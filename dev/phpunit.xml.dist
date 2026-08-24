@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="bootstrap.php"
+         colors="true"
+         failOnWarning="true"
+         failOnRisky="true"
+         cacheDirectory=".phpunit.cache">
+    <testsuites>
+        <!--
+          Unit: no PrestaShop, no database, no network. Runs anywhere PHP runs.
+        -->
+        <testsuite name="unit">
+            <directory>../tests/Unit</directory>
+        </testsuite>
+        <!--
+          Integration: needs a booted PrestaShop and its database, so it only
+          runs inside the container (see tests/Integration/bootstrap.php).
+        -->
+        <testsuite name="integration">
+            <directory>../tests/Integration</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory>../src</directory>
+        </include>
+    </source>
+</phpunit>

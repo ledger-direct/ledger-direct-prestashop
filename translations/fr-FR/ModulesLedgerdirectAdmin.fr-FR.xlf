@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="modules/ledgerdirect" source-language="en" target-language="fr" datatype="plaintext">
+    <body>
+      <trans-unit id="9a7e58ee13cb727cb7c4acc68f4cafe5">
+        <source>Settings saved.</source>
+        <target state="translated">Paramètres enregistrés.</target>
+      </trans-unit>
+      <trans-unit id="c82dc7fd19f357edc6f36e1898d8c408">
+        <source>The receiving address is not a valid XRPL address. It starts with "r" and contains no 0, O, I or l.</source>
+        <target state="translated">L'adresse de réception n'est pas une adresse XRPL valide. Elle commence par « r » et ne contient ni 0, ni O, ni I, ni l.</target>
+      </trans-unit>
+      <trans-unit id="960a1ea0e70d7e3437a3a37a0f2bd242">
+        <source>Enter a receiving address, or disable every payment method. Without an address there is nowhere for the money to go.</source>
+        <target state="translated">Saisissez une adresse de réception, ou désactivez tous les moyens de paiement. Sans adresse, l'argent n'a nulle part où aller.</target>
+      </trans-unit>
+      <trans-unit id="2ac42d4009bbe404a17e0ec8dc4b1c24">
+        <source>Choose either mainnet or testnet.</source>
+        <target state="translated">Choisissez mainnet ou testnet.</target>
+      </trans-unit>
+      <trans-unit id="5baeee2ff8f055dfc686538c7288e769">
+        <source>The quote validity must be between %d and %d seconds.</source>
+        <target state="translated">La validité de la cotation doit être comprise entre %d et %d secondes.</target>
+      </trans-unit>
+      <trans-unit id="63950aa871999109e98ab72e4b2f7f1f">
+        <source>Receiving address</source>
+        <target state="translated">Adresse de réception</target>
+      </trans-unit>
+      <trans-unit id="8564365509b1b04d5c348aa1ccd6434e">
+        <source>Your XRPL account. Customers pay to this address, each order identified by its own destination tag.</source>
+        <target state="translated">Votre compte XRPL. Les clients paient à cette adresse, chaque commande étant identifiée par son propre destination tag.</target>
+      </trans-unit>
+      <trans-unit id="eec89088ee408b80387155272b113256">
+        <source>Network</source>
+        <target state="translated">Réseau</target>
+      </trans-unit>
+      <trans-unit id="c245e370703d1700b92821320e90a2bb">
+        <source>Testnet (no real funds)</source>
+        <target state="translated">Testnet (pas de fonds réels)</target>
+      </trans-unit>
+      <trans-unit id="ae99a835487548e7bc19edfe8ed2f9e4">
+        <source>Mainnet (live)</source>
+        <target state="translated">Mainnet (production)</target>
+      </trans-unit>
+      <trans-unit id="24e2c74689dc9c7ce41e8f4e15dfd81a">
+        <source>The receiving address must belong to the selected network. A mainnet address holds no funds on testnet and the other way round.</source>
+        <target state="translated">L'adresse de réception doit appartenir au réseau sélectionné. Une adresse mainnet ne détient aucun fonds sur testnet, et inversement.</target>
+      </trans-unit>
+      <trans-unit id="623a9a4ce99b5852ef3c1e09b8ac4dd1">
+        <source>Accept %s</source>
+        <target state="translated">Accepter %s</target>
+      </trans-unit>
+      <trans-unit id="93cba07454f06a4a960172bbd6e2a435">
+        <source>Yes</source>
+        <target state="translated">Oui</target>
+      </trans-unit>
+      <trans-unit id="bafd7322c6e97d25b6299b5d6fe8920b">
+        <source>No</source>
+        <target state="translated">Non</target>
+      </trans-unit>
+      <trans-unit id="058b7002c86a63ccab7761d533af6e7d">
+        <source>Quote validity (seconds)</source>
+        <target state="translated">Validité de la cotation (secondes)</target>
+      </trans-unit>
+      <trans-unit id="2383283f5b9add5920c770c5391e9674">
+        <source>How long the exchange rate shown to a customer stays fixed. Once it lapses the customer is asked to refresh the amount; the destination tag stays the same.</source>
+        <target state="translated">Durée pendant laquelle le taux de change affiché au client reste fixe. Une fois expiré, le client est invité à actualiser le montant ; le destination tag reste inchangé.</target>
+      </trans-unit>
+      <trans-unit id="da9d58e0413e0b137baacd5a83b28dbd">
+        <source>XRP Ledger settings</source>
+        <target state="translated">Paramètres XRP Ledger</target>
+      </trans-unit>
+      <trans-unit id="c9cc8cce247e49bae79f15173ce97354">
+        <source>Save</source>
+        <target state="translated">Enregistrer</target>
+      </trans-unit>
+      <trans-unit id="b70a36683e27a793f8d76faf3e9f957e">
+        <source>The native asset of the XRP Ledger. Needs no trustline.</source>
+        <target state="translated">L'actif natif du XRP Ledger. Ne nécessite aucune trustline.</target>
+      </trans-unit>
+      <trans-unit id="c870979c352522e626446da53760f035">
+        <source>Your account needs a %s trustline to the issuer below before it can receive payments — without one they will fail on the ledger. The issuer is fixed and cannot be changed here. %s</source>
+        <target state="translated">Votre compte doit disposer d'une trustline %s vers l'émetteur ci-dessous avant de pouvoir recevoir des paiements — sans elle, ils échoueront sur le ledger. L'émetteur est fixe et ne peut pas être modifié ici. %s</target>
+      </trans-unit>
+      <trans-unit id="bf5914f1d90be1298863aa286b6bab1b">
+        <source>Payment confirmation</source>
+        <target state="translated">Confirmation de paiement</target>
+      </trans-unit>
+      <trans-unit id="b356f4f21ec4cf7684f00b2b3d24dfbc">
+        <source>Call this URL from a cron job every few minutes. It confirms payments for customers who closed the payment page. Keep the token secret.</source>
+        <target state="translated">Appelez cette URL depuis une tâche cron toutes les quelques minutes. Elle confirme les paiements des clients ayant fermé la page de paiement. Gardez le token secret.</target>
+      </trans-unit>
+      <trans-unit id="e26be2f47d89a72f288f1ebfd22cdcbe">
+        <source>LedgerDirect</source>
+        <target state="translated">LedgerDirect</target>
+      </trans-unit>
+      <trans-unit id="8ba44f563b2829ab670db530d325903c">
+        <source>Accept XRP, RLUSD and USDC directly on the XRP Ledger.</source>
+        <target state="translated">Acceptez XRP, RLUSD et USDC directement sur le XRP Ledger.</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

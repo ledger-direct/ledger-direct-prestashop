@@ -1,0 +1,25 @@
+{
+  "name": "hardcastle/ledger-direct-prestashop",
+  "type": "prestashop-module",
+  "license": "MIT",
+  "require": {
+    "php": "^8.2",
+    "hardcastle/ledger-direct-core": "@dev",
+    "guzzlehttp/guzzle": "^7.8",
+    "bacon/bacon-qr-code": "^3.0"
+  },
+  "repositories": [
+    {
+      "type": "path",
+      "url": "../../LedgerDirectCorePHP/ledger-direct-core-php",
+      "options": {
+        "symlink": false
+      }
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "LedgerDirect\\": "src/"
+    }
+  }
+}

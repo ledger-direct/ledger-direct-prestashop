@@ -1,0 +1,21 @@
+{
+  "name": "hardcastle/ledger-direct-prestashop-dev",
+  "description": "Development tooling for the LedgerDirect PrestaShop module. Kept out of the module's own vendor/, which PrestaShop autoloads on every request.",
+  "license": "MIT",
+  "type": "project",
+  "require-dev": {
+    "phpunit/phpunit": "^10.5",
+    "phpstan/phpstan": "^2.1"
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "LedgerDirect\\Tests\\": "../tests/"
+    }
+  },
+  "scripts": {
+    "test": "phpunit --testsuite unit"
+  },
+  "config": {
+    "sort-packages": true
+  }
+}

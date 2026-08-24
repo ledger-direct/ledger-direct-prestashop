@@ -1,0 +1,35 @@
+# Static analysis for the adapter.
+#
+# Run it inside the container, where the PrestaShop installation it scans
+# actually exists:
+#
+#   docker compose exec -u www-data -w /var/www/html/modules/ledgerdirect \
+#     prestashop php dev/vendor/bin/phpstan analyse -c dev/phpstan.neon.dist
+#
+# scanDirectories points at the real PrestaShop rather than a stub package:
+# PrestaShop's legacy classes (Db, Order, Configuration, Tools, …) live in the
+# global namespace and are loaded by its own autoloader, so without this every
+# one of them reads as an unknown class. Scanning the installation the module
+# is actually running against also means the analysis matches the version in
+# front of us instead of whatever a stub package last shipped.
+parameters:
+    level: 5
+    paths:
+        - ../src
+        - ../controllers
+        - ../ledgerdirect.php
+    scanDirectories:
+        - /var/www/html/classes
+        - /var/www/html/controllers
+        - /var/www/html/src
+        - /var/www/html/vendor/smarty
+        - /var/www/html/vendor/symfony/translation-contracts
+    scanFiles:
+        - ../tests/phpstan-prestashop-stubs.php
+    bootstrapFiles:
+        # The module's own dependencies (the core, PSR interfaces, Guzzle,
+        # BaconQrCode). They live in the module's vendor, not this one — the
+        # two Composer projects are separate on purpose.
+        - ../vendor/autoload.php
+        - ../tests/phpstan-constants.php
+    treatPhpDocTypesAsCertain: false

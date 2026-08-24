@@ -1,0 +1,7 @@
+# Keeps development files out of the distributed archive. The module ships as
+# a self-contained zip for the marketplace; tests and tooling have no business
+# in a merchant's modules directory.
+/dev              export-ignore
+/tests            export-ignore
+/.gitattributes   export-ignore
+/.gitignore       export-ignore

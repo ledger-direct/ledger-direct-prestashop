@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="modules/ledgerdirect" source-language="en" target-language="fr" datatype="plaintext">
+    <body>
+      <trans-unit id="205f617855d3e208ff92151d9943a859">
+        <source>Pay approximately</source>
+        <target state="translated">Payez environ</target>
+      </trans-unit>
+      <trans-unit id="18c5af9245b70d4fa289715f85604359">
+        <source>on the XRP Ledger.</source>
+        <target state="translated">sur le XRP Ledger.</target>
+      </trans-unit>
+      <trans-unit id="f151ed0ecf4d8fe2eb77980a85b0adcb">
+        <source>Testnet mode: this shop is not accepting real funds.</source>
+        <target state="translated">Mode testnet : cette boutique n'accepte pas de fonds réels.</target>
+      </trans-unit>
+      <trans-unit id="3c5af70bb823c983e69d325e8f4bfe1c">
+        <source>The exact amount and a destination tag are shown on the next page.</source>
+        <target state="translated">Le montant exact et un destination tag sont indiqués sur la page suivante.</target>
+      </trans-unit>
+      <trans-unit id="d63107b6b868d106e355f6ef7ec46bef">
+        <source>Complete your payment</source>
+        <target state="translated">Finalisez votre paiement</target>
+      </trans-unit>
+      <trans-unit id="a240fa27925a635b08dc28c9e4f9216d">
+        <source>Order</source>
+        <target state="translated">Commande</target>
+      </trans-unit>
+      <trans-unit id="f65de8a4c6429ca5c67dfbea9381f2b7">
+        <source>We could not load the payment details for this order.</source>
+        <target state="translated">Nous n'avons pas pu charger les informations de paiement de cette commande.</target>
+      </trans-unit>
+      <trans-unit id="7eabd2ab7947b830cd5c34bb4e9296da">
+        <source>Your order was placed. Please contact us so we can send you the payment details.</source>
+        <target state="translated">Votre commande a bien été enregistrée. Contactez-nous afin que nous puissions vous transmettre les informations de paiement.</target>
+      </trans-unit>
+      <trans-unit id="03bf06ff5af2214c5b5baa1158195927">
+        <source>The destination tag is required.</source>
+        <target state="translated">Le destination tag est obligatoire.</target>
+      </trans-unit>
+      <trans-unit id="142f8d291ae26f86f5f3b894462457a3">
+        <source>A payment sent without it cannot be matched to your order.</source>
+        <target state="translated">Un paiement envoyé sans celui-ci ne peut pas être rattaché à votre commande.</target>
+      </trans-unit>
+      <trans-unit id="58a5e0b457fb3401ba1d5db24015ab57">
+        <source>QR code of the destination account</source>
+        <target state="translated">QR code du compte de destination</target>
+      </trans-unit>
+      <trans-unit id="3296db3595184770deba702c3c485d67">
+        <source>Scanning fills in the destination account only. Enter the amount and destination tag manually.</source>
+        <target state="translated">Le scan ne renseigne que le compte de destination. Saisissez le montant et le destination tag manuellement.</target>
+      </trans-unit>
+      <trans-unit id="b2f40690858b404ed10e62bdf422c704">
+        <source>Amount</source>
+        <target state="translated">Montant</target>
+      </trans-unit>
+      <trans-unit id="7c381443ee1a0abfe7de332b8baa1ef8">
+        <source>Destination account</source>
+        <target state="translated">Compte de destination</target>
+      </trans-unit>
+      <trans-unit id="fac82bcd0e45d6bf7cf224ab3819fcd2">
+        <source>Destination tag</source>
+        <target state="translated">Destination tag</target>
+      </trans-unit>
+      <trans-unit id="51360304ea03557e79bdf5ff9cd2e234">
+        <source>Issuer</source>
+        <target state="translated">Émetteur</target>
+      </trans-unit>
+      <trans-unit id="eec89088ee408b80387155272b113256">
+        <source>Network</source>
+        <target state="translated">Réseau</target>
+      </trans-unit>
+      <trans-unit id="e75e316ab3a0a8c0c5fc4b48d1a7033f">
+        <source>Exchange rate</source>
+        <target state="translated">Taux de change</target>
+      </trans-unit>
+      <trans-unit id="fc11724939bb3296b12bf82ce759ff87">
+        <source>This amount is guaranteed for</source>
+        <target state="translated">Ce montant est garanti encore</target>
+      </trans-unit>
+      <trans-unit id="cb44603ea8999a726bb1a0170dde7990">
+        <source>This quote has expired. The exchange rate may have moved since.</source>
+        <target state="translated">Cette cotation a expiré. Le taux de change a pu évoluer depuis.</target>
+      </trans-unit>
+      <trans-unit id="8294367a5684ea3ec1f2e876379257f3">
+        <source>Already sent the old amount? Do not send it again — use the check button below instead.</source>
+        <target state="translated">Vous avez déjà envoyé l'ancien montant ? Ne l'envoyez pas une seconde fois — utilisez plutôt le bouton ci-dessous.</target>
+      </trans-unit>
+      <trans-unit id="f996e08614f9979cbc192487408b90aa">
+        <source>Get an updated amount</source>
+        <target state="translated">Obtenir un montant actualisé</target>
+      </trans-unit>
+      <trans-unit id="f293da28c92255f13eb5af6024a3e77e">
+        <source>We could not find your payment on the ledger yet.</source>
+        <target state="translated">Nous n'avons pas encore trouvé votre paiement sur le ledger.</target>
+      </trans-unit>
+      <trans-unit id="e39af7571df1184da6692a34c0e22bd2">
+        <source>A transaction usually takes a few seconds to confirm. If you have just sent it, wait a moment and check again.</source>
+        <target state="translated">Une transaction est généralement confirmée en quelques secondes. Si vous venez de l'envoyer, patientez un instant puis vérifiez à nouveau.</target>
+      </trans-unit>
+      <trans-unit id="c589b287fbf19deb92877849497607aa">
+        <source>I have sent the payment — check now</source>
+        <target state="translated">J'ai envoyé le paiement — vérifier maintenant</target>
+      </trans-unit>
+      <trans-unit id="44d2326ff0b9daac5c4ca1622bf1c5aa">
+        <source>You do not have to wait here: once your transaction is confirmed on the ledger, your order is updated automatically.</source>
+        <target state="translated">Vous n'êtes pas obligé de rester sur cette page : dès que votre transaction est confirmée sur le ledger, votre commande est mise à jour automatiquement.</target>
+      </trans-unit>
+      <trans-unit id="3d8b21672103787ae25aa248fb95bf09">
+        <source>Back to your orders</source>
+        <target state="translated">Retour à vos commandes</target>
+      </trans-unit>
+      <trans-unit id="35895cff7df70dab18783453e2bd241f">
+        <source>Pay with %s</source>
+        <target state="translated">Payer en %s</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

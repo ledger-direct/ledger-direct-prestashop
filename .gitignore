@@ -1,0 +1,13 @@
+# Composer-managed runtime dependencies. Restored with `composer install`,
+# which also mirrors the core in from the path repository. Release artefacts
+# bundle vendor/ at build time — a packaging step, not something the repo
+# carries.
+/vendor/
+
+# Development tooling (PHPUnit, PHPStan). Deliberately a separate Composer
+# project so it never lands in the module's own vendor/, which PrestaShop
+# autoloads on every request.
+/dev/vendor/
+/dev/.phpunit.cache/
+
+.DS_Store
