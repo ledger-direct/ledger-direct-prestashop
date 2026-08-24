@@ -11,11 +11,13 @@ use Hardcastle\LedgerDirect\Core\Price\PriceService;
 use Hardcastle\LedgerDirect\Core\Xrpl\DestinationTagService;
 use Hardcastle\LedgerDirect\Core\Xrpl\SyncService;
 use Hardcastle\LedgerDirect\Core\Xrpl\XrplClient;
+use LedgerDirect\Cache\DbRateCache;
 use LedgerDirect\Log\PrestaShopLoggerAdapter;
 use LedgerDirect\Port\PrestaShopConfigProvider;
 use LedgerDirect\Port\PrestaShopXrplTransactionRepository;
 use Psr\Http\Client\ClientInterface;
 use Psr\Log\LoggerInterface;
+use Psr\SimpleCache\CacheInterface as SimpleCacheInterface;
 
 /**
  * Wires the core's services to this platform's port implementations.
@@ -35,6 +37,7 @@ final class ServiceFactory
     private ?LoggerInterface $logger = null;
     private ?PrestaShopConfigProvider $configProvider = null;
     private ?PrestaShopXrplTransactionRepository $transactionRepository = null;
+    private ?SimpleCacheInterface $rateCache = null;
     private ?PriceService $priceService = null;
     private ?PaymentIntentService $paymentIntentService = null;
     private ?SyncService $syncService = null;
@@ -80,13 +83,28 @@ final class ServiceFactory
         ]);
     }
 
+    /**
+     * The rate cache is injected, so the core skips the oracle set while a
+     * quote is fresh — measured at 314 ms for XRP/EUR, on the critical path of
+     * every checkout render. It also lets the core fall back to a recent rate
+     * when no oracle answers, instead of the payment method vanishing from a
+     * checkout the customer is standing in.
+     *
+     * The freshness window stays at the core's default (60 s).
+     */
     public function getPriceService(): PriceService
     {
         return $this->priceService ??= new PriceService(
             $this->getHttpClient(),
             $this->getHttpFactory(),
-            $this->getLogger()
+            $this->getLogger(),
+            $this->getRateCache()
         );
+    }
+
+    public function getRateCache(): SimpleCacheInterface
+    {
+        return $this->rateCache ??= new DbRateCache();
     }
 
     public function getPaymentIntentService(): PaymentIntentService

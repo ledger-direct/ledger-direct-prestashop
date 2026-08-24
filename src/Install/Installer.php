@@ -32,6 +32,13 @@ final class Installer
      */
     public const TABLE_ORDER_PAYMENT_INTENT = 'ledger_direct_order_payment_intent';
 
+    /**
+     * PSR-16 store for the core's exchange-rate cache. Adapter-owned, and the
+     * one table here that is genuinely disposable: every row can be refetched
+     * from an oracle.
+     */
+    public const TABLE_RATE_CACHE = 'ledger_direct_rate_cache';
+
     public const KEY_ORDER_STATE = 'LEDGERDIRECT_OS_AWAITING_PAYMENT';
 
     /**
@@ -114,9 +121,20 @@ final class Installer
             PRIMARY KEY (`id_order`)
         ) ENGINE=' . $engine . ' DEFAULT CHARSET=utf8mb4;';
 
+        // One row per (network, asset, quote currency) — three rows for a shop
+        // accepting all three assets in one currency. It does not grow.
+        $rateCache = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . self::TABLE_RATE_CACHE . '` (
+            `cache_key` VARCHAR(191) NOT NULL,
+            `value` LONGTEXT NOT NULL,
+            `expires_at` INT UNSIGNED NULL DEFAULT NULL,
+            PRIMARY KEY (`cache_key`),
+            KEY `idx_ledger_direct_rate_expires` (`expires_at`)
+        ) ENGINE=' . $engine . ' DEFAULT CHARSET=utf8mb4;';
+
         return Db::getInstance()->execute($tx)
             && Db::getInstance()->execute($destinationTag)
-            && Db::getInstance()->execute($orderPaymentIntent);
+            && Db::getInstance()->execute($orderPaymentIntent)
+            && Db::getInstance()->execute($rateCache);
     }
 
     /**
