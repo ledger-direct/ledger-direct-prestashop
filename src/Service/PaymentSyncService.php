@@ -4,15 +4,11 @@ declare(strict_types=1);
 
 namespace LedgerDirect\Service;
 
-use Configuration;
-use Db;
 use Hardcastle\LedgerDirect\Core\Payment\PaymentIntent;
 use LedgerDirect\Install\Installer;
 use LedgerDirect\Port\PrestaShopConfigProvider;
 use LedgerDirect\Storage\OrderPaymentIntentRepository;
 use Order;
-use Throwable;
-use Validate;
 
 /**
  * Pulls the merchant's incoming XRPL transactions and settles the orders they
@@ -49,9 +45,9 @@ final class PaymentSyncService
         $settled = 0;
 
         foreach ($this->findAwaitingOrderIds() as $orderId) {
-            $checked++;
+            ++$checked;
             if ($this->matchOrder($orderId)) {
-                $settled++;
+                ++$settled;
             }
         }
 
@@ -75,14 +71,14 @@ final class PaymentSyncService
      */
     public function matchOrder(int $orderId): bool
     {
-        $order = new Order($orderId);
-        if (!Validate::isLoadedObject($order) || !self::isAwaitingPayment($order)) {
+        $order = new \Order($orderId);
+        if (!\Validate::isLoadedObject($order) || !self::isAwaitingPayment($order)) {
             return false;
         }
 
         try {
             $paymentIntent = $this->intents->find($orderId);
-        } catch (Throwable $exception) {
+        } catch (\Throwable $exception) {
             $this->services->getLogger()->error('Cannot match order, its payment intent is unreadable', [
                 'id_order' => $orderId,
                 'exception' => $exception->getMessage(),
@@ -106,7 +102,7 @@ final class PaymentSyncService
 
         try {
             $delivered = $transaction->getDeliveredAmount();
-        } catch (Throwable $exception) {
+        } catch (\Throwable $exception) {
             // Includes the ledger's "unavailable" marker: money arrived but
             // the amount cannot be reconstructed. Never settle on a guess —
             // this is a case for a human.
@@ -151,14 +147,14 @@ final class PaymentSyncService
      * @param float|array<string, mixed> $delivered
      */
     private function settle(
-        Order $order,
+        \Order $order,
         PaymentIntent $paymentIntent,
         string $hash,
         string $ctid,
-        float|array $delivered
+        float|array $delivered,
     ): bool {
         $orderId = (int) $order->id;
-        $paidStateId = (int) Configuration::get('PS_OS_PAYMENT');
+        $paidStateId = (int) \Configuration::get('PS_OS_PAYMENT');
 
         $fulfilled = $paymentIntent->withFulfillment($hash, $delivered, $ctid);
 
@@ -169,7 +165,7 @@ final class PaymentSyncService
 
         try {
             $order->setCurrentState($paidStateId);
-        } catch (Throwable $exception) {
+        } catch (\Throwable $exception) {
             // setCurrentState() changes the state and *then* sends the
             // confirmation email. A dead mail server therefore throws after
             // the order has already moved — treating that as failure would
@@ -223,7 +219,7 @@ final class PaymentSyncService
      * So: let PrestaShop do the accounting, then stamp the hash onto what it
      * wrote, so a merchant can still look the payment up on-chain.
      */
-    private function recordTransactionHash(Order $order, string $hash): void
+    private function recordTransactionHash(\Order $order, string $hash): void
     {
         try {
             $payments = $order->getOrderPayments();
@@ -245,7 +241,7 @@ final class PaymentSyncService
                 $payment->payment_method = $order->payment;
                 $payment->save();
             }
-        } catch (Throwable $exception) {
+        } catch (\Throwable $exception) {
             // Bookkeeping detail: the order is already settled and the hash is
             // on the PaymentIntent either way, so this never fails the match.
             $this->services->getLogger()->warning('Could not attach the transaction hash to the payment record', [
@@ -258,7 +254,7 @@ final class PaymentSyncService
 
     private function readCurrentState(int $orderId): int
     {
-        return (int) Db::getInstance()->getValue(
+        return (int) \Db::getInstance()->getValue(
             'SELECT `current_state` FROM `' . _DB_PREFIX_ . 'orders` WHERE `id_order` = ' . $orderId,
             false
         );
@@ -278,7 +274,7 @@ final class PaymentSyncService
                 $destinationAccount,
                 $configProvider->getNetwork(PrestaShopConfigProvider::CHAIN_XRPL)
             );
-        } catch (Throwable $exception) {
+        } catch (\Throwable $exception) {
             // A node that is down must not take the checkout with it: matching
             // still runs against whatever is already stored locally.
             $this->services->getLogger()->error('Ledger sync failed', [
@@ -292,7 +288,7 @@ final class PaymentSyncService
         return true;
     }
 
-    public static function isAwaitingPayment(Order $order): bool
+    public static function isAwaitingPayment(\Order $order): bool
     {
         return (int) $order->getCurrentState() === Installer::getOrderStateId();
     }
@@ -302,7 +298,7 @@ final class PaymentSyncService
      */
     private function findAwaitingOrderIds(): array
     {
-        $rows = Db::getInstance()->executeS(
+        $rows = \Db::getInstance()->executeS(
             'SELECT o.`id_order`
                FROM `' . _DB_PREFIX_ . 'orders` o
                INNER JOIN `' . _DB_PREFIX_ . Installer::TABLE_ORDER_PAYMENT_INTENT . '` i

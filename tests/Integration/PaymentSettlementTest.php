@@ -4,11 +4,6 @@ declare(strict_types=1);
 
 namespace LedgerDirect\Tests\Integration;
 
-use Cart;
-use Configuration;
-use Context;
-use Customer;
-use Db;
 use Hardcastle\LedgerDirect\Core\Payment\PaymentIntent;
 use Hardcastle\LedgerDirect\Core\Xrpl\XrplAmount;
 use Hardcastle\LedgerDirect\Core\Xrpl\XrplTransaction;
@@ -17,9 +12,7 @@ use LedgerDirect\Port\PrestaShopConfigProvider;
 use LedgerDirect\Service\PaymentSyncService;
 use LedgerDirect\Service\ServiceFactory;
 use LedgerDirect\Storage\OrderPaymentIntentRepository;
-use Module;
 use Order;
-use Validate;
 
 /**
  * Settling a real order against a transaction on the ledger.
@@ -39,8 +32,8 @@ final class PaymentSettlementTest extends IntegrationTestCase
     private const AMOUNT_XRP = 15.06378;
     private const AMOUNT_DROPS = '15063780';
 
-    private Order $order;
-    private Cart $cart;
+    private \Order $order;
+    private \Cart $cart;
     private int $destinationTag;
     private OrderPaymentIntentRepository $intents;
 
@@ -52,8 +45,8 @@ final class PaymentSettlementTest extends IntegrationTestCase
     {
         $this->intents = new OrderPaymentIntentRepository();
 
-        $this->previousDestination = (string) Configuration::get(PrestaShopConfigProvider::KEY_DESTINATION_ACCOUNT);
-        Configuration::updateValue(PrestaShopConfigProvider::KEY_DESTINATION_ACCOUNT, self::DESTINATION);
+        $this->previousDestination = (string) \Configuration::get(PrestaShopConfigProvider::KEY_DESTINATION_ACCOUNT);
+        \Configuration::updateValue(PrestaShopConfigProvider::KEY_DESTINATION_ACCOUNT, self::DESTINATION);
 
         $this->destinationTag = random_int(1000000, 4294967295);
         $this->createAwaitingOrder();
@@ -61,7 +54,7 @@ final class PaymentSettlementTest extends IntegrationTestCase
 
     protected function tearDown(): void
     {
-        $db = Db::getInstance();
+        $db = \Db::getInstance();
 
         foreach ($this->plantedHashes as $hash) {
             $db->execute(
@@ -71,7 +64,7 @@ final class PaymentSettlementTest extends IntegrationTestCase
         }
         $this->plantedHashes = [];
 
-        if (isset($this->order) && Validate::isLoadedObject($this->order)) {
+        if (isset($this->order) && \Validate::isLoadedObject($this->order)) {
             $db->execute(
                 'DELETE FROM `' . _DB_PREFIX_ . Installer::TABLE_ORDER_PAYMENT_INTENT . '`
                  WHERE `id_order` = ' . (int) $this->order->id
@@ -79,11 +72,11 @@ final class PaymentSettlementTest extends IntegrationTestCase
             $this->order->delete();
         }
 
-        if (isset($this->cart) && Validate::isLoadedObject($this->cart)) {
+        if (isset($this->cart) && \Validate::isLoadedObject($this->cart)) {
             $this->cart->delete();
         }
 
-        Configuration::updateValue(
+        \Configuration::updateValue(
             PrestaShopConfigProvider::KEY_DESTINATION_ACCOUNT,
             $this->previousDestination
         );
@@ -147,7 +140,7 @@ final class PaymentSettlementTest extends IntegrationTestCase
         $hash = $this->plant(['delivered_amount' => self::AMOUNT_DROPS]);
 
         self::assertTrue($this->sync()->matchOrder((int) $this->order->id));
-        self::assertSame((int) Configuration::get('PS_OS_PAYMENT'), $this->currentState());
+        self::assertSame((int) \Configuration::get('PS_OS_PAYMENT'), $this->currentState());
 
         $intent = $this->intents->find((int) $this->order->id);
         self::assertSame($hash, $intent?->hash);
@@ -165,7 +158,7 @@ final class PaymentSettlementTest extends IntegrationTestCase
         $hash = $this->plant(['delivered_amount' => self::AMOUNT_DROPS]);
         $this->sync()->matchOrder((int) $this->order->id);
 
-        $order = new Order((int) $this->order->id);
+        $order = new \Order((int) $this->order->id);
         $payments = $order->getOrderPayments();
 
         self::assertCount(1, $payments);
@@ -184,13 +177,14 @@ final class PaymentSettlementTest extends IntegrationTestCase
         self::assertTrue($this->sync()->matchOrder((int) $this->order->id));
         self::assertFalse($this->sync()->matchOrder((int) $this->order->id));
 
-        $order = new Order((int) $this->order->id);
+        $order = new \Order((int) $this->order->id);
         self::assertCount(1, $order->getOrderPayments());
         self::assertSame((float) $order->total_paid, (float) $order->total_paid_real);
     }
 
     /**
      * @param array<string, mixed> $meta
+     *
      * @return string the transaction hash
      */
     private function plant(array $meta, ?int $tag = null): string
@@ -225,7 +219,7 @@ final class PaymentSettlementTest extends IntegrationTestCase
     /** Read past the query cache — an ObjectModel reload can be stale here. */
     private function currentState(): int
     {
-        return (int) Db::getInstance()->getValue(
+        return (int) \Db::getInstance()->getValue(
             'SELECT `current_state` FROM `' . _DB_PREFIX_ . 'orders`
              WHERE `id_order` = ' . (int) $this->order->id,
             false
@@ -234,9 +228,9 @@ final class PaymentSettlementTest extends IntegrationTestCase
 
     private function createAwaitingOrder(): void
     {
-        $context = Context::getContext();
+        $context = \Context::getContext();
 
-        $this->cart = new Cart();
+        $this->cart = new \Cart();
         $this->cart->id_customer = self::customerId();
         $this->cart->id_address_delivery = self::addressId();
         $this->cart->id_address_invoice = self::addressId();
@@ -247,12 +241,12 @@ final class PaymentSettlementTest extends IntegrationTestCase
 
         $context->cart = $this->cart;
         $this->cart->updateQty(1, self::activeProductId());
-        $this->cart = new Cart((int) $this->cart->id);
+        $this->cart = new \Cart((int) $this->cart->id);
         $context->cart = $this->cart;
 
-        $customer = new Customer(self::customerId());
-        $module = Module::getInstanceByName('ledgerdirect');
-        $total = (float) $this->cart->getOrderTotal(true, Cart::BOTH);
+        $customer = new \Customer(self::customerId());
+        $module = \Module::getInstanceByName('ledgerdirect');
+        $total = (float) $this->cart->getOrderTotal(true, \Cart::BOTH);
 
         $module->validateOrder(
             (int) $this->cart->id,
@@ -266,7 +260,7 @@ final class PaymentSettlementTest extends IntegrationTestCase
             $customer->secure_key
         );
 
-        $this->order = new Order((int) $module->currentOrder);
+        $this->order = new \Order((int) $module->currentOrder);
 
         $this->intents->save((int) $this->order->id, PaymentIntent::quote(
             type: 'xrp-payment',
@@ -285,7 +279,7 @@ final class PaymentSettlementTest extends IntegrationTestCase
 
     private static function activeProductId(): int
     {
-        return (int) Db::getInstance()->getValue(
+        return (int) \Db::getInstance()->getValue(
             'SELECT `id_product` FROM `' . _DB_PREFIX_ . 'product` WHERE `active` = 1'
         );
     }

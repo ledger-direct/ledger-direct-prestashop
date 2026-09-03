@@ -4,10 +4,6 @@ declare(strict_types=1);
 
 namespace LedgerDirect\Cache;
 
-use DateInterval;
-use DateTimeImmutable;
-use Db;
-use JsonException;
 use LedgerDirect\Install\Installer;
 use Psr\SimpleCache\CacheInterface;
 
@@ -45,7 +41,7 @@ final class DbRateCache implements CacheInterface
     {
         $key = self::assertValidKey($key);
 
-        $row = Db::getInstance()->getRow(
+        $row = \Db::getInstance()->getRow(
             'SELECT `value`, `expires_at` FROM `' . self::table() . '`
              WHERE `cache_key` = "' . self::esc($key) . '"',
             false
@@ -65,7 +61,7 @@ final class DbRateCache implements CacheInterface
 
         try {
             return json_decode((string) $row['value'], true, 512, JSON_THROW_ON_ERROR);
-        } catch (JsonException) {
+        } catch (\JsonException) {
             // Unreadable payload: treat as a miss rather than propagating.
             // A cache is never allowed to be the reason a checkout fails.
             $this->delete($key);
@@ -90,11 +86,11 @@ final class DbRateCache implements CacheInterface
             // being written as "3" and read back as an int. The core tolerates
             // that shape, but there is no reason to hand it one.
             $encoded = json_encode($value, JSON_THROW_ON_ERROR | JSON_PRESERVE_ZERO_FRACTION);
-        } catch (JsonException) {
+        } catch (\JsonException) {
             return false;
         }
 
-        return (bool) Db::getInstance()->execute(
+        return (bool) \Db::getInstance()->execute(
             'INSERT INTO `' . self::table() . '` (`cache_key`, `value`, `expires_at`)
              VALUES ("' . self::esc($key) . '", "' . self::esc($encoded) . '", '
                 . ($expiresAt === null ? 'NULL' : $expiresAt) . ')
@@ -106,18 +102,19 @@ final class DbRateCache implements CacheInterface
     {
         $key = self::assertValidKey($key);
 
-        return (bool) Db::getInstance()->execute(
+        return (bool) \Db::getInstance()->execute(
             'DELETE FROM `' . self::table() . '` WHERE `cache_key` = "' . self::esc($key) . '"'
         );
     }
 
     public function clear(): bool
     {
-        return (bool) Db::getInstance()->execute('TRUNCATE TABLE `' . self::table() . '`');
+        return (bool) \Db::getInstance()->execute('TRUNCATE TABLE `' . self::table() . '`');
     }
 
     /**
      * @param iterable<string> $keys
+     *
      * @return iterable<string, mixed>
      */
     public function getMultiple($keys, $default = null): iterable
@@ -176,8 +173,8 @@ final class DbRateCache implements CacheInterface
             return time() + $ttl;
         }
 
-        if ($ttl instanceof DateInterval) {
-            return (new DateTimeImmutable())->add($ttl)->getTimestamp();
+        if ($ttl instanceof \DateInterval) {
+            return (new \DateTimeImmutable())->add($ttl)->getTimestamp();
         }
 
         throw new InvalidCacheKeyException('A TTL must be null, an integer or a DateInterval.');
@@ -185,6 +182,7 @@ final class DbRateCache implements CacheInterface
 
     /**
      * @param mixed $key
+     *
      * @return string the key, normalised to a string
      */
     private static function assertValidKey($key): string
@@ -198,11 +196,7 @@ final class DbRateCache implements CacheInterface
         }
 
         if (strpbrk($key, self::RESERVED_KEY_CHARACTERS) !== false) {
-            throw new InvalidCacheKeyException(sprintf(
-                'The cache key "%s" contains one of the characters PSR-16 reserves (%s).',
-                $key,
-                self::RESERVED_KEY_CHARACTERS
-            ));
+            throw new InvalidCacheKeyException(sprintf('The cache key "%s" contains one of the characters PSR-16 reserves (%s).', $key, self::RESERVED_KEY_CHARACTERS));
         }
 
         if (strlen($key) > 191) {
@@ -220,6 +214,6 @@ final class DbRateCache implements CacheInterface
     /** SQL escaping only — see PrestaShopXrplTransactionRepository::esc(). */
     private static function esc(string $value): string
     {
-        return Db::getInstance()->escape($value, true, false);
+        return \Db::getInstance()->escape($value, true, false);
     }
 }

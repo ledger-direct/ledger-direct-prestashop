@@ -4,12 +4,7 @@ declare(strict_types=1);
 
 namespace LedgerDirect\Install;
 
-use Configuration;
-use Db;
-use Language;
 use LedgerDirect\Port\PrestaShopConfigProvider;
-use OrderState;
-use Validate;
 
 /**
  * Schema and order-state setup for install()/uninstall().
@@ -51,7 +46,7 @@ final class Installer
      */
     public static function getOrderStateId(): int
     {
-        return (int) Configuration::getGlobalValue(self::KEY_ORDER_STATE);
+        return (int) \Configuration::getGlobalValue(self::KEY_ORDER_STATE);
     }
 
     public static function install(string $moduleName): bool
@@ -77,7 +72,7 @@ final class Installer
         // Merchant-facing settings go (PrestaShop convention); the order-state
         // id stays so a reinstall reuses the state instead of duplicating it.
         foreach (PrestaShopConfigProvider::configurationKeys() as $key) {
-            Configuration::deleteByName($key);
+            \Configuration::deleteByName($key);
         }
 
         return true;
@@ -131,10 +126,10 @@ final class Installer
             KEY `idx_ledger_direct_rate_expires` (`expires_at`)
         ) ENGINE=' . $engine . ' DEFAULT CHARSET=utf8mb4;';
 
-        return Db::getInstance()->execute($tx)
-            && Db::getInstance()->execute($destinationTag)
-            && Db::getInstance()->execute($orderPaymentIntent)
-            && Db::getInstance()->execute($rateCache);
+        return \Db::getInstance()->execute($tx)
+            && \Db::getInstance()->execute($destinationTag)
+            && \Db::getInstance()->execute($orderPaymentIntent)
+            && \Db::getInstance()->execute($rateCache);
     }
 
     /**
@@ -143,17 +138,17 @@ final class Installer
      */
     private static function ensureOrderState(string $moduleName): bool
     {
-        $existingId = (int) Configuration::getGlobalValue(self::KEY_ORDER_STATE);
+        $existingId = (int) \Configuration::getGlobalValue(self::KEY_ORDER_STATE);
         if ($existingId > 0) {
-            $existing = new OrderState($existingId);
-            if (Validate::isLoadedObject($existing)) {
+            $existing = new \OrderState($existingId);
+            if (\Validate::isLoadedObject($existing)) {
                 return true;
             }
         }
 
-        $orderState = new OrderState();
+        $orderState = new \OrderState();
         $orderState->name = [];
-        foreach (Language::getLanguages(false) as $language) {
+        foreach (\Language::getLanguages(false) as $language) {
             $orderState->name[(int) $language['id_lang']] = $language['iso_code'] === 'de'
                 ? 'Warten auf XRPL-Zahlung'
                 : 'Awaiting XRPL payment';
@@ -176,7 +171,7 @@ final class Installer
             return false;
         }
 
-        return Configuration::updateGlobalValue(self::KEY_ORDER_STATE, (int) $orderState->id);
+        return \Configuration::updateGlobalValue(self::KEY_ORDER_STATE, (int) $orderState->id);
     }
 
     /**
@@ -191,7 +186,7 @@ final class Installer
             return true;
         }
 
-        return Configuration::updateGlobalValue(
+        return \Configuration::updateGlobalValue(
             PrestaShopConfigProvider::KEY_CRON_TOKEN,
             bin2hex(random_bytes(16))
         );
@@ -200,7 +195,7 @@ final class Installer
     private static function setDefaultConfiguration(): bool
     {
         foreach (PrestaShopConfigProvider::defaultConfiguration() as $key => $value) {
-            if (!Configuration::updateValue($key, $value)) {
+            if (!\Configuration::updateValue($key, $value)) {
                 return false;
             }
         }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace LedgerDirect\Tests\Integration;
 
-use Db;
 use Hardcastle\LedgerDirect\Core\Xrpl\DestinationTagService;
 use Hardcastle\LedgerDirect\Core\Xrpl\XrplTransaction;
 use LedgerDirect\Install\Installer;
@@ -26,7 +25,7 @@ final class XrplTransactionRepositoryTest extends IntegrationTestCase
 
     protected function tearDown(): void
     {
-        $db = Db::getInstance();
+        $db = \Db::getInstance();
         $db->execute(
             'DELETE FROM `' . _DB_PREFIX_ . Installer::TABLE_TX . '`
              WHERE `destination` = "' . pSQL($this->account) . '"'
@@ -58,7 +57,7 @@ final class XrplTransactionRepositoryTest extends IntegrationTestCase
         try {
             self::assertSame(0, $this->repository->nextDestinationTagSequence($other));
         } finally {
-            Db::getInstance()->execute(
+            \Db::getInstance()->execute(
                 'DELETE FROM `' . _DB_PREFIX_ . Installer::TABLE_DESTINATION_TAG . '`
                  WHERE `destination_account` = "' . pSQL($other) . '"'
             );
@@ -70,7 +69,7 @@ final class XrplTransactionRepositoryTest extends IntegrationTestCase
         $service = new DestinationTagService($this->repository);
 
         $tags = [];
-        for ($i = 0; $i < 5; $i++) {
+        for ($i = 0; $i < 5; ++$i) {
             $tags[] = $service->generateDestinationTag($this->account);
         }
 
@@ -171,7 +170,7 @@ final class XrplTransactionRepositoryTest extends IntegrationTestCase
 
     private function countRows(): int
     {
-        return (int) Db::getInstance()->getValue(
+        return (int) \Db::getInstance()->getValue(
             'SELECT COUNT(*) FROM `' . _DB_PREFIX_ . Installer::TABLE_TX . '`
              WHERE `destination` = "' . pSQL($this->account) . '"',
             false

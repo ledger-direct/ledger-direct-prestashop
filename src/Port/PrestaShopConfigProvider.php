@@ -6,7 +6,6 @@ namespace LedgerDirect\Port;
 
 use Configuration;
 use Hardcastle\LedgerDirect\Core\Port\ConfigProviderInterface;
-use InvalidArgumentException;
 
 /**
  * Reads the merchant's LedgerDirect settings out of PrestaShop's
@@ -59,7 +58,7 @@ final class PrestaShopConfigProvider implements ConfigProviderInterface
     {
         self::assertXrpl($chain);
 
-        $network = (string) Configuration::get(self::KEY_NETWORK);
+        $network = (string) \Configuration::get(self::KEY_NETWORK);
 
         // Anything unrecognised falls back to testnet: an unconfigured or
         // corrupted setting must not silently start taking real money.
@@ -70,7 +69,7 @@ final class PrestaShopConfigProvider implements ConfigProviderInterface
     {
         self::assertXrpl($chain);
 
-        return trim((string) Configuration::get(self::KEY_DESTINATION_ACCOUNT));
+        return trim((string) \Configuration::get(self::KEY_DESTINATION_ACCOUNT));
     }
 
     public function isAssetEnabled(string $chain, string $baseAsset): bool
@@ -84,12 +83,12 @@ final class PrestaShopConfigProvider implements ConfigProviderInterface
             return false;
         }
 
-        return (bool) Configuration::get($key);
+        return (bool) \Configuration::get($key);
     }
 
     public function getQuoteExpirySeconds(): int
     {
-        $expiry = (int) Configuration::get(self::KEY_QUOTE_EXPIRY);
+        $expiry = (int) \Configuration::get(self::KEY_QUOTE_EXPIRY);
 
         return $expiry > 0 ? $expiry : self::DEFAULT_QUOTE_EXPIRY_SECONDS;
     }
@@ -127,15 +126,13 @@ final class PrestaShopConfigProvider implements ConfigProviderInterface
     /** The cron endpoint's shared secret. Empty means "not generated yet". */
     public static function getCronToken(): string
     {
-        return (string) Configuration::getGlobalValue(self::KEY_CRON_TOKEN);
+        return (string) \Configuration::getGlobalValue(self::KEY_CRON_TOKEN);
     }
 
     private static function assertXrpl(string $chain): void
     {
         if ($chain !== self::CHAIN_XRPL) {
-            throw new InvalidArgumentException(
-                "LedgerDirect has no configuration for chain '{$chain}'; only '" . self::CHAIN_XRPL . "' is supported."
-            );
+            throw new \InvalidArgumentException("LedgerDirect has no configuration for chain '{$chain}'; only '" . self::CHAIN_XRPL . "' is supported.");
         }
     }
 }

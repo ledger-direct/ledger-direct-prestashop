@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Directory listing guard. PrestaShop expects one of these in every module
  * directory so a misconfigured server cannot serve an index of the folder.

@@ -4,12 +4,8 @@ declare(strict_types=1);
 
 namespace LedgerDirect\Storage;
 
-use Db;
 use Hardcastle\LedgerDirect\Core\Payment\PaymentIntent;
-use InvalidArgumentException;
-use JsonException;
 use LedgerDirect\Install\Installer;
-use RuntimeException;
 
 /**
  * Stores one serialized PaymentIntent per order.
@@ -37,14 +33,14 @@ final class OrderPaymentIntentRepository
                 VALUES (' . $orderId . ', "' . self::esc($json) . '", NOW(), NOW())
                 ON DUPLICATE KEY UPDATE `payment_intent` = VALUES(`payment_intent`), `date_upd` = NOW()';
 
-        if (!Db::getInstance()->execute($sql)) {
-            throw new RuntimeException("LedgerDirect: could not store the payment intent for order {$orderId}.");
+        if (!\Db::getInstance()->execute($sql)) {
+            throw new \RuntimeException("LedgerDirect: could not store the payment intent for order {$orderId}.");
         }
     }
 
     public function find(int $orderId): ?PaymentIntent
     {
-        $json = Db::getInstance()->getValue(
+        $json = \Db::getInstance()->getValue(
             'SELECT `payment_intent` FROM `' . _DB_PREFIX_ . Installer::TABLE_ORDER_PAYMENT_INTENT . '`
              WHERE `id_order` = ' . $orderId,
             false
@@ -56,30 +52,21 @@ final class OrderPaymentIntentRepository
 
         try {
             $data = json_decode((string) $json, true, 512, JSON_THROW_ON_ERROR);
-        } catch (JsonException $exception) {
-            throw new RuntimeException(
-                "LedgerDirect: the stored payment intent for order {$orderId} is not valid JSON.",
-                0,
-                $exception
-            );
+        } catch (\JsonException $exception) {
+            throw new \RuntimeException("LedgerDirect: the stored payment intent for order {$orderId} is not valid JSON.", 0, $exception);
         }
 
         if (!is_array($data)) {
-            throw new RuntimeException("LedgerDirect: the stored payment intent for order {$orderId} is malformed.");
+            throw new \RuntimeException("LedgerDirect: the stored payment intent for order {$orderId} is malformed.");
         }
 
         try {
             return PaymentIntent::fromArray($data);
-        } catch (InvalidArgumentException $exception) {
+        } catch (\InvalidArgumentException $exception) {
             // Wrong/unknown schema_version lands here. Surfacing it beats
             // returning null: a silently ignored record would look to the rest
             // of the module like "this order was never paid for".
-            throw new RuntimeException(
-                "LedgerDirect: the stored payment intent for order {$orderId} is not readable: "
-                . $exception->getMessage(),
-                0,
-                $exception
-            );
+            throw new \RuntimeException("LedgerDirect: the stored payment intent for order {$orderId} is not readable: " . $exception->getMessage(), 0, $exception);
         }
     }
 
@@ -90,18 +77,14 @@ final class OrderPaymentIntentRepository
     {
         try {
             return json_encode($data, JSON_THROW_ON_ERROR);
-        } catch (JsonException $exception) {
-            throw new RuntimeException(
-                'LedgerDirect: could not serialise the payment intent: ' . $exception->getMessage(),
-                0,
-                $exception
-            );
+        } catch (\JsonException $exception) {
+            throw new \RuntimeException('LedgerDirect: could not serialise the payment intent: ' . $exception->getMessage(), 0, $exception);
         }
     }
 
     /** SQL escaping only — see PrestaShopXrplTransactionRepository::esc(). */
     private static function esc(string $value): string
     {
-        return Db::getInstance()->escape($value, true, false);
+        return \Db::getInstance()->escape($value, true, false);
     }
 }

@@ -6,7 +6,9 @@ use LedgerDirect\Port\PrestaShopConfigProvider;
 use LedgerDirect\Service\ServiceFactory;
 use PrestaShop\PrestaShop\Core\Payment\PaymentOption;
 
-if (!defined('_PS_VERSION_')) { exit; }
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 // Bundled dependencies: the core, its PSR interfaces, and Guzzle as the
 // concrete PSR-18 client. Release artefacts ship self-contained (see the core's
@@ -61,6 +63,7 @@ class Ledgerdirect extends PaymentModule
      * instead of to page views.
      *
      * @param array<string, mixed> $params
+     *
      * @return PaymentOption[]
      */
     public function hookPaymentOptions(array $params): array

@@ -3,7 +3,9 @@
 use LedgerDirect\Service\PaymentSyncService;
 use LedgerDirect\Storage\OrderPaymentIntentRepository;
 
-if (!defined('_PS_VERSION_')) { exit; }
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * Checks one order while its customer watches the payment page.

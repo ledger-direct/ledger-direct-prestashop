@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace LedgerDirect\Tests\Integration;
 
-use DateInterval;
-use Db;
 use LedgerDirect\Cache\DbRateCache;
 use LedgerDirect\Install\Installer;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -31,7 +29,7 @@ final class DbRateCacheTest extends IntegrationTestCase
 
     protected function tearDown(): void
     {
-        Db::getInstance()->execute(
+        \Db::getInstance()->execute(
             'DELETE FROM `' . _DB_PREFIX_ . Installer::TABLE_RATE_CACHE . '`
              WHERE `cache_key` LIKE "ledger-direct.test.%"'
         );
@@ -78,7 +76,7 @@ final class DbRateCacheTest extends IntegrationTestCase
 
     public function testATtlGivenAsAnIntervalIsHonoured(): void
     {
-        $this->cache->set($this->key, ['rate' => 1.0, 'fetched_at' => time()], new DateInterval('PT5M'));
+        $this->cache->set($this->key, ['rate' => 1.0, 'fetched_at' => time()], new \DateInterval('PT5M'));
 
         $expiresIn = $this->storedExpiry() - time();
         self::assertGreaterThan(280, $expiresIn);
@@ -111,7 +109,7 @@ final class DbRateCacheTest extends IntegrationTestCase
     public function testUnreadableStoredDataIsTreatedAsAMiss(): void
     {
         $this->cache->set($this->key, ['rate' => 1.0, 'fetched_at' => time()], 300);
-        Db::getInstance()->execute(
+        \Db::getInstance()->execute(
             'UPDATE `' . _DB_PREFIX_ . Installer::TABLE_RATE_CACHE . '`
              SET `value` = "not json at all" WHERE `cache_key` = "' . pSQL($this->key) . '"'
         );
@@ -169,7 +167,7 @@ final class DbRateCacheTest extends IntegrationTestCase
 
     private function countRows(): int
     {
-        return (int) Db::getInstance()->getValue(
+        return (int) \Db::getInstance()->getValue(
             'SELECT COUNT(*) FROM `' . _DB_PREFIX_ . Installer::TABLE_RATE_CACHE . '`
              WHERE `cache_key` = "' . pSQL($this->key) . '"',
             false
@@ -178,7 +176,7 @@ final class DbRateCacheTest extends IntegrationTestCase
 
     private function storedValue(): string
     {
-        return (string) Db::getInstance()->getValue(
+        return (string) \Db::getInstance()->getValue(
             'SELECT `value` FROM `' . _DB_PREFIX_ . Installer::TABLE_RATE_CACHE . '`
              WHERE `cache_key` = "' . pSQL($this->key) . '"',
             false
@@ -192,7 +190,7 @@ final class DbRateCacheTest extends IntegrationTestCase
 
     private function storedExpiryRaw(): ?string
     {
-        $value = Db::getInstance()->getValue(
+        $value = \Db::getInstance()->getValue(
             'SELECT `expires_at` FROM `' . _DB_PREFIX_ . Installer::TABLE_RATE_CACHE . '`
              WHERE `cache_key` = "' . pSQL($this->key) . '"',
             false
@@ -203,7 +201,7 @@ final class DbRateCacheTest extends IntegrationTestCase
 
     private function expireStoredEntry(): void
     {
-        Db::getInstance()->execute(
+        \Db::getInstance()->execute(
             'UPDATE `' . _DB_PREFIX_ . Installer::TABLE_RATE_CACHE . '`
              SET `expires_at` = UNIX_TIMESTAMP() - 1 WHERE `cache_key` = "' . pSQL($this->key) . '"'
         );
