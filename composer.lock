@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b40e9a15c63b8a36bbeb4a4fc280fd8d",
+    "content-hash": "5753c5ebc92c568eb16ebe7a38604205",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -504,14 +504,20 @@
         },
         {
             "name": "hardcastle/ledger-direct-core",
-            "version": "dev-master",
+            "version": "0.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ledger-direct/ledger-direct-core-php.git",
+                "reference": "0e92f75487dc6d452f5ff9794295760bb9dcb19b"
+            },
             "dist": {
-                "type": "path",
-                "url": "../../LedgerDirectCorePHP/ledger-direct-core-php",
-                "reference": "5866a3fadbec3459c63e3a4d5b64acb4eb8f5464"
+                "type": "zip",
+                "url": "https://api.github.com/repos/ledger-direct/ledger-direct-core-php/zipball/0e92f75487dc6d452f5ff9794295760bb9dcb19b",
+                "reference": "0e92f75487dc6d452f5ff9794295760bb9dcb19b",
+                "shasum": ""
             },
             "require": {
-                "brick/math": "^0.12",
+                "brick/math": "^0.12 || ^0.13 || ^0.14 || ^0.15 || ^0.16 || ^0.17 || ^0.18 || ^0.19 || ^0.20",
                 "php": "^8.2",
                 "psr/http-client": "^1.0",
                 "psr/http-factory": "^1.0",
@@ -528,11 +534,7 @@
                     "Hardcastle\\LedgerDirect\\Core\\": "src/"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Hardcastle\\LedgerDirect\\Core\\Tests\\": "tests/"
-                }
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -544,10 +546,11 @@
                 }
             ],
             "description": "LedgerDirect Core - platform-agnostic XRPL/commerce logic shared across all LedgerDirect plugins",
-            "transport-options": {
-                "symlink": false,
-                "relative": true
-            }
+            "support": {
+                "issues": "https://github.com/ledger-direct/ledger-direct-core-php/issues",
+                "source": "https://github.com/ledger-direct/ledger-direct-core-php/tree/0.1.0"
+            },
+            "time": "2026-09-03T12:15:07+00:00"
         },
         {
             "name": "psr/http-client",
@@ -1013,9 +1016,7 @@
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "hardcastle/ledger-direct-core": 20
-    },
+    "stability-flags": {},
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
