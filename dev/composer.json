@@ -20,6 +20,9 @@
     "cs-fix": "php-cs-fixer fix --config=.php-cs-fixer.dist.php"
   },
   "config": {
-    "sort-packages": true
+    "sort-packages": true,
+    "platform": {
+      "php": "8.2.0"
+    }
   }
 }
