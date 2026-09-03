@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace LedgerDirect\Log;
 
-use PrestaShopLogger;
 use Psr\Log\AbstractLogger;
 use Psr\Log\LogLevel;
-use Stringable;
 
 /**
  * PSR-3 sink for the core, writing into PrestaShop's own log (Advanced
@@ -32,7 +30,7 @@ final class PrestaShopLoggerAdapter extends AbstractLogger
     /**
      * @param array<string, mixed> $context
      */
-    public function log($level, string|Stringable $message, array $context = []): void
+    public function log($level, string|\Stringable $message, array $context = []): void
     {
         $severity = self::SEVERITY_BY_LEVEL[(string) $level] ?? 1;
 
@@ -41,6 +39,6 @@ final class PrestaShopLoggerAdapter extends AbstractLogger
             $line .= ' ' . json_encode($context, JSON_UNESCAPED_SLASHES | JSON_PARTIAL_OUTPUT_ON_ERROR);
         }
 
-        PrestaShopLogger::addLog('[LedgerDirect] ' . $line, $severity);
+        \PrestaShopLogger::addLog('[LedgerDirect] ' . $line, $severity);
     }
 }

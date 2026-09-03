@@ -6,7 +6,9 @@ use LedgerDirect\Service\PaymentSyncService;
 use LedgerDirect\Service\ServiceFactory;
 use LedgerDirect\Storage\OrderPaymentIntentRepository;
 
-if (!defined('_PS_VERSION_')) { exit; }
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * The payment instructions page: what to send, where, and with which
@@ -81,7 +83,7 @@ class LedgerdirectPaymentModuleFrontController extends ModuleFrontController
     {
         parent::initContent();
 
-        if (!($this->module instanceof Ledgerdirect)) {
+        if (!$this->module instanceof Ledgerdirect) {
             Tools::redirect('index.php?controller=history');
 
             return;

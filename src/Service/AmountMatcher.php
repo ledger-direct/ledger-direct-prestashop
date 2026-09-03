@@ -30,7 +30,8 @@ final class AmountMatcher
 
     /**
      * @param float|array<string, mixed> $delivered what the ledger delivered,
-     *     already decoded by the core (XrplTransaction::getDeliveredAmount())
+     *                                              already decoded by the core (XrplTransaction::getDeliveredAmount())
+     *
      * @return self::RESULT_*
      */
     public static function evaluate(PaymentIntent $paymentIntent, float|array $delivered): string

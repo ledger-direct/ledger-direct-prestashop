@@ -5,14 +5,11 @@ declare(strict_types=1);
 namespace LedgerDirect\Admin;
 
 use Configuration;
-use Context;
-use HelperForm;
 use Hardcastle\LedgerDirect\Core\Xrpl\StablecoinRegistry;
 use LedgerDirect\Port\PrestaShopConfigProvider;
 use LedgerDirect\Validation\XrplAddress;
 use Module;
 use PrestaShopBundle\Translation\TranslatorInterface;
-use Tools;
 
 /**
  * The module's settings screen.
@@ -35,7 +32,7 @@ final class ConfigurationForm
     private const QUOTE_EXPIRY_MIN = 60;
     private const QUOTE_EXPIRY_MAX = 3600;
 
-    public function __construct(private readonly Module $module)
+    public function __construct(private readonly \Module $module)
     {
     }
 
@@ -52,7 +49,7 @@ final class ConfigurationForm
     {
         $output = '';
 
-        if (Tools::isSubmit(self::SUBMIT_ACTION)) {
+        if (\Tools::isSubmit(self::SUBMIT_ACTION)) {
             $errors = $this->save();
 
             $output .= $errors === []
@@ -70,13 +67,13 @@ final class ConfigurationForm
     {
         $errors = [];
 
-        $destinationAccount = trim((string) Tools::getValue(PrestaShopConfigProvider::KEY_DESTINATION_ACCOUNT));
-        $network = (string) Tools::getValue(PrestaShopConfigProvider::KEY_NETWORK);
-        $quoteExpiry = (int) Tools::getValue(PrestaShopConfigProvider::KEY_QUOTE_EXPIRY);
+        $destinationAccount = trim((string) \Tools::getValue(PrestaShopConfigProvider::KEY_DESTINATION_ACCOUNT));
+        $network = (string) \Tools::getValue(PrestaShopConfigProvider::KEY_NETWORK);
+        $quoteExpiry = (int) \Tools::getValue(PrestaShopConfigProvider::KEY_QUOTE_EXPIRY);
 
         $enabledAssets = [];
         foreach (self::assetKeys() as $asset => $key) {
-            if ((bool) Tools::getValue($key)) {
+            if ((bool) \Tools::getValue($key)) {
                 $enabledAssets[] = $asset;
             }
         }
@@ -105,12 +102,12 @@ final class ConfigurationForm
             return $errors;
         }
 
-        Configuration::updateValue(PrestaShopConfigProvider::KEY_DESTINATION_ACCOUNT, $destinationAccount);
-        Configuration::updateValue(PrestaShopConfigProvider::KEY_NETWORK, $network);
-        Configuration::updateValue(PrestaShopConfigProvider::KEY_QUOTE_EXPIRY, $quoteExpiry);
+        \Configuration::updateValue(PrestaShopConfigProvider::KEY_DESTINATION_ACCOUNT, $destinationAccount);
+        \Configuration::updateValue(PrestaShopConfigProvider::KEY_NETWORK, $network);
+        \Configuration::updateValue(PrestaShopConfigProvider::KEY_QUOTE_EXPIRY, $quoteExpiry);
 
         foreach (self::assetKeys() as $key) {
-            Configuration::updateValue($key, (bool) Tools::getValue($key));
+            \Configuration::updateValue($key, (bool) \Tools::getValue($key));
         }
 
         return [];
@@ -118,12 +115,12 @@ final class ConfigurationForm
 
     private function renderForm(): string
     {
-        $language = (int) Context::getContext()->language->id;
+        $language = (int) \Context::getContext()->language->id;
 
-        $helper = new HelperForm();
+        $helper = new \HelperForm();
         $helper->module = $this->module;
         $helper->name_controller = $this->module->name;
-        $helper->token = Tools::getAdminTokenLite('AdminModules');
+        $helper->token = \Tools::getAdminTokenLite('AdminModules');
         $helper->currentIndex = 'index.php?controller=AdminModules&configure=' . $this->module->name;
         $helper->submit_action = self::SUBMIT_ACTION;
         $helper->default_form_language = $language;
@@ -132,13 +129,13 @@ final class ConfigurationForm
         $helper->show_toolbar = false;
 
         $helper->fields_value = [
-            PrestaShopConfigProvider::KEY_DESTINATION_ACCOUNT => Configuration::get(PrestaShopConfigProvider::KEY_DESTINATION_ACCOUNT),
-            PrestaShopConfigProvider::KEY_NETWORK => Configuration::get(PrestaShopConfigProvider::KEY_NETWORK),
-            PrestaShopConfigProvider::KEY_QUOTE_EXPIRY => Configuration::get(PrestaShopConfigProvider::KEY_QUOTE_EXPIRY),
+            PrestaShopConfigProvider::KEY_DESTINATION_ACCOUNT => \Configuration::get(PrestaShopConfigProvider::KEY_DESTINATION_ACCOUNT),
+            PrestaShopConfigProvider::KEY_NETWORK => \Configuration::get(PrestaShopConfigProvider::KEY_NETWORK),
+            PrestaShopConfigProvider::KEY_QUOTE_EXPIRY => \Configuration::get(PrestaShopConfigProvider::KEY_QUOTE_EXPIRY),
         ];
 
         foreach (self::assetKeys() as $key) {
-            $helper->fields_value[$key] = Configuration::get($key);
+            $helper->fields_value[$key] = \Configuration::get($key);
         }
 
         return $helper->generateForm([$this->formDefinition()]);
@@ -256,7 +253,7 @@ final class ConfigurationForm
      */
     private function renderCronPanel(): string
     {
-        $url = Context::getContext()->link->getModuleLink(
+        $url = \Context::getContext()->link->getModuleLink(
             $this->module->name,
             'cron',
             ['token' => PrestaShopConfigProvider::getCronToken()],

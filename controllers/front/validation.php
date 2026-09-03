@@ -4,7 +4,9 @@ use LedgerDirect\Port\PrestaShopConfigProvider;
 use LedgerDirect\Service\ServiceFactory;
 use LedgerDirect\Storage\OrderPaymentIntentRepository;
 
-if (!defined('_PS_VERSION_')) { exit; }
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * Turns a cart into an order sitting in "Awaiting XRPL payment", with a

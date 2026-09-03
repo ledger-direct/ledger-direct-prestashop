@@ -3,7 +3,9 @@
 use LedgerDirect\Port\PrestaShopConfigProvider;
 use LedgerDirect\Service\PaymentSyncService;
 
-if (!defined('_PS_VERSION_')) { exit; }
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 /**
  * The safety net: syncs the ledger and settles every waiting order.

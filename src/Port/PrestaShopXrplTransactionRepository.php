@@ -7,9 +7,7 @@ namespace LedgerDirect\Port;
 use Db;
 use Hardcastle\LedgerDirect\Core\Port\XrplTransactionRepositoryInterface;
 use Hardcastle\LedgerDirect\Core\Xrpl\XrplTransaction;
-use JsonException;
 use LedgerDirect\Install\Installer;
-use RuntimeException;
 
 /**
  * Persistence for the two XRPL tables, on PrestaShop's `Db` layer.
@@ -37,7 +35,7 @@ final class PrestaShopXrplTransactionRepository implements XrplTransactionReposi
      */
     public function nextDestinationTagSequence(string $destinationAccount): int
     {
-        $db = Db::getInstance();
+        $db = \Db::getInstance();
 
         $sql = 'INSERT INTO `' . self::table(Installer::TABLE_DESTINATION_TAG) . '`
                     (`destination_account`, `sequence`)
@@ -45,9 +43,7 @@ final class PrestaShopXrplTransactionRepository implements XrplTransactionReposi
                 ON DUPLICATE KEY UPDATE `sequence` = LAST_INSERT_ID(`sequence` + 1)';
 
         if (!$db->execute($sql)) {
-            throw new RuntimeException(
-                'LedgerDirect: could not issue a destination-tag sequence for ' . $destinationAccount . '.'
-            );
+            throw new \RuntimeException('LedgerDirect: could not issue a destination-tag sequence for ' . $destinationAccount . '.');
         }
 
         return ((int) $db->Insert_ID()) - 1;
@@ -55,6 +51,7 @@ final class PrestaShopXrplTransactionRepository implements XrplTransactionReposi
 
     /**
      * @param string[] $hashes
+     *
      * @return string[]
      */
     public function findExistingHashes(array $hashes): array
@@ -71,7 +68,7 @@ final class PrestaShopXrplTransactionRepository implements XrplTransactionReposi
             return [];
         }
 
-        $rows = Db::getInstance()->executeS(
+        $rows = \Db::getInstance()->executeS(
             'SELECT `hash` FROM `' . self::table(Installer::TABLE_TX) . '`
              WHERE `hash` IN (' . implode(',', $escaped) . ')'
         );
@@ -117,14 +114,14 @@ final class PrestaShopXrplTransactionRepository implements XrplTransactionReposi
                     (`ledger_index`, `hash`, `ctid`, `account`, `destination`, `destination_tag`, `date`, `meta`, `tx`)
                 VALUES ' . implode(',', $values);
 
-        if (!Db::getInstance()->execute($sql)) {
-            throw new RuntimeException('LedgerDirect: could not store synced XRPL transactions.');
+        if (!\Db::getInstance()->execute($sql)) {
+            throw new \RuntimeException('LedgerDirect: could not store synced XRPL transactions.');
         }
     }
 
     public function findTransaction(string $destination, int $destinationTag): ?XrplTransaction
     {
-        $rows = Db::getInstance()->executeS(
+        $rows = \Db::getInstance()->executeS(
             'SELECT * FROM `' . self::table(Installer::TABLE_TX) . '`
              WHERE `destination` = "' . self::esc($destination) . '"
                AND `destination_tag` = ' . $destinationTag . '
@@ -145,7 +142,7 @@ final class PrestaShopXrplTransactionRepository implements XrplTransactionReposi
         // The column is deliberately not a string type: ledger indices compared
         // lexicographically would order "9" above "10" and the sync would then
         // re-fetch from the wrong point forever.
-        $value = Db::getInstance()->getValue(
+        $value = \Db::getInstance()->getValue(
             'SELECT MAX(`ledger_index`) FROM `' . self::table(Installer::TABLE_TX) . '`',
             false
         );
@@ -160,8 +157,8 @@ final class PrestaShopXrplTransactionRepository implements XrplTransactionReposi
      */
     public function truncate(): void
     {
-        if (!Db::getInstance()->execute('TRUNCATE TABLE `' . self::table(Installer::TABLE_TX) . '`')) {
-            throw new RuntimeException('LedgerDirect: could not truncate the XRPL transaction table.');
+        if (!\Db::getInstance()->execute('TRUNCATE TABLE `' . self::table(Installer::TABLE_TX) . '`')) {
+            throw new \RuntimeException('LedgerDirect: could not truncate the XRPL transaction table.');
         }
     }
 
@@ -190,12 +187,8 @@ final class PrestaShopXrplTransactionRepository implements XrplTransactionReposi
     {
         try {
             return json_encode($value, JSON_THROW_ON_ERROR);
-        } catch (JsonException $exception) {
-            throw new RuntimeException(
-                'LedgerDirect: could not serialise XRPL transaction data: ' . $exception->getMessage(),
-                0,
-                $exception
-            );
+        } catch (\JsonException $exception) {
+            throw new \RuntimeException('LedgerDirect: could not serialise XRPL transaction data: ' . $exception->getMessage(), 0, $exception);
         }
     }
 
@@ -206,12 +199,8 @@ final class PrestaShopXrplTransactionRepository implements XrplTransactionReposi
     {
         try {
             $decoded = json_decode($value, true, 512, JSON_THROW_ON_ERROR);
-        } catch (JsonException $exception) {
-            throw new RuntimeException(
-                'LedgerDirect: stored XRPL transaction data is not valid JSON: ' . $exception->getMessage(),
-                0,
-                $exception
-            );
+        } catch (\JsonException $exception) {
+            throw new \RuntimeException('LedgerDirect: stored XRPL transaction data is not valid JSON: ' . $exception->getMessage(), 0, $exception);
         }
 
         return is_array($decoded) ? $decoded : [];
@@ -235,6 +224,6 @@ final class PrestaShopXrplTransactionRepository implements XrplTransactionReposi
      */
     private static function esc(string $value): string
     {
-        return Db::getInstance()->escape($value, true, false);
+        return \Db::getInstance()->escape($value, true, false);
     }
 }

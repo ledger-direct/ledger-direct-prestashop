@@ -4,15 +4,8 @@ declare(strict_types=1);
 
 namespace LedgerDirect\Tests\Integration;
 
-use Configuration;
-use Context;
-use Country;
-use Currency;
 use Customer;
-use Language;
-use Link;
 use PHPUnit\Framework\TestCase;
-use RuntimeException;
 
 /**
  * Boots a real PrestaShop for the tests that need one.
@@ -41,11 +34,7 @@ abstract class IntegrationTestCase extends TestCase
         }
 
         if (!is_file(self::PS_ROOT . '/config/config.inc.php')) {
-            throw new RuntimeException(
-                'The integration suite needs a PrestaShop installation at ' . self::PS_ROOT
-                . '. Run it inside the container: docker compose exec -u www-data prestashop '
-                . 'php modules/ledgerdirect/vendor/bin/phpunit --testsuite integration'
-            );
+            throw new \RuntimeException('The integration suite needs a PrestaShop installation at ' . self::PS_ROOT . '. Run it inside the container: docker compose exec -u www-data prestashop php modules/ledgerdirect/vendor/bin/phpunit --testsuite integration');
         }
 
         // Legacy bootstrap first — it defines _PS_ROOT_DIR_, which the kernel
@@ -58,13 +47,13 @@ abstract class IntegrationTestCase extends TestCase
         $kernel = new \FrontKernel('dev', true);
         $kernel->boot();
 
-        $context = Context::getContext();
+        $context = \Context::getContext();
         $context->container = $kernel->getContainer();
-        $context->link = new Link();
-        $context->language = new Language((int) Configuration::get('PS_LANG_DEFAULT'));
-        $context->currency = new Currency((int) Configuration::get('PS_CURRENCY_DEFAULT'));
-        $context->country = new Country((int) Configuration::get('PS_COUNTRY_DEFAULT'));
-        $context->customer = new Customer(self::customerId());
+        $context->link = new \Link();
+        $context->language = new \Language((int) \Configuration::get('PS_LANG_DEFAULT'));
+        $context->currency = new \Currency((int) \Configuration::get('PS_CURRENCY_DEFAULT'));
+        $context->country = new \Country((int) \Configuration::get('PS_COUNTRY_DEFAULT'));
+        $context->customer = new \Customer(self::customerId());
 
         self::$booted = true;
     }
