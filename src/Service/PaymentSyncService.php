@@ -126,37 +126,39 @@ final class PaymentSyncService
             return false;
         }
 
-        $result = AmountMatcher::evaluate($paymentIntent, $delivered);
+        $fulfilled = $paymentIntent->withFulfillment($transaction->hash, $delivered, $transaction->ctid);
+        $policy = $this->services->getSettlementPolicy();
 
-        if ($result !== AmountMatcher::RESULT_SETTLED) {
+        if (!$policy->isSettled($fulfilled)) {
+            // The core credits nothing for a token that is not the requested one
+            // (same name, other issuer, or another currency code), so a shortfall
+            // equal to the request means "wrong asset", not "too little".
+            $shortfall = (string) $policy->shortfall($fulfilled);
+
             $this->services->getLogger()->warning('Payment does not settle the order', [
                 'id_order' => $orderId,
                 'hash' => $transaction->hash,
-                'result' => $result,
+                'result' => $shortfall === $fulfilled->amountRequestedValue() ? 'wrong_asset' : 'underpaid',
                 'requested' => $paymentIntent->amountRequested,
                 'delivered' => $delivered,
+                'shortfall' => $shortfall,
             ]);
 
             return false;
         }
 
-        return $this->settle($order, $paymentIntent, $transaction->hash, $transaction->ctid, $delivered);
+        return $this->settle($order, $fulfilled);
     }
 
     /**
-     * @param float|array<string, mixed> $delivered
+     * @param PaymentIntent $fulfilled the intent with hash, ctid and delivered amount set
      */
-    private function settle(
-        \Order $order,
-        PaymentIntent $paymentIntent,
-        string $hash,
-        string $ctid,
-        float|array $delivered,
-    ): bool {
+    private function settle(\Order $order, PaymentIntent $fulfilled): bool
+    {
         $orderId = (int) $order->id;
         $paidStateId = (int) \Configuration::get('PS_OS_PAYMENT');
-
-        $fulfilled = $paymentIntent->withFulfillment($hash, $delivered, $ctid);
+        $hash = (string) $fulfilled->hash;
+        $ctid = $fulfilled->ctid;
 
         // Record the fulfillment first: if anything below fails, the next run
         // sees hash !== null and stops rather than crediting the transaction

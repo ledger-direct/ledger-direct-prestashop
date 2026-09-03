@@ -7,6 +7,7 @@ namespace LedgerDirect\Service;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\HttpFactory;
 use Hardcastle\LedgerDirect\Core\Payment\PaymentIntentService;
+use Hardcastle\LedgerDirect\Core\Payment\SettlementPolicy;
 use Hardcastle\LedgerDirect\Core\Price\PriceService;
 use Hardcastle\LedgerDirect\Core\Xrpl\DestinationTagService;
 use Hardcastle\LedgerDirect\Core\Xrpl\SyncService;
@@ -41,6 +42,7 @@ final class ServiceFactory
     private ?PriceService $priceService = null;
     private ?PaymentIntentService $paymentIntentService = null;
     private ?SyncService $syncService = null;
+    private ?SettlementPolicy $settlementPolicy = null;
 
     private function __construct()
     {
@@ -114,6 +116,16 @@ final class ServiceFactory
             new DestinationTagService($this->getTransactionRepository()),
             $this->getConfigProvider()
         );
+    }
+
+    /**
+     * The decision whether a delivered amount pays for a quote — the core's, so
+     * every LedgerDirect plugin calls an order paid under the same conditions
+     * (INVARIANTS.md, "Settlement").
+     */
+    public function getSettlementPolicy(): SettlementPolicy
+    {
+        return $this->settlementPolicy ??= new SettlementPolicy();
     }
 
     public function getSyncService(): SyncService
