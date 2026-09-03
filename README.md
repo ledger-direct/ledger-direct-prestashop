@@ -1,5 +1,7 @@
 # LedgerDirect for PrestaShop
 
+[![CI](https://github.com/ledger-direct/prestashop/actions/workflows/ci.yml/badge.svg)](https://github.com/ledger-direct/prestashop/actions/workflows/ci.yml)
+
 Accept XRP, RLUSD and USDC directly on the XRP Ledger — no payment processor, no custody, funds
 land in the merchant's own wallet.
 
@@ -99,6 +101,26 @@ docker compose exec -u www-data -w /var/www/html/modules/ledgerdirect prestashop
 
 The unit suite runs anywhere. The integration suite needs a booted PrestaShop and its database, and
 is offline by design — it builds payment records directly rather than calling live price oracles.
+
+The code follows the [PrestaShop coding standard](https://github.com/PrestaShop/php-dev-tools):
+
+```
+composer cs-check -d dev        # report violations
+composer cs-fix -d dev          # fix them
+```
+
+### Continuous integration
+
+Every push and pull request runs `.github/workflows/ci.yml`, modelled on the checks PrestaShop
+applies to its own modules: PHP syntax on 8.2–8.4, PHP-CS-Fixer, PHPStan against PrestaShop 9.0 and
+9.1, both PHPUnit suites, and a release archive. The integration suite runs in
+[PrestaShop Flashlight](https://github.com/PrestaShop/prestashop-flashlight), a pre-installed shop
+that boots from a dump; the same stack can be started locally with
+`docker compose -f dev/ci/docker-compose.yml up -d --wait` (shop on :8000).
+
+The release job builds the zip a merchant uploads: `git archive` applies the `export-ignore` rules
+in `.gitattributes`, runtime dependencies are bundled with `composer install --no-dev`, and every
+directory gets an `index.php`. The zip is attached to the workflow run as an artifact.
 
 ## Translations
 

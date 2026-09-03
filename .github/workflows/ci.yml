@@ -1,0 +1,227 @@
+# Continuous integration for the module.
+#
+# Follows the checks PrestaShop runs on its own modules (ps_wirepayment,
+# ps_checkpayment): PHP syntax across the supported PHP versions, the
+# PrestaShop coding standard via PHP-CS-Fixer, PHPStan against real PrestaShop
+# sources, and a release artefact built the way the marketplace expects it.
+# On top of that come the module's own PHPUnit suites: the unit suite on the
+# runner, the integration suite inside PrestaShop Flashlight, a pre-installed
+# shop that boots from a database dump in seconds.
+#
+# The development tooling lives in dev/ as a separate Composer project so it
+# never lands in the module's vendor/ (PrestaShop autoloads that on every
+# request). Every job that needs it installs both projects.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # PrestaShop 9 requires PHP 8.1; the module and the core require 8.2.
+  PHP_MIN: '8.2'
+
+jobs:
+  # Syntax check across every PHP version the module claims to support. The
+  # PHP version is part of the action path, and `uses:` cannot take an
+  # expression, so the steps are spelled out.
+  lint:
+    name: PHP syntax 8.2 => 8.4
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: PHP syntax checker 8.2
+        uses: prestashop/github-action-php-lint/8.2@master
+
+      - name: PHP syntax checker 8.3
+        uses: prestashop/github-action-php-lint/8.3@master
+
+      - name: PHP syntax checker 8.4
+        uses: prestashop/github-action-php-lint/8.4@master
+
+  # PrestaShop's coding standard (prestashop/php-dev-tools), checked, not fixed.
+  coding-standard:
+    name: PHP-CS-Fixer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_MIN }}
+          coverage: none
+
+      - name: Install development tooling
+        uses: ramsey/composer-install@v3
+        with:
+          working-directory: dev
+
+      - name: Check coding standard
+        run: dev/vendor/bin/php-cs-fixer fix --config=dev/.php-cs-fixer.dist.php --dry-run --diff --show-progress=none
+
+  # No PrestaShop, no database, no network. Runs on the oldest and newest PHP.
+  unit:
+    name: Unit tests (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.2', '8.4']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+
+      - name: Install module dependencies
+        uses: ramsey/composer-install@v3
+
+      - name: Install development tooling
+        uses: ramsey/composer-install@v3
+        with:
+          working-directory: dev
+
+      - name: Run unit suite
+        run: dev/vendor/bin/phpunit -c dev/phpunit.xml.dist --testsuite unit --do-not-cache-result
+
+  # Static analysis against the actual PrestaShop sources, one job per
+  # supported PrestaShop release line. The official image ships the complete
+  # source tree at /var/www/html, which is exactly what dev/phpstan.neon.dist
+  # scans, so the analysis in CI matches the one run against the local shop.
+  phpstan:
+    name: PHPStan (PrestaShop ${{ matrix.prestashop }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # <PrestaShop line>-<PHP version> tags of prestashop/prestashop.
+        prestashop: ['9.0-8.2', '9.1-8.4']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_MIN }}
+          coverage: none
+
+      - name: Install module dependencies
+        uses: ramsey/composer-install@v3
+
+      - name: Install development tooling
+        uses: ramsey/composer-install@v3
+        with:
+          working-directory: dev
+
+      - name: Run PHPStan inside prestashop/prestashop:${{ matrix.prestashop }}
+        run: |
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE":/var/www/html/modules/ledgerdirect \
+            -w /var/www/html/modules/ledgerdirect \
+            prestashop/prestashop:${{ matrix.prestashop }} \
+            php dev/vendor/bin/phpstan analyse -c dev/phpstan.neon.dist --no-progress --error-format=github
+
+  # Real database, real orders, real ObjectModel behaviour. Flashlight brings
+  # up an installed PrestaShop 9 with demo data from a dump; the module is
+  # mounted in and installed through the console, exactly like a merchant
+  # install minus the Back Office.
+  integration:
+    name: Integration tests (Flashlight)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_MIN }}
+          coverage: none
+
+      - name: Install module dependencies
+        uses: ramsey/composer-install@v3
+
+      - name: Install development tooling
+        uses: ramsey/composer-install@v3
+        with:
+          working-directory: dev
+
+      - name: Start PrestaShop Flashlight
+        run: docker compose -f dev/ci/docker-compose.yml up -d --wait --quiet-pull
+
+      - name: Install the module
+        run: docker compose -f dev/ci/docker-compose.yml exec -T prestashop php bin/console prestashop:module install ledgerdirect
+
+      - name: Run integration suite
+        run: |
+          docker compose -f dev/ci/docker-compose.yml exec -T -w /var/www/html/modules/ledgerdirect prestashop \
+            php dev/vendor/bin/phpunit -c dev/phpunit.xml.dist --testsuite integration --do-not-cache-result
+
+      - name: Show container logs
+        if: failure()
+        run: docker compose -f dev/ci/docker-compose.yml logs --no-color
+
+      - name: Stop PrestaShop Flashlight
+        if: always()
+        run: docker compose -f dev/ci/docker-compose.yml down -v
+
+  # The distributable module: what a merchant uploads in the Back Office and
+  # what the marketplace validator receives. `git archive` applies the
+  # export-ignore rules in .gitattributes, so tests and tooling stay out;
+  # runtime dependencies are bundled because PrestaShop does not run Composer
+  # for a module. Every directory gets an index.php, as the validator requires.
+  build:
+    name: Release archive
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_MIN }}
+          coverage: none
+
+      - name: Export the module sources
+        run: |
+          mkdir -p build
+          git archive --format=tar --prefix=ledgerdirect/ HEAD | tar -x -C build
+
+      - name: Bundle runtime dependencies
+        working-directory: build/ledgerdirect
+        run: composer install --no-dev --no-interaction --no-progress --optimize-autoloader --classmap-authoritative
+
+      - name: Guard every directory with an index.php
+        working-directory: build/ledgerdirect
+        run: |
+          find . -type d -not -exec test -e '{}/index.php' \; -print | while read -r dir; do
+            cp index.php "$dir/index.php"
+          done
+
+      - name: Check the archive for development leftovers
+        working-directory: build/ledgerdirect
+        run: |
+          for forbidden in dev tests .gitattributes .gitignore .github payment_page.png; do
+            if [ -e "$forbidden" ]; then
+              echo "::error::$forbidden must not ship in the release archive"
+              exit 1
+            fi
+          done
+          test -f ledgerdirect.php && test -f logo.png && test -f LICENSE.md && test -d vendor/hardcastle/ledger-direct-core
+
+      - name: Create the zip
+        working-directory: build
+        run: zip -qr ledgerdirect.zip ledgerdirect
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ledgerdirect
+          path: build/ledgerdirect.zip
+          if-no-files-found: error

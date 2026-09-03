@@ -1,0 +1,21 @@
+# Keeps the module's runtime dependencies (vendor/), the development tooling
+# (dev/vendor/) and the actions in the workflows current. The two Composer
+# projects are separate on purpose; see dev/composer.json.
+version: 2
+updates:
+  - package-ecosystem: composer
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: composer
+    directory: /dev
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

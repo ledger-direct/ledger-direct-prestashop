@@ -1,0 +1,45 @@
+# Throwaway PrestaShop for the integration suite in CI.
+#
+# Flashlight is PrestaShop's pre-installed image: the shop comes up from a
+# database dump in seconds instead of running the installer. The module is
+# mounted the same way the local harness does it, as modules/ledgerdirect.
+#
+#   docker compose -f dev/ci/docker-compose.yml up -d --wait
+#   docker compose -f dev/ci/docker-compose.yml exec prestashop php bin/console prestashop:module install ledgerdirect
+#   docker compose -f dev/ci/docker-compose.yml exec -w /var/www/html/modules/ledgerdirect prestashop \
+#     php dev/vendor/bin/phpunit -c dev/phpunit.xml.dist --testsuite integration
+services:
+  mysql:
+    image: mariadb:11
+    environment:
+      MYSQL_ROOT_PASSWORD: prestashop
+      MYSQL_DATABASE: prestashop
+      MYSQL_USER: prestashop
+      MYSQL_PASSWORD: prestashop
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  prestashop:
+    image: prestashop/prestashop-flashlight:${FLASHLIGHT_TAG:-9.0.0-8.2-nginx}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      PS_DOMAIN: localhost:8000
+      MYSQL_HOST: mysql
+      MYSQL_USER: prestashop
+      MYSQL_PASSWORD: prestashop
+      MYSQL_DATABASE: prestashop
+      DEBUG_MODE: "true"
+    ports:
+      - "8000:80"
+    volumes:
+      - ../..:/var/www/html/modules/ledgerdirect
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://localhost/"]
+      interval: 5s
+      timeout: 10s
+      retries: 40
