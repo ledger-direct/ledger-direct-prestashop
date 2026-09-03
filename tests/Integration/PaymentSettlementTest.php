@@ -127,6 +127,20 @@ final class PaymentSettlementTest extends IntegrationTestCase
         self::assertSame(Installer::getOrderStateId(), $this->currentState());
     }
 
+    /**
+     * The core's SettlementPolicy tolerates 0.15 % on the native asset (a quote is a float
+     * rounded to five places, wallets may shave rounding). A single drop short therefore
+     * settles now — the previous local matcher rejected it. Both are defensible; what matters
+     * is that every LedgerDirect plugin decides the same way, so the rule lives in the core.
+     */
+    public function testAPaymentWithinTheCoreToleranceSettles(): void
+    {
+        $this->plant(['delivered_amount' => (string) ((int) self::AMOUNT_DROPS - 1)]);
+
+        self::assertTrue($this->sync()->matchOrder((int) $this->order->id));
+        self::assertSame((int) \Configuration::get('PS_OS_PAYMENT'), $this->currentState());
+    }
+
     public function testPaymentUnderAnotherDestinationTagDoesNotSettle(): void
     {
         $this->plant(['delivered_amount' => self::AMOUNT_DROPS], $this->destinationTag + 1);
