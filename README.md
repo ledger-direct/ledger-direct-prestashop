@@ -1,6 +1,6 @@
 # LedgerDirect for PrestaShop
 
-[![CI](https://github.com/ledger-direct/prestashop/actions/workflows/ci.yml/badge.svg)](https://github.com/ledger-direct/prestashop/actions/workflows/ci.yml)
+[![CI](https://github.com/ledger-direct/ledger-direct-prestashop/actions/workflows/ci.yml/badge.svg)](https://github.com/ledger-direct/ledger-direct-prestashop/actions/workflows/ci.yml)
 
 Accept XRP, RLUSD and USDC directly on the XRP Ledger — no payment processor, no custody, funds
 land in the merchant's own wallet.
