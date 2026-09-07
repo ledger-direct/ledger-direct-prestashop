@@ -149,6 +149,38 @@ final class PaymentSettlementTest extends IntegrationTestCase
         self::assertSame(Installer::getOrderStateId(), $this->currentState());
     }
 
+    /**
+     * A tag can carry more than one transaction. Before core 0.3 the first row
+     * on the tag was taken as the payment; a stray RLUSD transfer sitting there
+     * then made withFulfillment() reject the shape, the sync aborted, and the
+     * real XRP payment behind it was never looked at. The core now picks the
+     * newest candidate in the quote's asset class.
+     */
+    public function testAStrayPaymentInAnotherAssetClassIsSkippedInFavourOfTheRealOne(): void
+    {
+        $xrpHash = $this->plant(['delivered_amount' => self::AMOUNT_DROPS], null, '20180000');
+        $this->plant([
+            'delivered_amount' => ['currency' => 'RLUSD', 'value' => '20', 'issuer' => 'rIssuerTest'],
+        ], null, '20180005');
+
+        self::assertTrue($this->sync()->matchOrder((int) $this->order->id));
+        self::assertSame($xrpHash, $this->intents->find((int) $this->order->id)?->hash);
+    }
+
+    /**
+     * Two XRP payments on the tag: the newest is the candidate, and it is
+     * judged on its own. An old underpayment does not add up with a later one,
+     * and an old full payment does not rescue a later short one.
+     */
+    public function testTheNewestPaymentInClassIsTheCandidate(): void
+    {
+        $this->plant(['delivered_amount' => self::AMOUNT_DROPS], null, '20180000');
+        $this->plant(['delivered_amount' => '1000000'], null, '20180009');
+
+        self::assertFalse($this->sync()->matchOrder((int) $this->order->id));
+        self::assertSame(Installer::getOrderStateId(), $this->currentState());
+    }
+
     public function testExactPaymentSettlesTheOrder(): void
     {
         $hash = $this->plant(['delivered_amount' => self::AMOUNT_DROPS]);
@@ -201,14 +233,15 @@ final class PaymentSettlementTest extends IntegrationTestCase
      *
      * @return string the transaction hash
      */
-    private function plant(array $meta, ?int $tag = null): string
+    private function plant(array $meta, ?int $tag = null, string $ledgerIndex = '20180000'): string
     {
         $hash = strtoupper(bin2hex(random_bytes(32)));
         $this->plantedHashes[] = $hash;
 
         ServiceFactory::getInstance()->getTransactionRepository()->saveTransactions([
             new XrplTransaction(
-                ledgerIndex: '20180000',
+                network: 'testnet',
+                ledgerIndex: $ledgerIndex,
                 hash: $hash,
                 ctid: 'C133E44700020001',
                 account: 'rSenderTest',

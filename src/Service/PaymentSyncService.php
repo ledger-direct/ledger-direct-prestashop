@@ -91,38 +91,18 @@ final class PaymentSyncService
             return false;
         }
 
-        $transaction = $this->services->getSyncService()->findTransaction(
-            $paymentIntent->destinationAccount,
-            $paymentIntent->destinationTag
-        );
-
+        // Which transaction on the tag is the one that pays — the core's
+        // decision: the newest candidate in the quote's asset class. A stray
+        // payment in the other class, a non-payment (EscrowCreate, CheckCreate)
+        // or an unreadable delivered amount is skipped and logged there, so a
+        // wrong row can no longer hide the right one behind it.
+        $transaction = $this->services->getSyncService()->findTransactionFor($paymentIntent);
         if ($transaction === null) {
             return false;
         }
 
-        try {
-            $delivered = $transaction->getDeliveredAmount();
-        } catch (\Throwable $exception) {
-            // Includes the ledger's "unavailable" marker: money arrived but
-            // the amount cannot be reconstructed. Never settle on a guess —
-            // this is a case for a human.
-            $this->services->getLogger()->error('Matched a transaction with an unusable delivered amount', [
-                'id_order' => $orderId,
-                'hash' => $transaction->hash,
-                'exception' => $exception->getMessage(),
-            ]);
-
-            return false;
-        }
-
+        $delivered = $transaction->getDeliveredAmount();
         if ($delivered === null) {
-            // Not a Payment — an EscrowCreate or CheckCreate also carries a
-            // destination and tag and lands in the same table.
-            $this->services->getLogger()->warning('Transaction matched the tag but delivered nothing', [
-                'id_order' => $orderId,
-                'hash' => $transaction->hash,
-            ]);
-
             return false;
         }
 
