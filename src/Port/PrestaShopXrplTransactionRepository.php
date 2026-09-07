@@ -19,27 +19,40 @@ use LedgerDirect\Install\Installer;
 final class PrestaShopXrplTransactionRepository implements XrplTransactionRepositoryInterface
 {
     /**
-     * Issues the next sequence number for $destinationAccount: 0 on the first
-     * call for that account, 1 on the second, and so on.
+     * Issues the next sequence number for $destinationAccount: a random start
+     * in [0, 2^31 - 1] on the first call for that account, then +1 per call.
+     *
+     * Random rather than 0 because the core's tag permutation is public: a
+     * counter starting at 0 hands out the same tag sequence in every
+     * installation, and two shops on one receiving account then settle each
+     * other's orders (INVARIANTS.md, "Tables"). The permutation is a bijection
+     * over the whole range, so it does not care where the counter starts.
      *
      * Atomicity matters here — two customers checking out at the same moment
      * must never receive the same destination tag, or one order gets matched
      * against the other's payment. A SELECT-then-UPDATE pair has exactly that
      * race, so the counter is bumped in a *single* statement and the new value
      * is read back through LAST_INSERT_ID(), which is connection-local and
-     * therefore unaffected by whatever another request did in between.
+     * therefore unaffected by whatever another request did in between. The
+     * random start is drawn before the statement and only used when the row
+     * is created; a concurrent first call for the same account loses the
+     * insert and takes the +1 branch instead.
      *
-     * The stored column counts tags *issued* (1, 2, 3 …) so that the same
-     * statement works for the first insert and every later bump; the port's
-     * contract is a 0-based sequence, hence the -1.
+     * The stored column counts tags *issued* (start, start+1, …) so that the
+     * same statement works for the first insert and every later bump; the
+     * port's contract is the value before the bump, hence the -1.
      */
     public function nextDestinationTagSequence(string $destinationAccount): int
     {
         $db = \Db::getInstance();
 
+        // 1-based in storage, so the returned 0-based value lands in the
+        // contract's [0, 2^31 - 1].
+        $start = random_int(1, 2 ** 31);
+
         $sql = 'INSERT INTO `' . self::table(Installer::TABLE_DESTINATION_TAG) . '`
                     (`destination_account`, `sequence`)
-                VALUES ("' . self::esc($destinationAccount) . '", LAST_INSERT_ID(1))
+                VALUES ("' . self::esc($destinationAccount) . '", LAST_INSERT_ID(' . $start . '))
                 ON DUPLICATE KEY UPDATE `sequence` = LAST_INSERT_ID(`sequence` + 1)';
 
         if (!$db->execute($sql)) {
@@ -92,7 +105,8 @@ final class PrestaShopXrplTransactionRepository implements XrplTransactionReposi
         $values = [];
         foreach ($transactions as $transaction) {
             $values[] = sprintf(
-                '(%s, "%s", "%s", "%s", "%s", %s, %d, "%s", "%s")',
+                '("%s", %s, "%s", "%s", "%s", "%s", %s, %d, "%s", "%s")',
+                self::esc($transaction->network),
                 (string) (int) $transaction->ledgerIndex,
                 self::esc($transaction->hash),
                 self::esc($transaction->ctid),
@@ -111,7 +125,7 @@ final class PrestaShopXrplTransactionRepository implements XrplTransactionReposi
         // `hash` is what actually guarantees uniqueness; IGNORE just lets the
         // loser of the race proceed quietly instead of erroring.
         $sql = 'INSERT IGNORE INTO `' . self::table(Installer::TABLE_TX) . '`
-                    (`ledger_index`, `hash`, `ctid`, `account`, `destination`, `destination_tag`, `date`, `meta`, `tx`)
+                    (`network`, `ledger_index`, `hash`, `ctid`, `account`, `destination`, `destination_tag`, `date`, `meta`, `tx`)
                 VALUES ' . implode(',', $values);
 
         if (!\Db::getInstance()->execute($sql)) {
@@ -119,31 +133,45 @@ final class PrestaShopXrplTransactionRepository implements XrplTransactionReposi
         }
     }
 
-    public function findTransaction(string $destination, int $destinationTag): ?XrplTransaction
+    /**
+     * Every row on the pair, newest first. Which of them pays a given order is
+     * the core's call (SyncService::findTransactionFor()), so nothing is
+     * filtered here beyond destination and tag. The primary key breaks ties
+     * between rows from the same ledger so the order is total.
+     *
+     * @return XrplTransaction[]
+     */
+    public function findTransactions(string $destination, int $destinationTag): array
     {
         $rows = \Db::getInstance()->executeS(
             'SELECT * FROM `' . self::table(Installer::TABLE_TX) . '`
              WHERE `destination` = "' . self::esc($destination) . '"
                AND `destination_tag` = ' . $destinationTag . '
-             ORDER BY `ledger_index` ASC
-             LIMIT 1'
+             ORDER BY `ledger_index` DESC, `id_ledger_direct_xrpl_tx` DESC'
         );
 
-        if (!is_array($rows) || $rows === []) {
-            return null;
+        if (!is_array($rows)) {
+            return [];
         }
 
-        return self::hydrate($rows[0]);
+        return array_map(static fn (array $row): XrplTransaction => self::hydrate($row), $rows);
     }
 
-    public function getLastSyncedLedgerIndex(): ?string
+    /**
+     * Scoped by account *and* network, never a global maximum: a ledger index
+     * only means anything within one network, and one mainnet row would
+     * otherwise pin the cursor above every testnet ledger for good.
+     */
+    public function getLastSyncedLedgerIndex(string $destinationAccount, string $network): ?string
     {
         // MAX() over a BIGINT UNSIGNED column, so this is a numeric maximum.
         // The column is deliberately not a string type: ledger indices compared
         // lexicographically would order "9" above "10" and the sync would then
         // re-fetch from the wrong point forever.
         $value = \Db::getInstance()->getValue(
-            'SELECT MAX(`ledger_index`) FROM `' . self::table(Installer::TABLE_TX) . '`',
+            'SELECT MAX(`ledger_index`) FROM `' . self::table(Installer::TABLE_TX) . '`
+             WHERE `destination` = "' . self::esc($destinationAccount) . '"
+               AND `network` = "' . self::esc($network) . '"',
             false
         );
 
@@ -168,6 +196,7 @@ final class PrestaShopXrplTransactionRepository implements XrplTransactionReposi
     private static function hydrate(array $row): XrplTransaction
     {
         return new XrplTransaction(
+            network: (string) $row['network'],
             ledgerIndex: (string) $row['ledger_index'],
             hash: (string) $row['hash'],
             ctid: (string) $row['ctid'],

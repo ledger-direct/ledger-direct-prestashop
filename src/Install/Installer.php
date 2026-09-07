@@ -51,10 +51,82 @@ final class Installer
 
     public static function install(string $moduleName): bool
     {
+        // ensureSchema() after createTables(): uninstall keeps the tables, so
+        // a reinstall can meet a table created by an older version. That path
+        // runs no upgrade script — install() has to bring the schema up to
+        // date itself.
         return self::createTables()
+            && self::ensureSchema()
             && self::ensureOrderState($moduleName)
             && self::setDefaultConfiguration()
             && self::ensureCronToken();
+    }
+
+    /**
+     * Brings an existing `ledger_direct_xrpl_tx` up to the current schema.
+     * Idempotent: safe to run on a fresh table, a current one, or one from any
+     * earlier version. Called from install() and from every upgrade script.
+     *
+     * 0.2.0 (core 0.4): the `network` column. A ledger index only means
+     * anything within one network, so the sync cursor is scoped by
+     * (destination, network) and needs the column plus an index to serve it
+     * (INVARIANTS.md, "Tables"). Existing rows are backfilled from their CTID —
+     * its last four hex digits are the XRPL network id, 0 mainnet, 1 testnet
+     * (XLS-37) — so the cursor keeps working for rows synced before the
+     * column existed. Anything else stays '' and simply never feeds a cursor.
+     */
+    public static function ensureSchema(): bool
+    {
+        $db = \Db::getInstance();
+        $table = _DB_PREFIX_ . self::TABLE_TX;
+
+        if (!self::columnExists($table, 'network')) {
+            $added = $db->execute(
+                'ALTER TABLE `' . $table . '`
+                 ADD COLUMN `network` VARCHAR(16) NOT NULL AFTER `id_ledger_direct_xrpl_tx`'
+            );
+            if (!$added) {
+                return false;
+            }
+        }
+
+        if (!self::indexExists($table, 'idx_ledger_direct_cursor')) {
+            $indexed = $db->execute(
+                'ALTER TABLE `' . $table . '`
+                 ADD KEY `idx_ledger_direct_cursor` (`destination`, `network`, `ledger_index`)'
+            );
+            if (!$indexed) {
+                return false;
+            }
+        }
+
+        return $db->execute(
+            'UPDATE `' . $table . '`
+                SET `network` = CASE RIGHT(`ctid`, 4)
+                                    WHEN "0000" THEN "mainnet"
+                                    WHEN "0001" THEN "testnet"
+                                    ELSE ""
+                                END
+              WHERE `network` = ""'
+        );
+    }
+
+    private static function columnExists(string $table, string $column): bool
+    {
+        $rows = \Db::getInstance()->executeS(
+            'SHOW COLUMNS FROM `' . $table . '` LIKE "' . \Db::getInstance()->escape($column) . '"'
+        );
+
+        return is_array($rows) && $rows !== [];
+    }
+
+    private static function indexExists(string $table, string $index): bool
+    {
+        $rows = \Db::getInstance()->executeS(
+            'SHOW INDEX FROM `' . $table . '` WHERE `Key_name` = "' . \Db::getInstance()->escape($index) . '"'
+        );
+
+        return is_array($rows) && $rows !== [];
     }
 
     /**
@@ -84,6 +156,7 @@ final class Installer
 
         $tx = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . self::TABLE_TX . '` (
             `id_ledger_direct_xrpl_tx` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+            `network` VARCHAR(16) NOT NULL,
             `ledger_index` BIGINT UNSIGNED NOT NULL,
             `hash` VARCHAR(64) NOT NULL,
             `ctid` VARCHAR(16) NOT NULL,
@@ -96,12 +169,15 @@ final class Installer
             PRIMARY KEY (`id_ledger_direct_xrpl_tx`),
             UNIQUE KEY `uniq_ledger_direct_hash` (`hash`),
             KEY `idx_ledger_direct_destination` (`destination`, `destination_tag`),
-            KEY `idx_ledger_direct_ledger_index` (`ledger_index`)
+            KEY `idx_ledger_direct_ledger_index` (`ledger_index`),
+            KEY `idx_ledger_direct_cursor` (`destination`, `network`, `ledger_index`)
         ) ENGINE=' . $engine . ' DEFAULT CHARSET=utf8mb4;';
 
         // One row per destination account, not one per issued tag: the core's
         // DestinationTagService derives the tag from this counter via a fixed
-        // bijection, so the table stays constant-size per account.
+        // bijection, so the table stays constant-size per account. The counter
+        // starts at a random offset (see the repository), so INT UNSIGNED has
+        // to hold 2^31 plus every tag issued after it — it does, with room.
         $destinationTag = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . self::TABLE_DESTINATION_TAG . '` (
             `destination_account` VARCHAR(64) NOT NULL,
             `sequence` INT UNSIGNED NOT NULL,
