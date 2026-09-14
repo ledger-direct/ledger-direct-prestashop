@@ -11,3 +11,7 @@
 /dev/.phpunit.cache/
 
 .DS_Store
+
+# Handover documents (working input for Claude Code sessions, not part of the module)
+/LedgerDirect-*.md
+/CLAUDE.md

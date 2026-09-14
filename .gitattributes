@@ -7,3 +7,5 @@
 /.gitignore       export-ignore
 /.github          export-ignore
 /payment_page.png export-ignore
+/LedgerDirect-*.md export-ignore
+/CLAUDE.md export-ignore
