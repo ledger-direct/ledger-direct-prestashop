@@ -61,7 +61,7 @@ final class PaymentSyncService
      */
     public function syncAndMatchOrder(int $orderId): bool
     {
-        $this->syncLedger();
+        $this->syncLedger(true);
 
         return $this->matchOrder($orderId);
     }
@@ -87,47 +87,59 @@ final class PaymentSyncService
             return false;
         }
 
-        if ($paymentIntent === null || $paymentIntent->hash !== null) {
+        if ($paymentIntent === null) {
             return false;
         }
 
-        // Which transaction on the tag is the one that pays — the core's
-        // decision: the newest candidate in the quote's asset class. A stray
-        // payment in the other class, a non-payment (EscrowCreate, CheckCreate)
-        // or an unreadable delivered amount is skipped and logged there, so a
-        // wrong row can no longer hide the right one behind it.
-        $transaction = $this->services->getSyncService()->findTransactionFor($paymentIntent);
-        if ($transaction === null) {
-            return false;
-        }
-
-        $delivered = $transaction->getDeliveredAmount();
-        if ($delivered === null) {
-            return false;
-        }
-
-        $fulfilled = $paymentIntent->withFulfillment($transaction->hash, $delivered, $transaction->ctid);
         $policy = $this->services->getSettlementPolicy();
 
-        if (!$policy->isSettled($fulfilled)) {
-            // The core credits nothing for a token that is not the requested one
-            // (same name, other issuer, or another currency code), so a shortfall
-            // equal to the request means "wrong asset", not "too little".
-            $shortfall = (string) $policy->shortfall($fulfilled);
+        // A stored fulfillment ends the matching only if it settled the order.
+        // That still covers the window this guard was written for — save()
+        // succeeded, setCurrentState() threw — without letting the first wrong
+        // or short payment lock out every later one: the customer may still
+        // send the right token, or the rest of the amount.
+        if ($paymentIntent->hash !== null && $policy->isSettled($paymentIntent)) {
+            return false;
+        }
 
-            $this->services->getLogger()->warning('Payment does not settle the order', [
-                'id_order' => $orderId,
-                'hash' => $transaction->hash,
-                'result' => $shortfall === $fulfilled->amountRequestedValue() ? 'wrong_asset' : 'underpaid',
-                'requested' => $paymentIntent->amountRequested,
-                'delivered' => $delivered,
-                'shortfall' => $shortfall,
-            ]);
+        // Which transactions on the tag pay, and what they add up to — the
+        // core's decision. Every payment in the quoted asset counts, so a
+        // top-up of the shortfall settles; a payment in another asset is the
+        // fulfillment only while nothing in the right one has arrived, so the
+        // page can say "wrong token". Non-payments, unreadable amounts and the
+        // other asset class are skipped and logged there.
+        $fulfilled = $this->services->getSyncService()->findFulfillmentFor($paymentIntent)?->applyTo($paymentIntent);
+        if ($fulfilled === null) {
+            return false;
+        }
+
+        if (!$policy->isSettled($fulfilled)) {
+            // Persist the attempt: PaymentStatus is derived from the stored
+            // intent, so without this the payment page would keep showing
+            // "waiting" to a customer whose money is already on the ledger.
+            // Only when something changed — the poll runs every few seconds.
+            if (self::fulfillmentChanged($paymentIntent, $fulfilled)) {
+                $this->intents->save($orderId, $fulfilled);
+
+                $this->services->getLogger()->warning('Payment does not settle the order', [
+                    'id_order' => $orderId,
+                    'hash' => $fulfilled->hash,
+                    'result' => $policy->isWrongAsset($fulfilled) ? 'wrong_asset' : 'underpaid',
+                    'requested' => $fulfilled->amountRequested,
+                    'delivered' => $fulfilled->amountPaid,
+                    'shortfall' => $policy->shortfall($fulfilled),
+                ]);
+            }
 
             return false;
         }
 
         return $this->settle($order, $fulfilled);
+    }
+
+    private static function fulfillmentChanged(PaymentIntent $before, PaymentIntent $after): bool
+    {
+        return $before->hash !== $after->hash || $before->amountPaid !== $after->amountPaid;
     }
 
     /**
@@ -164,7 +176,7 @@ final class PaymentSyncService
         // query cache bypassed: re-loading the Order object can hand back the
         // row as this request first saw it, which would report a settled order
         // as unsettled and invite a second attempt.
-        $settled = $this->readCurrentState($orderId) === $paidStateId;
+        $settled = self::readCurrentState($orderId) === $paidStateId;
 
         if (!$settled) {
             $this->services->getLogger()->error('Payment recorded but the order did not reach the paid state', [
@@ -234,7 +246,7 @@ final class PaymentSyncService
         }
     }
 
-    private function readCurrentState(int $orderId): int
+    private static function readCurrentState(int $orderId): int
     {
         return (int) \Db::getInstance()->getValue(
             'SELECT `current_state` FROM `' . _DB_PREFIX_ . 'orders` WHERE `id_order` = ' . $orderId,
@@ -242,20 +254,38 @@ final class PaymentSyncService
         );
     }
 
-    private function syncLedger(): bool
+    /**
+     * @param bool $throttled skip the node request when this account was synced
+     *                        within SyncThrottle's interval — the poll and the
+     *                        check button pass true, the cron never does: it is
+     *                        the safety net, token-protected, on its own schedule
+     *
+     * @return bool whether the ledger was synced in this call
+     */
+    private function syncLedger(bool $throttled = false): bool
     {
         $configProvider = $this->services->getConfigProvider();
         $destinationAccount = $configProvider->getDestinationAccount(PrestaShopConfigProvider::CHAIN_XRPL);
+        $network = $configProvider->getNetwork(PrestaShopConfigProvider::CHAIN_XRPL);
 
         if ($destinationAccount === '') {
             return false;
         }
 
+        $throttle = $this->services->getSyncThrottle();
+
+        if ($throttled && !$throttle->shouldSync($network, $destinationAccount)) {
+            return false;
+        }
+
+        // Marked before the request, not after a successful one: a node that
+        // is down must not be hit harder than one that answers.
+        if ($throttled) {
+            $throttle->markSynced($network, $destinationAccount);
+        }
+
         try {
-            $this->services->getSyncService()->syncTransactions(
-                $destinationAccount,
-                $configProvider->getNetwork(PrestaShopConfigProvider::CHAIN_XRPL)
-            );
+            $this->services->getSyncService()->syncTransactions($destinationAccount, $network);
         } catch (\Throwable $exception) {
             // A node that is down must not take the checkout with it: matching
             // still runs against whatever is already stored locally.
@@ -273,6 +303,17 @@ final class PaymentSyncService
     public static function isAwaitingPayment(\Order $order): bool
     {
         return (int) $order->getCurrentState() === Installer::getOrderStateId();
+    }
+
+    /**
+     * The same question, answered from storage with the query cache bypassed.
+     * An Order object loaded before a sync still reports the state it was
+     * loaded with — a poll that settled the order in this very request would
+     * otherwise not notice until the next one.
+     */
+    public static function isAwaitingPaymentById(int $orderId): bool
+    {
+        return self::readCurrentState($orderId) === Installer::getOrderStateId();
     }
 
     /**
