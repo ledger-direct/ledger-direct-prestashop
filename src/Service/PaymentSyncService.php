@@ -120,6 +120,7 @@ final class PaymentSyncService
             // Only when something changed — the poll runs every few seconds.
             if (self::fulfillmentChanged($paymentIntent, $fulfilled)) {
                 $this->intents->save($orderId, $fulfilled);
+                $this->markIncomplete($order);
 
                 $this->services->getLogger()->warning('Payment does not settle the order', [
                     'id_order' => $orderId,
@@ -140,6 +141,35 @@ final class PaymentSyncService
     private static function fulfillmentChanged(PaymentIntent $before, PaymentIntent $after): bool
     {
         return $before->hash !== $after->hash || $before->amountPaid !== $after->amountPaid;
+    }
+
+    /**
+     * Moves a waiting order to "XRPL payment incomplete" the first time
+     * something arrives that does not pay it. That is what the merchant sees:
+     * the order list, the status filter, the history line with a timestamp.
+     * The details (what arrived, what is missing, which transaction) are on
+     * the LedgerDirect panel of the order page. The state is still an open
+     * one — matching continues, and the paid state follows once the ledger
+     * covers the amount.
+     */
+    private function markIncomplete(\Order $order): void
+    {
+        $incompleteStateId = Installer::getIncompleteOrderStateId();
+
+        if ($incompleteStateId <= 0 || (int) $order->getCurrentState() === $incompleteStateId) {
+            return;
+        }
+
+        try {
+            $order->setCurrentState($incompleteStateId);
+        } catch (\Throwable $exception) {
+            // The intent is saved either way; the state is a courtesy to the
+            // merchant, not something the settlement depends on.
+            $this->services->getLogger()->warning('Could not mark the order as incompletely paid', [
+                'id_order' => (int) $order->id,
+                'exception' => $exception->getMessage(),
+            ]);
+        }
     }
 
     /**
@@ -300,9 +330,14 @@ final class PaymentSyncService
         return true;
     }
 
+    /**
+     * Whether the order is still open for payment on the ledger: nothing
+     * arrived yet, or something did that does not cover the amount. Both
+     * states are matched, both render the payment page.
+     */
     public static function isAwaitingPayment(\Order $order): bool
     {
-        return (int) $order->getCurrentState() === Installer::getOrderStateId();
+        return in_array((int) $order->getCurrentState(), Installer::openOrderStateIds(), true);
     }
 
     /**
@@ -313,7 +348,7 @@ final class PaymentSyncService
      */
     public static function isAwaitingPaymentById(int $orderId): bool
     {
-        return self::readCurrentState($orderId) === Installer::getOrderStateId();
+        return in_array(self::readCurrentState($orderId), Installer::openOrderStateIds(), true);
     }
 
     /**
@@ -326,7 +361,7 @@ final class PaymentSyncService
                FROM `' . _DB_PREFIX_ . 'orders` o
                INNER JOIN `' . _DB_PREFIX_ . Installer::TABLE_ORDER_PAYMENT_INTENT . '` i
                        ON i.`id_order` = o.`id_order`
-              WHERE o.`current_state` = ' . Installer::getOrderStateId() . '
+              WHERE o.`current_state` IN (' . implode(',', Installer::openOrderStateIds()) . ')
               ORDER BY o.`id_order` ASC'
         );
 

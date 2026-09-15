@@ -37,6 +37,15 @@ final class Installer
     public const KEY_ORDER_STATE = 'LEDGERDIRECT_OS_AWAITING_PAYMENT';
 
     /**
+     * The second state: something arrived on the ledger, but it does not pay
+     * the order — too little, or the wrong token. Still open for payment
+     * (the sync keeps matching, the payment page keeps rendering), but the
+     * merchant can see it in the order list, filter on it, and read it in
+     * the history, which "Awaiting XRPL payment" alone would never show.
+     */
+    public const KEY_ORDER_STATE_INCOMPLETE = 'LEDGERDIRECT_OS_PAYMENT_INCOMPLETE';
+
+    /**
      * The "awaiting XRPL payment" state id.
      *
      * Lives here rather than on the module class because the module class is
@@ -49,6 +58,23 @@ final class Installer
         return (int) \Configuration::getGlobalValue(self::KEY_ORDER_STATE);
     }
 
+    /** The "XRPL payment incomplete" state id. */
+    public static function getIncompleteOrderStateId(): int
+    {
+        return (int) \Configuration::getGlobalValue(self::KEY_ORDER_STATE_INCOMPLETE);
+    }
+
+    /**
+     * Every state in which an order is still waiting for money on the ledger
+     * and must keep being matched.
+     *
+     * @return int[]
+     */
+    public static function openOrderStateIds(): array
+    {
+        return array_values(array_filter([self::getOrderStateId(), self::getIncompleteOrderStateId()]));
+    }
+
     public static function install(string $moduleName): bool
     {
         // ensureSchema() after createTables(): uninstall keeps the tables, so
@@ -57,7 +83,7 @@ final class Installer
         // date itself.
         return self::createTables()
             && self::ensureSchema()
-            && self::ensureOrderState($moduleName)
+            && self::ensureOrderStates($moduleName)
             && self::setDefaultConfiguration()
             && self::ensureCronToken();
     }
@@ -209,12 +235,33 @@ final class Installer
     }
 
     /**
-     * Creates the "awaiting XRPL payment" state, or reuses the one a previous
-     * install left behind (uninstall keeps the id on purpose).
+     * Creates the module's order states, or reuses the ones a previous install
+     * left behind (uninstall keeps the ids on purpose). Public and idempotent:
+     * install() and the upgrade scripts both call it.
      */
-    private static function ensureOrderState(string $moduleName): bool
+    public static function ensureOrderStates(string $moduleName): bool
     {
-        $existingId = (int) \Configuration::getGlobalValue(self::KEY_ORDER_STATE);
+        return self::ensureOrderState(
+            self::KEY_ORDER_STATE,
+            $moduleName,
+            ['de' => 'Warten auf XRPL-Zahlung'],
+            'Awaiting XRPL payment',
+            '#4169E1'
+        ) && self::ensureOrderState(
+            self::KEY_ORDER_STATE_INCOMPLETE,
+            $moduleName,
+            ['de' => 'XRPL-Zahlung unvollständig'],
+            'XRPL payment incomplete',
+            '#E67E22'
+        );
+    }
+
+    /**
+     * @param array<string, string> $names per language iso code; $fallback for every other language
+     */
+    private static function ensureOrderState(string $key, string $moduleName, array $names, string $fallback, string $color): bool
+    {
+        $existingId = (int) \Configuration::getGlobalValue($key);
         if ($existingId > 0) {
             $existing = new \OrderState($existingId);
             if (\Validate::isLoadedObject($existing)) {
@@ -225,16 +272,14 @@ final class Installer
         $orderState = new \OrderState();
         $orderState->name = [];
         foreach (\Language::getLanguages(false) as $language) {
-            $orderState->name[(int) $language['id_lang']] = $language['iso_code'] === 'de'
-                ? 'Warten auf XRPL-Zahlung'
-                : 'Awaiting XRPL payment';
+            $orderState->name[(int) $language['id_lang']] = $names[$language['iso_code']] ?? $fallback;
         }
         $orderState->module_name = $moduleName;
-        $orderState->color = '#4169E1';
+        $orderState->color = $color;
         $orderState->unremovable = true;
         // Not paid, not logable, no invoice: the customer has been shown a
         // payment request, nothing has settled on-chain yet. SyncService moves
-        // the order to "Payment accepted" once a transaction matches.
+        // the order to "Payment accepted" once the ledger covers the amount.
         $orderState->logable = false;
         $orderState->paid = false;
         $orderState->invoice = false;
@@ -247,7 +292,7 @@ final class Installer
             return false;
         }
 
-        return \Configuration::updateGlobalValue(self::KEY_ORDER_STATE, (int) $orderState->id);
+        return \Configuration::updateGlobalValue($key, (int) $orderState->id);
     }
 
     /**

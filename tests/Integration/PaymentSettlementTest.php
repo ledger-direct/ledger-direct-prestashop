@@ -121,12 +121,13 @@ final class PaymentSettlementTest extends IntegrationTestCase
         self::assertSame(Installer::getOrderStateId(), $this->currentState());
     }
 
-    public function testUnderpaymentDoesNotSettle(): void
+    public function testUnderpaymentDoesNotSettleButIsShownToTheMerchant(): void
     {
         $this->plant(['delivered_amount' => (string) ((int) self::AMOUNT_DROPS - 1000000)]);
 
         self::assertFalse($this->sync()->matchOrder((int) $this->order->id));
-        self::assertSame(Installer::getOrderStateId(), $this->currentState());
+        self::assertSame(Installer::getIncompleteOrderStateId(), $this->currentState());
+        self::assertNotSame((int) \Configuration::get('PS_OS_PAYMENT'), $this->currentState());
     }
 
     /**
@@ -180,11 +181,19 @@ final class PaymentSettlementTest extends IntegrationTestCase
         $this->plant(['delivered_amount' => '5000000'], null, '20180000');
 
         self::assertFalse($this->sync()->matchOrder((int) $this->order->id));
-        self::assertSame(Installer::getOrderStateId(), $this->currentState());
 
         $stored = $this->intents->find((int) $this->order->id);
         self::assertNotNull($stored?->hash, 'The partial payment must be recorded on the order.');
         self::assertSame(5.0, $stored->amountPaid);
+        self::assertSame(
+            Installer::getIncompleteOrderStateId(),
+            $this->currentState(),
+            'The merchant sees the short payment as its own order state.'
+        );
+        self::assertTrue(
+            PaymentSyncService::isAwaitingPaymentById((int) $this->order->id),
+            'An incompletely paid order is still open for payment.'
+        );
         self::assertSame(
             PaymentStatus::PARTIAL,
             PaymentStatus::fromIntent($stored, ServiceFactory::getInstance()->getSettlementPolicy())->state()
@@ -220,7 +229,7 @@ final class PaymentSettlementTest extends IntegrationTestCase
         ], null, '20180000');
 
         self::assertFalse($this->sync()->matchOrder((int) $this->order->id));
-        self::assertSame(Installer::getOrderStateId(), $this->currentState());
+        self::assertSame(Installer::getIncompleteOrderStateId(), $this->currentState());
 
         $stored = $this->intents->find((int) $this->order->id);
         self::assertSame(
@@ -303,6 +312,72 @@ final class PaymentSettlementTest extends IntegrationTestCase
         $order = new \Order((int) $this->order->id);
         self::assertCount(1, $order->getOrderPayments());
         self::assertSame((float) $order->total_paid, (float) $order->total_paid_real);
+    }
+
+    /**
+     * The order page panel: state, amounts, and every transaction on the tag
+     * with an explorer link. Rendered through the real hook, so a broken
+     * template or a missing translation domain fails here, not in the Back
+     * Office.
+     */
+    public function testTheOrderPanelShowsTheShortPaymentAndItsTransaction(): void
+    {
+        $hash = $this->plant(['delivered_amount' => '5000000']);
+        $this->sync()->matchOrder((int) $this->order->id);
+
+        $module = \Module::getInstanceByName('ledgerdirect');
+        self::assertInstanceOf(\Ledgerdirect::class, $module);
+
+        $html = $module->hookDisplayAdminOrderSide(['id_order' => (int) $this->order->id]);
+
+        self::assertStringContainsString('data-ld-admin-state="partial"', $html);
+        self::assertStringContainsString('5.00000', $html);
+        self::assertStringContainsString('10.06378', $html);
+        self::assertStringContainsString('https://testnet.xrpl.org/transactions/' . $hash, $html);
+        self::assertStringContainsString((string) $this->destinationTag, $html);
+    }
+
+    public function testTheOrderPanelIsEmptyForAnOrderOfAnotherPaymentModule(): void
+    {
+        \Db::getInstance()->execute(
+            'DELETE FROM `' . _DB_PREFIX_ . Installer::TABLE_ORDER_PAYMENT_INTENT . '`
+             WHERE `id_order` = ' . (int) $this->order->id
+        );
+
+        $module = \Module::getInstanceByName('ledgerdirect');
+        self::assertInstanceOf(\Ledgerdirect::class, $module);
+
+        self::assertSame('', $module->hookDisplayAdminOrderSide(['id_order' => (int) $this->order->id]));
+    }
+
+    /**
+     * The state change is what the merchant reads in the order history; the
+     * second short payment must not add a second line.
+     */
+    public function testTheIncompleteStateIsEnteredOnceAndLeftOnSettlement(): void
+    {
+        $this->plant(['delivered_amount' => '2000000'], null, '20180000');
+        $this->sync()->matchOrder((int) $this->order->id);
+        $this->plant(['delivered_amount' => '3000000'], null, '20180005');
+        $this->sync()->matchOrder((int) $this->order->id);
+
+        self::assertSame(1, $this->historyCount(Installer::getIncompleteOrderStateId()));
+        self::assertSame(Installer::getIncompleteOrderStateId(), $this->currentState());
+
+        $this->plant(['delivered_amount' => (string) ((int) self::AMOUNT_DROPS - 5000000)], null, '20180009');
+        self::assertTrue($this->sync()->matchOrder((int) $this->order->id));
+
+        self::assertSame((int) \Configuration::get('PS_OS_PAYMENT'), $this->currentState());
+        self::assertSame(1, $this->historyCount(Installer::getIncompleteOrderStateId()));
+    }
+
+    private function historyCount(int $stateId): int
+    {
+        return (int) \Db::getInstance()->getValue(
+            'SELECT COUNT(*) FROM `' . _DB_PREFIX_ . 'order_history`
+             WHERE `id_order` = ' . (int) $this->order->id . ' AND `id_order_state` = ' . $stateId,
+            false
+        );
     }
 
     /**
