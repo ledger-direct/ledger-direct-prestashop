@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4a43870ccde287c7601cfe70338c020e",
+    "content-hash": "c7d42ec9e68fe2e7fcd3405b75d4a5f3",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -504,16 +504,16 @@
         },
         {
             "name": "hardcastle/ledger-direct-core",
-            "version": "0.4.0",
+            "version": "0.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ledger-direct/ledger-direct-core-php.git",
-                "reference": "ff832e7e8aa21750ffd8858ba2a0d2ed2a5abb6e"
+                "reference": "76f911724462868acc5ddfa769e8da876be6c286"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ledger-direct/ledger-direct-core-php/zipball/ff832e7e8aa21750ffd8858ba2a0d2ed2a5abb6e",
-                "reference": "ff832e7e8aa21750ffd8858ba2a0d2ed2a5abb6e",
+                "url": "https://api.github.com/repos/ledger-direct/ledger-direct-core-php/zipball/76f911724462868acc5ddfa769e8da876be6c286",
+                "reference": "76f911724462868acc5ddfa769e8da876be6c286",
                 "shasum": ""
             },
             "require": {
@@ -548,9 +548,9 @@
             "description": "LedgerDirect Core - platform-agnostic XRPL/commerce logic shared across all LedgerDirect plugins",
             "support": {
                 "issues": "https://github.com/ledger-direct/ledger-direct-core-php/issues",
-                "source": "https://github.com/ledger-direct/ledger-direct-core-php/tree/0.4.0"
+                "source": "https://github.com/ledger-direct/ledger-direct-core-php/tree/0.6.0"
             },
-            "time": "2026-09-07T11:14:35+00:00"
+            "time": "2026-09-15T07:56:56+00:00"
         },
         {
             "name": "psr/http-client",
