@@ -28,9 +28,17 @@ Payments are confirmed three ways, which is deliberate redundancy:
 - a **check now** button for anyone who would rather not wait (and for browsers without JavaScript),
 - a cron endpoint that settles orders for customers who closed the page.
 
-An order is credited only from the ledger's `delivered_amount`, only when it covers the requested
-amount, and — for stablecoins — only when the currency and issuer match. Anything else is left
-waiting and logged.
+An order is credited only from the ledger's `delivered_amount`, only when what arrived covers the
+requested amount, and — for stablecoins — only when the currency and issuer match. Several payments
+in the quoted asset add up, so a customer who sent too little can send the rest. Anything else stays
+open, and the payment page says why: it shows one of five states — waiting, expired, partial payment
+(with the outstanding amount), wrong token (with the full amount still due), or paid — and updates
+in place while the customer watches, without reloading.
+
+The page asks the server every 8 seconds. That endpoint syncs with the XRPL node at most once every
+5 seconds per receiving account, whatever the number of customers waiting; in between it answers
+from what is already stored. A guest order can poll too — the link carries the order's secret, and
+no login is required.
 
 ## Requirements
 
