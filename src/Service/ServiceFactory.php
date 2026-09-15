@@ -43,6 +43,7 @@ final class ServiceFactory
     private ?PaymentIntentService $paymentIntentService = null;
     private ?SyncService $syncService = null;
     private ?SettlementPolicy $settlementPolicy = null;
+    private ?SyncThrottle $syncThrottle = null;
 
     private function __construct()
     {
@@ -126,6 +127,16 @@ final class ServiceFactory
     public function getSettlementPolicy(): SettlementPolicy
     {
         return $this->settlementPolicy ??= new SettlementPolicy();
+    }
+
+    /**
+     * The rate limit on ledger syncs triggered from the payment page. Shares
+     * the rate cache's store: the same "set within the last N seconds"
+     * semantics, no schema of its own, and a table that is disposable anyway.
+     */
+    public function getSyncThrottle(): SyncThrottle
+    {
+        return $this->syncThrottle ??= new SyncThrottle($this->getRateCache(), $this->getLogger());
     }
 
     public function getSyncService(): SyncService

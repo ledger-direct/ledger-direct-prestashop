@@ -29,8 +29,11 @@ use Psr\SimpleCache\CacheInterface;
  * of caching an exchange rate is that the next page render, and the next
  * customer, reuse it — an in-process array would help nobody.
  *
- * The table stays tiny: one row per (network, asset, quote currency), so three
- * rows for a shop that accepts all three assets in one currency.
+ * The table stays tiny. Two key families live in it: the core's exchange
+ * rates, one row per (network, asset, quote currency), and the sync
+ * throttle's timestamps (see SyncThrottle), one row per (network, receiving
+ * account). Both are disposable — every row can be refetched or simply
+ * expires.
  */
 final class DbRateCache implements CacheInterface
 {

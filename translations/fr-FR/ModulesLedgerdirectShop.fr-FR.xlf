@@ -114,6 +114,14 @@
         <source>Pay with %s</source>
         <target state="translated">Payer en %s</target>
       </trans-unit>
+      <trans-unit id="fd961ebe805aaff84c2ab4ead30eccea">
+        <source>%paid% received so far. %shortfall% is still outstanding — please send the remaining amount to the same address, with the same destination tag.</source>
+        <target state="translated">%paid% reçus jusqu’à présent. Il manque encore %shortfall% — veuillez envoyer le montant restant à la même adresse, avec le même destination tag.</target>
+      </trans-unit>
+      <trans-unit id="16ca81e98f5ba9fd4a1e4f2d9b961783">
+        <source>A payment of %paid% arrived, but not in the token this order is quoted in — the currency or the issuer does not match, so it cannot be credited. Please send %shortfall% %asset% from the issuer shown above, or contact us about the payment you already made.</source>
+        <target state="translated">Un paiement de %paid% est arrivé, mais pas dans le jeton dans lequel cette commande est libellée — la devise ou l’émetteur ne correspond pas, il ne peut donc pas être crédité. Veuillez envoyer %shortfall% %asset% depuis l’émetteur indiqué ci-dessus, ou contactez-nous au sujet du paiement déjà effectué.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

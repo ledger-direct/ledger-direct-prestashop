@@ -5,6 +5,12 @@
  * configuration — the destination account and tag are what the customer's
  * money follows, so their rendering must not depend on a setting a theme can
  * change.
+ *
+ * One block per payment state (waiting, expired, partial, wrong_asset), all
+ * rendered, the server decides which starts visible. The script only switches
+ * blocks and fills in numbers; every sentence a customer reads lives here and
+ * in the XLIFF catalogues, nowhere else. A settled order never renders this
+ * page — the controller redirects it.
  *}
 {extends file='page.tpl'}
 
@@ -15,8 +21,9 @@
 {block name='page_content'}
   <section class="ledgerdirect-payment"
            data-ledgerdirect-payment
-           {if $ld_intent && !$ld_intent.is_paid}
-             data-ld-poll-url="{$ld_poll_url|escape:'html':'UTF-8'}"
+           {if $ld_intent}
+             data-ld-state="{$ld_intent.state|escape:'html':'UTF-8'}"
+             {if $ld_intent.state !== 'settled'}data-ld-poll-url="{$ld_poll_url|escape:'html':'UTF-8'}"{/if}
              {if $ld_intent.seconds_left !== null}data-ld-seconds-left="{$ld_intent.seconds_left|intval}"{/if}
            {/if}>
 
@@ -40,6 +47,29 @@
           {l s='Testnet mode: this shop is not accepting real funds.' d='Modules.Ledgerdirect.Shop'}
         </div>
       {/if}
+
+      {* Something arrived but the order is not paid. Neutral tone on purpose:
+         the customer did what their wallet told them; the page explains, it
+         does not alarm. The numbers are formatted by the presenter and by the
+         script from the same rule (XRP five places, tokens two). *}
+      <div data-ld-partial class="alert alert-info"{if $ld_intent.state !== 'partial'} hidden{/if}>
+        {l s='%paid% received so far. %shortfall% is still outstanding — please send the remaining amount to the same address, with the same destination tag.'
+           sprintf=[
+             '%paid%' => "<strong data-ld-paid>{$ld_intent.amount_paid|escape:'html':'UTF-8'}</strong> {$ld_intent.base_asset|escape:'html':'UTF-8'}",
+             '%shortfall%' => "<strong data-ld-shortfall>{$ld_intent.shortfall|escape:'html':'UTF-8'}</strong> {$ld_intent.base_asset|escape:'html':'UTF-8'}"
+           ]
+           d='Modules.Ledgerdirect.Shop'}
+      </div>
+
+      <div data-ld-wrong-asset class="alert alert-info"{if $ld_intent.state !== 'wrong_asset'} hidden{/if}>
+        {l s='A payment of %paid% arrived, but not in the token this order is quoted in — the currency or the issuer does not match, so it cannot be credited. Please send %shortfall% %asset% from the issuer shown above, or contact us about the payment you already made.'
+           sprintf=[
+             '%paid%' => "<strong data-ld-paid>{$ld_intent.amount_paid|escape:'html':'UTF-8'}</strong>",
+             '%shortfall%' => "<strong data-ld-shortfall>{$ld_intent.shortfall|escape:'html':'UTF-8'}</strong>",
+             '%asset%' => $ld_intent.base_asset|escape:'html':'UTF-8'
+           ]
+           d='Modules.Ledgerdirect.Shop'}
+      </div>
 
       <div class="alert alert-info">
         <strong>{l s='The destination tag is required.' d='Modules.Ledgerdirect.Shop'}</strong>
@@ -84,13 +114,16 @@
 
           {if $ld_intent.expiry}
             {* Both blocks are always rendered so the countdown can swap them
-               without a reload; the server decides which one starts visible. *}
-            <p data-ld-live class="text-muted"{if $ld_intent.is_expired} hidden{/if}>
+               without a reload; the server decides which one starts visible.
+               Neither shows while a payment has arrived: the state blocks
+               above take over, and a refresh would re-quote an order that is
+               already partly paid. *}
+            <p data-ld-live class="text-muted"{if $ld_intent.state !== 'waiting'} hidden{/if}>
               {l s='This amount is guaranteed for' d='Modules.Ledgerdirect.Shop'}
               <strong data-ld-countdown>{$ld_intent.seconds_left|intval}</strong>
             </p>
 
-            <div data-ld-expired class="alert alert-warning"{if !$ld_intent.is_expired} hidden{/if}>
+            <div data-ld-expired class="alert alert-warning"{if $ld_intent.state !== 'expired'} hidden{/if}>
               <p>{l s='This quote has expired. The exchange rate may have moved since.' d='Modules.Ledgerdirect.Shop'}</p>
               <p>{l s='Already sent the old amount? Do not send it again — use the check button below instead.' d='Modules.Ledgerdirect.Shop'}</p>
               <form method="post" action="{$ld_self_url|escape:'html':'UTF-8'}">

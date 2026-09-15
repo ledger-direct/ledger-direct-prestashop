@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LedgerDirect\Tests\Integration;
 
 use Hardcastle\LedgerDirect\Core\Payment\PaymentIntent;
+use Hardcastle\LedgerDirect\Core\Payment\PaymentStatus;
 use Hardcastle\LedgerDirect\Core\Xrpl\XrplAmount;
 use Hardcastle\LedgerDirect\Core\Xrpl\XrplTransaction;
 use LedgerDirect\Install\Installer;
@@ -31,6 +32,7 @@ final class PaymentSettlementTest extends IntegrationTestCase
     private const DESTINATION = 'raXkRCAYkqaoFYCeVej93SzCTtiAbbRzAg';
     private const AMOUNT_XRP = 15.06378;
     private const AMOUNT_DROPS = '15063780';
+    private const USDC_ISSUER = 'rQhWct2fv4Vc4KRjRgMrxa8xPN9Zx9iLKV';
 
     private \Order $order;
     private \Cart $cart;
@@ -168,17 +170,92 @@ final class PaymentSettlementTest extends IntegrationTestCase
     }
 
     /**
-     * Two XRP payments on the tag: the newest is the candidate, and it is
-     * judged on its own. An old underpayment does not add up with a later one,
-     * and an old full payment does not rescue a later short one.
+     * Two XRP payments on the tag add up (core 0.6): an underpayment followed
+     * by the rest settles. Before that the newest transaction was judged on
+     * its own, and a customer who sent exactly the shortfall they were shown
+     * could never settle — the page would ask for the *other* part next.
      */
-    public function testTheNewestPaymentInClassIsTheCandidate(): void
+    public function testAToppedUpShortfallSettlesTheOrder(): void
     {
-        $this->plant(['delivered_amount' => self::AMOUNT_DROPS], null, '20180000');
-        $this->plant(['delivered_amount' => '1000000'], null, '20180009');
+        $this->plant(['delivered_amount' => '5000000'], null, '20180000');
 
         self::assertFalse($this->sync()->matchOrder((int) $this->order->id));
         self::assertSame(Installer::getOrderStateId(), $this->currentState());
+
+        $stored = $this->intents->find((int) $this->order->id);
+        self::assertNotNull($stored?->hash, 'The partial payment must be recorded on the order.');
+        self::assertSame(5.0, $stored->amountPaid);
+        self::assertSame(
+            PaymentStatus::PARTIAL,
+            PaymentStatus::fromIntent($stored, ServiceFactory::getInstance()->getSettlementPolicy())->state()
+        );
+
+        $second = $this->plant(['delivered_amount' => (string) ((int) self::AMOUNT_DROPS - 5000000)], null, '20180009');
+
+        self::assertTrue($this->sync()->matchOrder((int) $this->order->id));
+        self::assertSame((int) \Configuration::get('PS_OS_PAYMENT'), $this->currentState());
+
+        $settled = $this->intents->find((int) $this->order->id);
+        self::assertSame($second, $settled?->hash, 'The intent records the newest contributing transaction.');
+        self::assertSame(self::AMOUNT_XRP, $settled->amountPaid);
+
+        $order = new \Order((int) $this->order->id);
+        $payments = $order->getOrderPayments();
+        self::assertCount(1, $payments);
+        self::assertSame($second, $payments[0]->transaction_id);
+    }
+
+    /**
+     * The regression guard for persisting non-settling hits: a payment in the
+     * wrong token is stored on the order (so the page can say so) and must not
+     * lock out the right one that follows. Before, `hash !== null` ended the
+     * matching for good.
+     */
+    public function testAWrongAssetPaymentIsRecordedAndDoesNotBlockTheRightOne(): void
+    {
+        $this->createAwaitingUsdcOrder();
+
+        $this->plant([
+            'delivered_amount' => ['currency' => 'USD', 'value' => '12.50', 'issuer' => 'rSomebodyElse'],
+        ], null, '20180000');
+
+        self::assertFalse($this->sync()->matchOrder((int) $this->order->id));
+        self::assertSame(Installer::getOrderStateId(), $this->currentState());
+
+        $stored = $this->intents->find((int) $this->order->id);
+        self::assertSame(
+            PaymentStatus::WRONG_ASSET,
+            PaymentStatus::fromIntent($stored, ServiceFactory::getInstance()->getSettlementPolicy())->state()
+        );
+
+        $this->plant([
+            'delivered_amount' => ['currency' => 'USD', 'value' => '12.50', 'issuer' => self::USDC_ISSUER],
+        ], null, '20180009');
+
+        self::assertTrue($this->sync()->matchOrder((int) $this->order->id));
+        self::assertSame((int) \Configuration::get('PS_OS_PAYMENT'), $this->currentState());
+    }
+
+    /**
+     * The poll runs every few seconds; an unchanged fulfillment must not be
+     * written again and again.
+     */
+    public function testAnUnchangedPartialPaymentIsNotSavedTwice(): void
+    {
+        $this->plant(['delivered_amount' => '5000000']);
+        $this->sync()->matchOrder((int) $this->order->id);
+
+        $firstWrite = $this->intentUpdatedAt();
+        \Db::getInstance()->execute(
+            'UPDATE `' . _DB_PREFIX_ . Installer::TABLE_ORDER_PAYMENT_INTENT . '`
+                SET `date_upd` = DATE_SUB(`date_upd`, INTERVAL 1 HOUR)
+              WHERE `id_order` = ' . (int) $this->order->id
+        );
+
+        $this->sync()->matchOrder((int) $this->order->id);
+
+        self::assertNotSame($firstWrite, $this->intentUpdatedAt(), 'sanity: the backdate took effect');
+        self::assertLessThan($firstWrite, $this->intentUpdatedAt(), 'The second run must not rewrite the intent.');
     }
 
     public function testExactPaymentSettlesTheOrder(): void
@@ -322,6 +399,36 @@ final class PaymentSettlementTest extends IntegrationTestCase
             destinationTag: $this->destinationTag,
             expiry: time() + 300,
         ));
+    }
+
+    /**
+     * Re-points the order created in setUp() at a USDC quote. The order and
+     * its tag stay; only the stored intent changes shape.
+     */
+    private function createAwaitingUsdcOrder(): void
+    {
+        $this->intents->save((int) $this->order->id, PaymentIntent::quote(
+            type: 'usdc-payment',
+            chain: 'XRPL',
+            network: 'testnet',
+            baseAsset: 'USDC',
+            quoteCurrency: 'EUR',
+            pairing: 'USDC/EUR',
+            exchangeRate: 0.92,
+            amountRequested: ['currency' => 'USD', 'value' => '12.50', 'issuer' => self::USDC_ISSUER],
+            destinationAccount: self::DESTINATION,
+            destinationTag: $this->destinationTag,
+            expiry: time() + 300,
+        ));
+    }
+
+    private function intentUpdatedAt(): string
+    {
+        return (string) \Db::getInstance()->getValue(
+            'SELECT `date_upd` FROM `' . _DB_PREFIX_ . Installer::TABLE_ORDER_PAYMENT_INTENT . '`
+             WHERE `id_order` = ' . (int) $this->order->id,
+            false
+        );
     }
 
     private static function activeProductId(): int
