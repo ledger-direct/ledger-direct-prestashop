@@ -1,6 +1,7 @@
 <?php
 
 use LedgerDirect\Admin\ConfigurationForm;
+use LedgerDirect\Admin\OrderPanel;
 use LedgerDirect\Install\Installer;
 use LedgerDirect\Port\PrestaShopConfigProvider;
 use LedgerDirect\Service\ServiceFactory;
@@ -26,7 +27,7 @@ class Ledgerdirect extends PaymentModule
     {
         $this->name = 'ledgerdirect';
         $this->tab = 'payments_gateways';
-        $this->version = '0.3.0';
+        $this->version = '0.4.0';
         $this->author = 'Hardcastle';
         $this->bootstrap = true;
         parent::__construct();
@@ -44,6 +45,7 @@ class Ledgerdirect extends PaymentModule
     {
         return parent::install()
             && $this->registerHook('paymentOptions')
+            && $this->registerHook('displayAdminOrderSide')
             && Installer::install($this->name);
     }
 
@@ -149,6 +151,19 @@ class Ledgerdirect extends PaymentModule
     public function getContent(): string
     {
         return (new ConfigurationForm($this))->handle();
+    }
+
+    /**
+     * The LedgerDirect panel on the Back Office order page: payment state,
+     * what was asked for, what arrived, and every transaction on the order's
+     * destination tag with a link to the explorer. Empty for orders that were
+     * not paid through this module.
+     *
+     * @param array<string, mixed> $params
+     */
+    public function hookDisplayAdminOrderSide(array $params): string
+    {
+        return (new OrderPanel($this))->render((int) ($params['id_order'] ?? 0));
     }
 
     /**

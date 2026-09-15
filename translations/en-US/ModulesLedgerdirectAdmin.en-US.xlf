@@ -98,6 +98,66 @@
         <source>Accept XRP, RLUSD and USDC directly on the XRP Ledger.</source>
         <target state="translated">Accept XRP, RLUSD and USDC directly on the XRP Ledger.</target>
       </trans-unit>
+      <trans-unit id="68ebbb61167073564b61ca77dc280a60">
+        <source>XRPL payment</source>
+        <target state="translated">XRPL payment</target>
+      </trans-unit>
+      <trans-unit id="46a2a41cc6e552044816a2d04634545d">
+        <source>State</source>
+        <target state="translated">State</target>
+      </trans-unit>
+      <trans-unit id="fcdf8a82eba24e303b63b2e49a507ecb">
+        <source>Requested</source>
+        <target state="translated">Requested</target>
+      </trans-unit>
+      <trans-unit id="ac5bb077c33753116b5e91ff1766e7bc">
+        <source>Received</source>
+        <target state="translated">Received</target>
+      </trans-unit>
+      <trans-unit id="94325723d5b29917a78736901daf7ca7">
+        <source>another currency or issuer</source>
+        <target state="translated">another currency or issuer</target>
+      </trans-unit>
+      <trans-unit id="a860ed9926b241b7d4dca2d00610ab2c">
+        <source>Outstanding</source>
+        <target state="translated">Outstanding</target>
+      </trans-unit>
+      <trans-unit id="fac82bcd0e45d6bf7cf224ab3819fcd2">
+        <source>Destination tag</source>
+        <target state="translated">Destination tag</target>
+      </trans-unit>
+      <trans-unit id="44b9f225ed451d483a93110fad204a5c">
+        <source>Transactions on this destination tag</source>
+        <target state="translated">Transactions on this destination tag</target>
+      </trans-unit>
+      <trans-unit id="63bd34f1308e37824df5b8129ba1397e">
+        <source>None yet.</source>
+        <target state="translated">None yet.</target>
+      </trans-unit>
+      <trans-unit id="14a94a99755c5fcd7c23335bacb4c7b8">
+        <source>no delivered amount</source>
+        <target state="translated">no delivered amount</target>
+      </trans-unit>
+      <trans-unit id="e0010a0a1a3259ab5c06a19bad532851">
+        <source>Paid</source>
+        <target state="translated">Paid</target>
+      </trans-unit>
+      <trans-unit id="d46e9766487850eb77acf3268228f323">
+        <source>Partially paid</source>
+        <target state="translated">Partially paid</target>
+      </trans-unit>
+      <trans-unit id="d1dde637dd9eed89d33766eb9fe70ad6">
+        <source>Paid in the wrong token — not credited</source>
+        <target state="translated">Paid in the wrong token — not credited</target>
+      </trans-unit>
+      <trans-unit id="be031a11e9b69da4e60ca1352c1cfeff">
+        <source>Quote expired, nothing received</source>
+        <target state="translated">Quote expired, nothing received</target>
+      </trans-unit>
+      <trans-unit id="8b36249c00d04fa8cf0ee475d1e21078">
+        <source>Waiting for payment</source>
+        <target state="translated">Waiting for payment</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

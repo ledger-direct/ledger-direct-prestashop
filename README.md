@@ -35,6 +35,13 @@ open, and the payment page says why: it shows one of five states — waiting, ex
 (with the outstanding amount), wrong token (with the full amount still due), or paid — and updates
 in place while the customer watches, without reloading.
 
+The merchant sees the same thing from the other side. A payment that arrives but does not pay the
+order moves it to its own state, **XRPL payment incomplete** — visible in the order list, filterable,
+and dated in the order history — and the order page carries a LedgerDirect panel with the state,
+what was requested, what arrived, what is still outstanding, and every transaction on the order's
+destination tag linked to the explorer. Nothing on that panel changes the order; settling remains
+the sync's job.
+
 The page asks the server every 8 seconds. That endpoint syncs with the XRPL node at most once every
 5 seconds per receiving account, whatever the number of customers waiting; in between it answers
 from what is already stored. A guest order can poll too — the link carries the order's secret, and

@@ -91,7 +91,7 @@ final class PaymentIntentPresenter
      *
      * @param float|array{currency: string, value: string, issuer: string} $amount
      */
-    private static function formatAmount(float|array $amount): string
+    public static function formatAmount(float|array $amount): string
     {
         if (is_array($amount)) {
             return number_format((float) ($amount['value'] ?? 0), self::ISSUED_DECIMALS, '.', '');
