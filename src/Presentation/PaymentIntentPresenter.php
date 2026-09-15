@@ -9,13 +9,20 @@ use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
 use Hardcastle\LedgerDirect\Core\Payment\PaymentIntent;
+use Hardcastle\LedgerDirect\Core\Payment\PaymentStatus;
+use Hardcastle\LedgerDirect\Core\Payment\SettlementPolicy;
 
 /**
  * Turns a PaymentIntent into the plain scalars a template needs.
  *
- * Keeps two things out of the Smarty layer: the shape difference of
- * `amount_requested` (float for XRP, {currency,value,issuer} for anything
- * else — the known v1 wart in INVARIANTS.md), and the QR rendering.
+ * Keeps three things out of the Smarty layer: the shape difference of the
+ * amounts (float for XRP, {currency,value,issuer} for anything else — the
+ * known v1 wart in INVARIANTS.md), the QR rendering, and the payment state.
+ * The state is the core's PaymentStatus, derived here and never re-derived
+ * in a template: `hash !== null` used to stand in for "paid", and after a
+ * payment in the wrong token it would have been true and wrong.
+ *
+ * No PrestaShop dependency on purpose, so this runs in the unit suite.
  */
 final class PaymentIntentPresenter
 {
@@ -23,17 +30,19 @@ final class PaymentIntentPresenter
     private const ISSUED_DECIMALS = 2;
 
     /**
+     * @param int|null $now unix timestamp for the state derivation; defaults to the clock
+     *
      * @return array<string, mixed>
      */
-    public static function present(PaymentIntent $paymentIntent): array
+    public static function present(PaymentIntent $paymentIntent, SettlementPolicy $policy, ?int $now = null): array
     {
-        $expiry = $paymentIntent->expiry;
+        $status = PaymentStatus::fromIntent($paymentIntent, $policy, $now)->toArray();
 
         return [
             'base_asset' => $paymentIntent->baseAsset,
             'network' => $paymentIntent->network,
             'is_testnet' => $paymentIntent->network !== 'mainnet',
-            'amount' => self::formatAmount($paymentIntent),
+            'amount' => self::formatAmount($paymentIntent->amountRequested),
             'exchange_rate' => $paymentIntent->exchangeRate,
             'pairing' => $paymentIntent->pairing,
             'quote_currency' => $paymentIntent->quoteCurrency,
@@ -45,33 +54,45 @@ final class PaymentIntentPresenter
             'issuer' => is_array($paymentIntent->amountRequested)
                 ? ($paymentIntent->amountRequested['issuer'] ?? null)
                 : null,
-            'expiry' => $expiry,
-            'seconds_left' => $expiry === null ? null : max(0, $expiry - time()),
-            'is_expired' => self::isExpired($paymentIntent),
-            'is_paid' => $paymentIntent->hash !== null,
+            'expiry' => $paymentIntent->expiry,
+            'state' => $status['state'],
+            // Only set while waiting; the core decides whether the quote still
+            // stands, and a countdown for a partial payment would be a lie.
+            'seconds_left' => $status['seconds_left'],
+            // Formatted through the same rule as the request. Never raw: the
+            // shortfall is a number the customer types into a wallet, and a
+            // float tail there is the rounding story Shopware already had once.
+            'amount_paid' => $status['amount_paid'] === null ? null : self::formatAmount($status['amount_paid']),
+            'shortfall' => $status['shortfall'] === null ? null : self::formatAmount($status['shortfall']),
             'hash' => $paymentIntent->hash,
             'qr_data_uri' => self::renderQrCode($paymentIntent->destinationAccount),
         ];
     }
 
+    /**
+     * Whether the quote's validity has passed — regardless of what arrived.
+     * Not the same question as `state === 'expired'`: a partial payment on an
+     * expired quote is `partial`, but the quote is still expired, and the
+     * refresh path needs exactly this fact.
+     */
     public static function isExpired(PaymentIntent $paymentIntent): bool
     {
         return $paymentIntent->expiry !== null && $paymentIntent->expiry <= time();
     }
 
     /**
-     * The requested amount as an exact decimal string.
+     * An amount as an exact decimal string, whatever its shape.
      *
      * Never printed straight from the float: the core divides through
      * brick/math and hands back e.g. 39.067500000000003 for XRP, which is the
      * binary representation of a value it already rounded to 5 places. Showing
      * that to a customer who is about to type it into a wallet would be
      * actively misleading.
+     *
+     * @param float|array{currency: string, value: string, issuer: string} $amount
      */
-    private static function formatAmount(PaymentIntent $paymentIntent): string
+    private static function formatAmount(float|array $amount): string
     {
-        $amount = $paymentIntent->amountRequested;
-
         if (is_array($amount)) {
             return number_format((float) ($amount['value'] ?? 0), self::ISSUED_DECIMALS, '.', '');
         }

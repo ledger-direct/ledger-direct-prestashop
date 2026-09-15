@@ -120,6 +120,15 @@ class LedgerdirectPaymentModuleFrontController extends ModuleFrontController
             $paymentIntent = null;
         }
 
+        // A refresh re-matches (see resolvePaymentIntent()); if the new rate
+        // turned an earlier partial payment into a full one, the order is paid
+        // now and this page is as stale as for any other finished order.
+        if (!PaymentSyncService::isAwaitingPaymentById((int) $order->id)) {
+            Tools::redirect($this->confirmationUrl($order));
+
+            return;
+        }
+
         $orderCurrency = new Currency((int) $order->id_currency);
 
         $this->context->smarty->assign([
@@ -137,7 +146,9 @@ class LedgerdirectPaymentModuleFrontController extends ModuleFrontController
                 ['id_order' => (int) $order->id, 'key' => $order->secure_key],
                 true
             ),
-            'ld_intent' => $paymentIntent === null ? null : PaymentIntentPresenter::present($paymentIntent),
+            'ld_intent' => $paymentIntent === null
+                ? null
+                : PaymentIntentPresenter::present($paymentIntent, ServiceFactory::getInstance()->getSettlementPolicy()),
         ]);
 
         $this->setTemplate('module:ledgerdirect/views/templates/front/payment.tpl');
@@ -152,6 +163,14 @@ class LedgerdirectPaymentModuleFrontController extends ModuleFrontController
      * destination account and tag — the tag is what ties an incoming ledger
      * transaction back to this order, so reallocating it would orphan a
      * payment already in flight.
+     *
+     * A refreshed quote starts without a fulfillment: quoteForOrder() carries
+     * over the destination, not what already arrived on it. For an order with
+     * a partial or wrong-asset payment that would wipe the trace the page is
+     * about to show, so the refresh re-runs the local match right away — no
+     * node request, the transactions are already synced — which stores the
+     * fulfillment against the new amount, or settles the order if the new
+     * rate turned the partial payment into a full one.
      */
     private function resolvePaymentIntent(Order $order, OrderPaymentIntentRepository $repository): ?PaymentIntent
     {
@@ -178,6 +197,12 @@ class LedgerdirectPaymentModuleFrontController extends ModuleFrontController
         );
 
         $repository->save((int) $order->id, $refreshed);
+
+        if ($paymentIntent?->hash !== null) {
+            PaymentSyncService::create()->matchOrder((int) $order->id);
+
+            return $repository->find((int) $order->id) ?? $refreshed;
+        }
 
         return $refreshed;
     }
