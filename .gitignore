@@ -13,7 +13,7 @@
 .DS_Store
 
 # Handover documents (working input for Claude Code sessions, not part of the module)
-/LedgerDirect-*.md
+/Handover-*.md
 /CLAUDE.md
 
 # Local secrets (testnet wallet etc.) never belong in the module directory:
