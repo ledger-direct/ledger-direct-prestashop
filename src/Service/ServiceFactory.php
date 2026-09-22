@@ -11,6 +11,7 @@ use Hardcastle\LedgerDirect\Core\Payment\SettlementPolicy;
 use Hardcastle\LedgerDirect\Core\Price\PriceService;
 use Hardcastle\LedgerDirect\Core\Xrpl\DestinationTagService;
 use Hardcastle\LedgerDirect\Core\Xrpl\SyncService;
+use Hardcastle\LedgerDirect\Core\Xrpl\SyncThrottle;
 use Hardcastle\LedgerDirect\Core\Xrpl\XrplClient;
 use LedgerDirect\Cache\DbRateCache;
 use LedgerDirect\Log\PrestaShopLoggerAdapter;
@@ -130,9 +131,10 @@ final class ServiceFactory
     }
 
     /**
-     * The rate limit on ledger syncs triggered from the payment page. Shares
-     * the rate cache's store: the same "set within the last N seconds"
-     * semantics, no schema of its own, and a table that is disposable anyway.
+     * The rate limit on ledger syncs triggered from the payment page — the
+     * core's since 0.7, keyed per network and receiving account. Shares the
+     * rate cache's store: the same "set within the last N seconds" semantics,
+     * no schema of its own, and a table that is disposable anyway.
      */
     public function getSyncThrottle(): SyncThrottle
     {
