@@ -286,9 +286,13 @@ final class PaymentSyncService
 
     /**
      * @param bool $throttled skip the node request when this account was synced
-     *                        within SyncThrottle's interval — the poll and the
-     *                        check button pass true, the cron never does: it is
-     *                        the safety net, token-protected, on its own schedule
+     *                        within the core SyncThrottle's interval — the poll
+     *                        and the check button pass true, the cron never
+     *                        does: it is the safety net, token-protected, on
+     *                        its own schedule. shouldSync()/markSynced() rather
+     *                        than syncIfDue(): the mark is set *before* the
+     *                        request, so a node that is down is not hit harder
+     *                        than one that answers
      *
      * @return bool whether the ledger was synced in this call
      */
