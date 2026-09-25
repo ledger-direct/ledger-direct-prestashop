@@ -139,6 +139,36 @@ switch ($command) {
         ]);
 
         // no break
+    case 'find-products':
+        // What a customer would find in the search box: active products whose name
+        // matches, with the gross price in the shop's default currency.
+        $query = trim((string) ($args['query'] ?? ''));
+        $langId = (int) Configuration::get('PS_LANG_DEFAULT');
+        // getPriceStatic() wants an employee or a cart in the context; a CLI has neither.
+        Context::getContext()->employee = new Employee((int) db()->getValue('SELECT id_employee FROM ' . _DB_PREFIX_ . 'employee WHERE active = 1 ORDER BY id_employee ASC'));
+        $currency = new Currency((int) Configuration::get('PS_CURRENCY_DEFAULT'));
+        $rows = db()->executeS(
+            'SELECT p.id_product, p.reference, pl.name
+               FROM ' . _DB_PREFIX_ . 'product p
+               JOIN ' . _DB_PREFIX_ . 'product_lang pl ON pl.id_product = p.id_product AND pl.id_lang = ' . $langId . '
+              WHERE p.active = 1' . ($query === '' ? '' : ' AND (pl.name LIKE "%' . pSQL($query) . '%" OR p.reference LIKE "%' . pSQL($query) . '%")') . '
+              ORDER BY pl.name ASC LIMIT 10',
+            true,
+            false
+        ) ?: [];
+        $products = [];
+        foreach ($rows as $row) {
+            $products[] = [
+                'id_product' => (int) $row['id_product'],
+                'reference' => (string) $row['reference'],
+                'name' => (string) $row['name'],
+                'price' => number_format(Product::getPriceStatic((int) $row['id_product'], true), 2, '.', ''),
+                'currency' => $currency->iso_code,
+            ];
+        }
+        emit(['query' => $query, 'products' => $products]);
+
+        // no break
     case 'order-state':
         $orderId = (int) ($args['order'] ?? fail('--order is required'));
         $order = new Order($orderId);
@@ -190,5 +220,5 @@ switch ($command) {
         emit(['id_order' => $orderId, 'state' => currentState($orderId)]);
 
     default:
-        emit(['commands' => ['configure', 'create-order', 'order-state', 'sync-marker', 'close-order']]);
+        emit(['commands' => ['configure', 'create-order', 'find-products', 'order-state', 'sync-marker', 'close-order']]);
 }
