@@ -1,6 +1,8 @@
 <?php
 
 use Hardcastle\LedgerDirect\Core\Payment\PaymentIntent;
+use LedgerDirect\Presentation\AccentColor;
+use LedgerDirect\Presentation\PageLogo;
 use LedgerDirect\Presentation\PaymentIntentPresenter;
 use LedgerDirect\Service\PaymentSyncService;
 use LedgerDirect\Service\ServiceFactory;
@@ -65,14 +67,28 @@ class LedgerdirectPaymentModuleFrontController extends ModuleFrontController
     /**
      * Asset registration belongs here, not in initContent(): by the time the
      * latter runs, PrestaShop has already collected the page's media.
+     *
+     * The page's behaviour and design come from the shared package
+     *
+     * @ledger-direct/payment-ui, copied into views/ as built files (the
+     * version is in views/js/ledger-direct-payment-ui/VERSION). The wallet
+     * library is deliberately *not* registered: the page fetches it with a
+     * native import() only when a customer opens the wallet list, from the
+     * URL the template puts into data-ld-wallets-src. Registering it here
+     * would load 1.6 MB on every visit.
      */
     public function setMedia()
     {
         $result = parent::setMedia();
 
+        $this->registerStylesheet(
+            'ledgerdirect-payment-ui',
+            'modules/' . $this->module->name . '/views/css/payment-page.css',
+            ['media' => 'all', 'priority' => 200]
+        );
         $this->registerJavascript(
-            'ledgerdirect-payment',
-            'modules/' . $this->module->name . '/views/js/payment.js',
+            'ledgerdirect-payment-ui',
+            'modules/' . $this->module->name . '/views/js/ledger-direct-payment-ui/payment-page.js',
             ['position' => 'bottom', 'priority' => 200]
         );
 
@@ -130,6 +146,8 @@ class LedgerdirectPaymentModuleFrontController extends ModuleFrontController
         }
 
         $orderCurrency = new Currency((int) $order->id_currency);
+        $configProvider = ServiceFactory::getInstance()->getConfigProvider();
+        $shopName = (string) $this->context->shop->name;
 
         $this->context->smarty->assign([
             'ld_order_reference' => $order->reference,
@@ -138,6 +156,9 @@ class LedgerdirectPaymentModuleFrontController extends ModuleFrontController
             'ld_order_total' => $this->context->getCurrentLocale()
                 ->formatPrice((float) $order->total_paid, $orderCurrency->iso_code),
             'ld_history_url' => $this->context->link->getPageLink('history', true),
+            'ld_home_url' => $this->context->link->getPageLink('index', true),
+            'ld_cart_url' => $this->context->link->getPageLink('cart', true, null, ['action' => 'show']),
+            'ld_confirmation_url' => $this->confirmationUrl($order),
             'ld_self_url' => $this->selfUrl($order),
             'ld_checked_no_payment' => $this->checkedWithoutResult,
             'ld_poll_url' => $this->context->link->getModuleLink(
@@ -146,6 +167,22 @@ class LedgerdirectPaymentModuleFrontController extends ModuleFrontController
                 ['id_order' => (int) $order->id, 'key' => $order->secure_key],
                 true
             ),
+            'ld_quote_seconds' => $configProvider->getQuoteExpirySeconds(),
+            // The merchant's part of the design: one accent colour and the logo.
+            'ld_shop_name' => $shopName,
+            'ld_accent' => AccentColor::sanitize($configProvider->getPageAccentColor()),
+            'ld_logo' => PageLogo::resolve(
+                $configProvider->getPageLogoMode(),
+                $configProvider->getPageLogoPath(),
+                $shopName,
+                static fn (string $path): bool => is_file(_PS_IMG_DIR_ . $path),
+                fn (string $path): string => $this->context->link->getMediaLink(_PS_IMG_ . $path)
+            ),
+            // Public identifiers of the wallet apps; the page offers those only when set.
+            'ld_xaman_key' => $configProvider->getXamanApiKey(),
+            'ld_wc_project' => $configProvider->getWalletConnectProjectId(),
+            // The wallet library, fetched by the page on demand (see setMedia()).
+            'ld_wallets_src' => $this->module->getPathUri() . 'views/js/ledger-direct-payment-ui/wallets.js',
             'ld_intent' => $paymentIntent === null
                 ? null
                 : PaymentIntentPresenter::present($paymentIntent, ServiceFactory::getInstance()->getSettlementPolicy()),
