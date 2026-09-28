@@ -1,7 +1,7 @@
 <?php
 
 use Hardcastle\LedgerDirect\Core\Payment\PaymentIntent;
-use LedgerDirect\Presentation\AccentColor;
+use Hardcastle\LedgerDirect\Core\Presentation\AccentColor;
 use LedgerDirect\Presentation\PageLogo;
 use LedgerDirect\Presentation\PaymentIntentPresenter;
 use LedgerDirect\Service\PaymentSyncService;

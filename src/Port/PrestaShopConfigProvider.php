@@ -6,7 +6,7 @@ namespace LedgerDirect\Port;
 
 use Configuration;
 use Hardcastle\LedgerDirect\Core\Port\ConfigProviderInterface;
-use LedgerDirect\Presentation\AccentColor;
+use Hardcastle\LedgerDirect\Core\Presentation\AccentColor;
 use LedgerDirect\Presentation\PageLogo;
 
 /**
