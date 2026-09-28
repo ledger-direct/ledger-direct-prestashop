@@ -22,6 +22,94 @@
         <source>The quote validity must be between %d and %d seconds.</source>
         <target state="translated">Die Kursgültigkeit muss zwischen %d und %d Sekunden liegen.</target>
       </trans-unit>
+      <trans-unit id="387746579e07efa6f15ccc30b422ec49">
+        <source>Choose which logo the payment page shows.</source>
+        <target state="translated">Wählen Sie, welches Logo die Zahlungsseite zeigt.</target>
+      </trans-unit>
+      <trans-unit id="eb80e2e5c8e2a88493f2fc0302c60acc">
+        <source>The logo must be a PNG, JPG, SVG or WebP file inside the shop's img/ directory, given as a path relative to it, e.g. "brand/logo.png".</source>
+        <target state="translated">Das Logo muss eine PNG-, JPG-, SVG- oder WebP-Datei im img/-Verzeichnis des Shops sein, angegeben als Pfad relativ dazu, z. B. "brand/logo.png".</target>
+      </trans-unit>
+      <trans-unit id="3bc63221b2855ecdf9d239fb48e45cf9">
+        <source>Enter the path of the logo file, or choose the shop logo or the monogram.</source>
+        <target state="translated">Geben Sie den Pfad der Logodatei an, oder wählen Sie das Shop-Logo oder das Monogramm.</target>
+      </trans-unit>
+      <trans-unit id="152118e87fb6db99199de318def1f9ad">
+        <source>The accent colour must be a hex colour such as #1f5eff.</source>
+        <target state="translated">Die Akzentfarbe muss eine Hex-Farbe wie #1f5eff sein.</target>
+      </trans-unit>
+      <trans-unit id="ac49a725da2388488309f0091aaee5d7">
+        <source>The accent colour is too light to carry white text (contrast below 4.5:1). Choose a darker colour.</source>
+        <target state="translated">Die Akzentfarbe ist zu hell für weiße Schrift (Kontrast unter 4,5:1). Wählen Sie eine dunklere Farbe.</target>
+      </trans-unit>
+      <trans-unit id="953e0e7bb7e344b837b9146275a67ea1">
+        <source>The Xaman API key contains characters it cannot contain.</source>
+        <target state="translated">Der Xaman-API-Key enthält Zeichen, die er nicht enthalten kann.</target>
+      </trans-unit>
+      <trans-unit id="d3ed9d57fbeec8ab515a2a89f28e38d8">
+        <source>The WalletConnect project id contains characters it cannot contain.</source>
+        <target state="translated">Die WalletConnect-Projekt-ID enthält Zeichen, die sie nicht enthalten kann.</target>
+      </trans-unit>
+      <trans-unit id="d35acbb07d2841712a937d5748e9bdc2">
+        <source>Payment page</source>
+        <target state="translated">Zahlungsseite</target>
+      </trans-unit>
+      <trans-unit id="8c2857a9ad1d8f31659e35e904e20fa6">
+        <source>Logo</source>
+        <target state="translated">Logo</target>
+      </trans-unit>
+      <trans-unit id="21ccae98e684eb58f808ff0ef87b18cf">
+        <source>The shop logo</source>
+        <target state="translated">Das Shop-Logo</target>
+      </trans-unit>
+      <trans-unit id="09e5b83ac0e8f08cc517b67ce7c16a33">
+        <source>A picture from the img/ directory</source>
+        <target state="translated">Ein Bild aus dem img/-Verzeichnis</target>
+      </trans-unit>
+      <trans-unit id="c7ddc82fc3cdf42ad07c0791e804e423">
+        <source>No logo, the first letter of the shop name</source>
+        <target state="translated">Kein Logo, der erste Buchstabe des Shop-Namens</target>
+      </trans-unit>
+      <trans-unit id="e99ebd5a30c1f06d433e006921e2e298">
+        <source>Shown in the header of the payment page, at most 160 by 32 pixels.</source>
+        <target state="translated">Erscheint im Kopf der Zahlungsseite, höchstens 160 mal 32 Pixel.</target>
+      </trans-unit>
+      <trans-unit id="4848e737d173f8ea7b7d72eb47c11777">
+        <source>Logo file</source>
+        <target state="translated">Logodatei</target>
+      </trans-unit>
+      <trans-unit id="d6b977ec73a55705b3dbc02137e61c69">
+        <source>Path of a PNG, JPG, SVG or WebP file relative to the shop's img/ directory, e.g. "brand/logo.png". Only used with "A picture from the img/ directory".</source>
+        <target state="translated">Pfad einer PNG-, JPG-, SVG- oder WebP-Datei relativ zum img/-Verzeichnis des Shops, z. B. "brand/logo.png". Nur mit "Ein Bild aus dem img/-Verzeichnis" verwendet.</target>
+      </trans-unit>
+      <trans-unit id="b9486aa41cd280296a43874b793b71f4">
+        <source>Accent colour</source>
+        <target state="translated">Akzentfarbe</target>
+      </trans-unit>
+      <trans-unit id="38345876b0b2b8fd8e30e28fbe9503c8">
+        <source>Buttons, the countdown bar and the destination tag are drawn in this colour with white text on it, so it has to be dark enough (contrast 4.5:1). Default #1f5eff.</source>
+        <target state="translated">Buttons, der Countdown-Balken und das Destination Tag werden in dieser Farbe mit weißer Schrift gezeichnet, sie muss also dunkel genug sein (Kontrast 4,5:1). Standard #1f5eff.</target>
+      </trans-unit>
+      <trans-unit id="37fa52d03e8511d035468175e84bd7db">
+        <source>Xaman API key</source>
+        <target state="translated">Xaman-API-Key</target>
+      </trans-unit>
+      <trans-unit id="559670b098cc865ccc2be055efe3f4c8">
+        <source>The public API key of your Xaman developer app (apps.xaman.dev). With it, customers on a phone get an "Open in wallet app" button. Never the API secret.</source>
+        <target state="translated">Der öffentliche API-Key Ihrer Xaman-Entwickler-App (apps.xaman.dev). Damit bekommen Kunden am Handy einen Button "In Wallet-App öffnen". Niemals das API-Secret.</target>
+      </trans-unit>
+      <trans-unit id="c3ac78ad77a47f719760986c958654e9">
+        <source>WalletConnect project id</source>
+        <target state="translated">WalletConnect-Projekt-ID</target>
+      </trans-unit>
+      <trans-unit id="dba723f42d523bedc31c1ee466bd9f16">
+        <source>The project id from cloud.walletconnect.com, if you want to offer WalletConnect wallets. Public, like the Xaman key.</source>
+        <target state="translated">Die Projekt-ID von cloud.walletconnect.com, wenn Sie WalletConnect-Wallets anbieten wollen. Öffentlich, wie der Xaman-Key.</target>
+      </trans-unit>
+      <trans-unit id="c9cc8cce247e49bae79f15173ce97354">
+        <source>Save</source>
+        <target state="translated">Speichern</target>
+      </trans-unit>
       <trans-unit id="63950aa871999109e98ab72e4b2f7f1f">
         <source>Receiving address</source>
         <target state="translated">Empfangsadresse</target>
@@ -70,10 +158,6 @@
         <source>XRP Ledger settings</source>
         <target state="translated">XRP-Ledger-Einstellungen</target>
       </trans-unit>
-      <trans-unit id="c9cc8cce247e49bae79f15173ce97354">
-        <source>Save</source>
-        <target state="translated">Speichern</target>
-      </trans-unit>
       <trans-unit id="b70a36683e27a793f8d76faf3e9f957e">
         <source>The native asset of the XRP Ledger. Needs no trustline.</source>
         <target state="translated">Der native Vermögenswert des XRP Ledger. Benötigt keine Trustline.</target>
@@ -97,46 +181,6 @@
       <trans-unit id="8ba44f563b2829ab670db530d325903c">
         <source>Accept XRP, RLUSD and USDC directly on the XRP Ledger.</source>
         <target state="translated">Akzeptieren Sie XRP, RLUSD und USDC direkt auf dem XRP Ledger.</target>
-      </trans-unit>
-      <trans-unit id="68ebbb61167073564b61ca77dc280a60">
-        <source>XRPL payment</source>
-        <target state="translated">XRPL-Zahlung</target>
-      </trans-unit>
-      <trans-unit id="46a2a41cc6e552044816a2d04634545d">
-        <source>State</source>
-        <target state="translated">Zustand</target>
-      </trans-unit>
-      <trans-unit id="fcdf8a82eba24e303b63b2e49a507ecb">
-        <source>Requested</source>
-        <target state="translated">Gefordert</target>
-      </trans-unit>
-      <trans-unit id="ac5bb077c33753116b5e91ff1766e7bc">
-        <source>Received</source>
-        <target state="translated">Eingegangen</target>
-      </trans-unit>
-      <trans-unit id="94325723d5b29917a78736901daf7ca7">
-        <source>another currency or issuer</source>
-        <target state="translated">andere Währung oder anderer Herausgeber</target>
-      </trans-unit>
-      <trans-unit id="a860ed9926b241b7d4dca2d00610ab2c">
-        <source>Outstanding</source>
-        <target state="translated">Offen</target>
-      </trans-unit>
-      <trans-unit id="fac82bcd0e45d6bf7cf224ab3819fcd2">
-        <source>Destination tag</source>
-        <target state="translated">Destination Tag</target>
-      </trans-unit>
-      <trans-unit id="44b9f225ed451d483a93110fad204a5c">
-        <source>Transactions on this destination tag</source>
-        <target state="translated">Transaktionen auf diesem Destination Tag</target>
-      </trans-unit>
-      <trans-unit id="63bd34f1308e37824df5b8129ba1397e">
-        <source>None yet.</source>
-        <target state="translated">Noch keine.</target>
-      </trans-unit>
-      <trans-unit id="14a94a99755c5fcd7c23335bacb4c7b8">
-        <source>no delivered amount</source>
-        <target state="translated">kein gelieferter Betrag</target>
       </trans-unit>
       <trans-unit id="e0010a0a1a3259ab5c06a19bad532851">
         <source>Paid</source>

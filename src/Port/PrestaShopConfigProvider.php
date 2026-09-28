@@ -6,6 +6,8 @@ namespace LedgerDirect\Port;
 
 use Configuration;
 use Hardcastle\LedgerDirect\Core\Port\ConfigProviderInterface;
+use LedgerDirect\Presentation\AccentColor;
+use LedgerDirect\Presentation\PageLogo;
 
 /**
  * Reads the merchant's LedgerDirect settings out of PrestaShop's
@@ -33,6 +35,17 @@ final class PrestaShopConfigProvider implements ConfigProviderInterface
 
     /** Shared secret for the cron endpoint; generated once at install. */
     public const KEY_CRON_TOKEN = 'LEDGERDIRECT_CRON_TOKEN';
+
+    /**
+     * The payment page's look: which logo, an accent colour, and the public
+     * identifiers of the wallet apps offered on a phone. All display-only —
+     * nothing here decides where money goes.
+     */
+    public const KEY_PAGE_LOGO_MODE = 'LEDGERDIRECT_PAGE_LOGO_MODE';
+    public const KEY_PAGE_LOGO_PATH = 'LEDGERDIRECT_PAGE_LOGO_PATH';
+    public const KEY_PAGE_ACCENT = 'LEDGERDIRECT_PAGE_ACCENT';
+    public const KEY_XAMAN_API_KEY = 'LEDGERDIRECT_XAMAN_API_KEY';
+    public const KEY_WALLETCONNECT_PROJECT_ID = 'LEDGERDIRECT_WALLETCONNECT_PROJECT_ID';
 
     /**
      * Five minutes. Long enough for a customer to open their wallet and send,
@@ -93,6 +106,40 @@ final class PrestaShopConfigProvider implements ConfigProviderInterface
         return $expiry > 0 ? $expiry : self::DEFAULT_QUOTE_EXPIRY_SECONDS;
     }
 
+    /** `shop`, `custom` or `none` — see PageLogo; anything else reads as `shop`. */
+    public function getPageLogoMode(): string
+    {
+        $mode = (string) \Configuration::get(self::KEY_PAGE_LOGO_MODE);
+
+        return in_array($mode, PageLogo::MODES, true) ? $mode : PageLogo::MODE_SHOP;
+    }
+
+    /** A path below img/, as the merchant typed it; PageLogo decides whether it is usable. */
+    public function getPageLogoPath(): string
+    {
+        return trim((string) \Configuration::get(self::KEY_PAGE_LOGO_PATH));
+    }
+
+    /** The stored accent colour; AccentColor::sanitize() decides whether the page uses it. */
+    public function getPageAccentColor(): string
+    {
+        $stored = \Configuration::get(self::KEY_PAGE_ACCENT);
+
+        return is_string($stored) && $stored !== '' ? $stored : AccentColor::DEFAULT;
+    }
+
+    /** Xaman's public API key; empty means the "open in wallet app" button is not offered. */
+    public function getXamanApiKey(): string
+    {
+        return trim((string) \Configuration::get(self::KEY_XAMAN_API_KEY));
+    }
+
+    /** The WalletConnect project id; empty means it is not offered. */
+    public function getWalletConnectProjectId(): string
+    {
+        return trim((string) \Configuration::get(self::KEY_WALLETCONNECT_PROJECT_ID));
+    }
+
     /**
      * @return array<string, scalar>
      */
@@ -105,6 +152,11 @@ final class PrestaShopConfigProvider implements ConfigProviderInterface
             self::KEY_ASSET_XRP => true,
             self::KEY_ASSET_RLUSD => false,
             self::KEY_ASSET_USDC => false,
+            self::KEY_PAGE_LOGO_MODE => PageLogo::MODE_SHOP,
+            self::KEY_PAGE_LOGO_PATH => '',
+            self::KEY_PAGE_ACCENT => AccentColor::DEFAULT,
+            self::KEY_XAMAN_API_KEY => '',
+            self::KEY_WALLETCONNECT_PROJECT_ID => '',
         ];
     }
 

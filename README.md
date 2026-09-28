@@ -78,6 +78,9 @@ Modules → LedgerDirect → Configure:
 | Network | `testnet` or `mainnet`. The address must belong to the selected one. |
 | Payment methods | XRP, RLUSD, USDC. Stablecoins are off by default — they need a trustline first. |
 | Quote validity | How long a quoted amount stays fixed, 60–3600 seconds. |
+| Logo | What the payment page shows in its header: the shop logo, a picture from the shop's `img/` directory (a path relative to it, e.g. `brand/logo.png`), or the first letter of the shop name. |
+| Accent colour | The one colour of the payment page — buttons, countdown bar, destination tag — with white text on it, so it must be dark enough (contrast 4.5:1). Default `#1f5eff`. |
+| Xaman API key, WalletConnect project id | Public identifiers, optional. With one of them, customers on a phone get an "Open in wallet app" button. |
 
 Issuer addresses are shown on that screen but cannot be edited. They are fixed in the core: a wrong
 issuer would send customer funds to a dead trustline.
@@ -90,6 +93,36 @@ https://<shop>/module/ledgerdirect/cron?token=<token>
 
 Call it every few minutes. Without it, a customer who closes the payment page before their
 transaction confirms is only settled the next time someone visits their payment page.
+
+## The payment page
+
+After checkout the customer lands on `/module/ledgerdirect/payment`, reachable by the order's
+`secure_key`, so a guest can return to it. The page stands on its own — the module answers
+PrestaShop's `overrideLayoutTemplate` hook with the theme's content-only layout for this one
+page, so the theme's `<head>` and stylesheets stay and its header, footer and columns go.
+
+Behaviour and design come from [`@ledger-direct/payment-ui`](https://github.com/ledger-direct/ledger-direct-payment-ui),
+the package every LedgerDirect plugin shares: the five payment states, the countdown, polling,
+copy buttons, the QR code with address, destination tag and amount, and browser wallets over
+XRPL Connect (Crossmark, GemWallet, MetaMask Snap, Ledger, Otsu, Xyra; Xaman and WalletConnect
+with the identifiers above). The module has no build step: it copies the package's built files
+into `views/`.
+
+| File | From the package | Loaded |
+|---|---|---|
+| `views/css/payment-page.css` | `dist/payment-page.css` | with the page |
+| `views/js/ledger-direct-payment-ui/payment-page.js` | `dist/payment-page.js` | with the page |
+| `views/js/ledger-direct-payment-ui/wallets.js` | `dist/wallets.js` | only when the customer opens the wallet list, by a native `import()` |
+
+`views/js/ledger-direct-payment-ui/VERSION` names the package tag the files were copied from. To
+update: copy the three files from the package's `dist/` at the new tag and write the tag into
+`VERSION`. The markup the template renders is the package's contract (`src/README.md` there);
+every sentence a customer reads is in `views/templates/front/payment.tpl` and the XLIFF catalogues,
+nothing is rounded or reformatted in the browser.
+
+Without JavaScript the page still works: the amount, address and tag are server-rendered, the QR
+code is drawn on the server from the same payment request, and the "Check payment now" button is a
+plain form.
 
 ## Development
 

@@ -331,7 +331,8 @@ final class PaymentSettlementTest extends IntegrationTestCase
         $html = $module->hookDisplayAdminOrderSide(['id_order' => (int) $this->order->id]);
 
         self::assertStringContainsString('data-ld-admin-state="partial"', $html);
-        self::assertStringContainsString('5.00000', $html);
+        // Amounts as the core states them: no padding to five places any more.
+        self::assertMatchesRegularExpression('~\b5\s+XRP~', $html);
         self::assertStringContainsString('10.06378', $html);
         self::assertStringContainsString('https://testnet.xrpl.org/transactions/' . $hash, $html);
         self::assertStringContainsString((string) $this->destinationTag, $html);

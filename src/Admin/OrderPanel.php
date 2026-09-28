@@ -100,7 +100,7 @@ final class OrderPanel
 
         return [
             'hash' => $transaction->hash,
-            'delivered' => $delivered === null ? null : PaymentIntentPresenter::formatAmount($delivered),
+            'delivered' => $delivered === null ? null : PaymentIntentPresenter::plainAmount($delivered),
             // Issued currencies carry their code as a 40-hex string on the
             // ledger (e.g. RLUSD); the merchant reads the asset from the state
             // label and the request, not from that.
