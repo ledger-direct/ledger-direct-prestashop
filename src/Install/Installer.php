@@ -323,4 +323,24 @@ final class Installer
 
         return true;
     }
+
+    /**
+     * Writes the default for every setting that has none yet and leaves the
+     * rest alone — what an upgrade needs when a version adds settings, where
+     * setDefaultConfiguration() would reset the merchant's choices.
+     */
+    public static function ensureConfigurationDefaults(): bool
+    {
+        foreach (PrestaShopConfigProvider::defaultConfiguration() as $key => $value) {
+            if (\Configuration::get($key) !== false) {
+                continue;
+            }
+
+            if (!\Configuration::updateValue($key, $value)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }

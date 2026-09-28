@@ -21,3 +21,19 @@ if (!defined('_DB_PREFIX_')) {
 if (!defined('_MYSQL_ENGINE_')) {
     define('_MYSQL_ENGINE_', 'InnoDB');
 }
+
+if (!defined('_PS_MODULE_DIR_')) {
+    define('_PS_MODULE_DIR_', '/var/www/html/modules/');
+}
+
+if (!defined('_PS_THEME_DIR_')) {
+    define('_PS_THEME_DIR_', '/var/www/html/themes/classic/');
+}
+
+if (!defined('_PS_IMG_DIR_')) {
+    define('_PS_IMG_DIR_', '/var/www/html/img/');
+}
+
+if (!defined('_PS_IMG_')) {
+    define('_PS_IMG_', '/img/');
+}

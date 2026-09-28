@@ -7,6 +7,8 @@ namespace LedgerDirect\Admin;
 use Configuration;
 use Hardcastle\LedgerDirect\Core\Xrpl\StablecoinRegistry;
 use LedgerDirect\Port\PrestaShopConfigProvider;
+use LedgerDirect\Presentation\AccentColor;
+use LedgerDirect\Presentation\PageLogo;
 use LedgerDirect\Validation\XrplAddress;
 use Module;
 use PrestaShopBundle\Translation\TranslatorInterface;
@@ -31,6 +33,9 @@ final class ConfigurationForm
 
     private const QUOTE_EXPIRY_MIN = 60;
     private const QUOTE_EXPIRY_MAX = 3600;
+
+    /** Public identifiers only (Xaman API key, WalletConnect project id): plain characters, no secrets. */
+    private const IDENTIFIER_PATTERN = '/^[A-Za-z0-9._-]{0,128}$/';
 
     public function __construct(private readonly \Module $module)
     {
@@ -98,6 +103,42 @@ final class ConfigurationForm
             );
         }
 
+        // The payment page's look. Display-only settings, but validated all the
+        // same: the logo path must stay below img/, the accent colour must
+        // carry white text, and the wallet identifiers are plain tokens.
+        $logoMode = (string) \Tools::getValue(PrestaShopConfigProvider::KEY_PAGE_LOGO_MODE);
+        $logoPath = trim((string) \Tools::getValue(PrestaShopConfigProvider::KEY_PAGE_LOGO_PATH));
+        $accent = trim((string) \Tools::getValue(PrestaShopConfigProvider::KEY_PAGE_ACCENT));
+        $xamanApiKey = trim((string) \Tools::getValue(PrestaShopConfigProvider::KEY_XAMAN_API_KEY));
+        $walletConnectProjectId = trim((string) \Tools::getValue(PrestaShopConfigProvider::KEY_WALLETCONNECT_PROJECT_ID));
+
+        if (!in_array($logoMode, PageLogo::MODES, true)) {
+            $errors[] = $this->translator()->trans('Choose which logo the payment page shows.', [], self::DOMAIN);
+        }
+
+        if ($logoPath !== '' && (!PageLogo::isValidPath($logoPath) || !is_file(_PS_IMG_DIR_ . $logoPath))) {
+            $errors[] = $this->translator()->trans('The logo must be a PNG, JPG, SVG or WebP file inside the shop\'s img/ directory, given as a path relative to it, e.g. "brand/logo.png".', [], self::DOMAIN);
+        }
+
+        if ($logoMode === PageLogo::MODE_CUSTOM && $logoPath === '') {
+            $errors[] = $this->translator()->trans('Enter the path of the logo file, or choose the shop logo or the monogram.', [], self::DOMAIN);
+        }
+
+        $normalizedAccent = AccentColor::normalize($accent);
+        if ($normalizedAccent === null) {
+            $errors[] = $this->translator()->trans('The accent colour must be a hex colour such as #1f5eff.', [], self::DOMAIN);
+        } elseif (AccentColor::contrastToWhite($normalizedAccent) < AccentColor::MIN_CONTRAST_TO_WHITE) {
+            $errors[] = $this->translator()->trans('The accent colour is too light to carry white text (contrast below 4.5:1). Choose a darker colour.', [], self::DOMAIN);
+        }
+
+        if (preg_match(self::IDENTIFIER_PATTERN, $xamanApiKey) !== 1) {
+            $errors[] = $this->translator()->trans('The Xaman API key contains characters it cannot contain.', [], self::DOMAIN);
+        }
+
+        if (preg_match(self::IDENTIFIER_PATTERN, $walletConnectProjectId) !== 1) {
+            $errors[] = $this->translator()->trans('The WalletConnect project id contains characters it cannot contain.', [], self::DOMAIN);
+        }
+
         if ($errors !== []) {
             return $errors;
         }
@@ -109,6 +150,12 @@ final class ConfigurationForm
         foreach (self::assetKeys() as $key) {
             \Configuration::updateValue($key, (bool) \Tools::getValue($key));
         }
+
+        \Configuration::updateValue(PrestaShopConfigProvider::KEY_PAGE_LOGO_MODE, $logoMode);
+        \Configuration::updateValue(PrestaShopConfigProvider::KEY_PAGE_LOGO_PATH, $logoPath);
+        \Configuration::updateValue(PrestaShopConfigProvider::KEY_PAGE_ACCENT, (string) $normalizedAccent);
+        \Configuration::updateValue(PrestaShopConfigProvider::KEY_XAMAN_API_KEY, $xamanApiKey);
+        \Configuration::updateValue(PrestaShopConfigProvider::KEY_WALLETCONNECT_PROJECT_ID, $walletConnectProjectId);
 
         return [];
     }
@@ -138,7 +185,82 @@ final class ConfigurationForm
             $helper->fields_value[$key] = \Configuration::get($key);
         }
 
-        return $helper->generateForm([$this->formDefinition()]);
+        $configProvider = new PrestaShopConfigProvider();
+        $helper->fields_value[PrestaShopConfigProvider::KEY_PAGE_LOGO_MODE] = $configProvider->getPageLogoMode();
+        $helper->fields_value[PrestaShopConfigProvider::KEY_PAGE_LOGO_PATH] = $configProvider->getPageLogoPath();
+        $helper->fields_value[PrestaShopConfigProvider::KEY_PAGE_ACCENT] = AccentColor::sanitize($configProvider->getPageAccentColor());
+        $helper->fields_value[PrestaShopConfigProvider::KEY_XAMAN_API_KEY] = $configProvider->getXamanApiKey();
+        $helper->fields_value[PrestaShopConfigProvider::KEY_WALLETCONNECT_PROJECT_ID] = $configProvider->getWalletConnectProjectId();
+
+        return $helper->generateForm([$this->formDefinition(), $this->paymentPageFormDefinition()]);
+    }
+
+    /**
+     * The second fieldset: how the payment page looks. The logo is a path
+     * below img/ rather than an upload — HelperForm has no media picker for
+     * modules, and the module must not accept files of its own.
+     *
+     * @return array<string, mixed>
+     */
+    private function paymentPageFormDefinition(): array
+    {
+        return [
+            'form' => [
+                'legend' => [
+                    'title' => $this->translator()->trans('Payment page', [], self::DOMAIN),
+                    'icon' => 'icon-picture',
+                ],
+                'input' => [
+                    [
+                        'type' => 'select',
+                        'label' => $this->translator()->trans('Logo', [], self::DOMAIN),
+                        'name' => PrestaShopConfigProvider::KEY_PAGE_LOGO_MODE,
+                        'options' => [
+                            'query' => [
+                                ['id' => PageLogo::MODE_SHOP, 'name' => $this->translator()->trans('The shop logo', [], self::DOMAIN)],
+                                ['id' => PageLogo::MODE_CUSTOM, 'name' => $this->translator()->trans('A picture from the img/ directory', [], self::DOMAIN)],
+                                ['id' => PageLogo::MODE_NONE, 'name' => $this->translator()->trans('No logo, the first letter of the shop name', [], self::DOMAIN)],
+                            ],
+                            'id' => 'id',
+                            'name' => 'name',
+                        ],
+                        'desc' => $this->translator()->trans('Shown in the header of the payment page, at most 160 by 32 pixels.', [], self::DOMAIN),
+                    ],
+                    [
+                        'type' => 'text',
+                        'label' => $this->translator()->trans('Logo file', [], self::DOMAIN),
+                        'name' => PrestaShopConfigProvider::KEY_PAGE_LOGO_PATH,
+                        'required' => false,
+                        'desc' => $this->translator()->trans('Path of a PNG, JPG, SVG or WebP file relative to the shop\'s img/ directory, e.g. "brand/logo.png". Only used with "A picture from the img/ directory".', [], self::DOMAIN),
+                    ],
+                    [
+                        'type' => 'color',
+                        'label' => $this->translator()->trans('Accent colour', [], self::DOMAIN),
+                        'name' => PrestaShopConfigProvider::KEY_PAGE_ACCENT,
+                        'required' => false,
+                        'desc' => $this->translator()->trans('Buttons, the countdown bar and the destination tag are drawn in this colour with white text on it, so it has to be dark enough (contrast 4.5:1). Default #1f5eff.', [], self::DOMAIN),
+                    ],
+                    [
+                        'type' => 'text',
+                        'label' => $this->translator()->trans('Xaman API key', [], self::DOMAIN),
+                        'name' => PrestaShopConfigProvider::KEY_XAMAN_API_KEY,
+                        'required' => false,
+                        'desc' => $this->translator()->trans('The public API key of your Xaman developer app (apps.xaman.dev). With it, customers on a phone get an "Open in wallet app" button. Never the API secret.', [], self::DOMAIN),
+                    ],
+                    [
+                        'type' => 'text',
+                        'label' => $this->translator()->trans('WalletConnect project id', [], self::DOMAIN),
+                        'name' => PrestaShopConfigProvider::KEY_WALLETCONNECT_PROJECT_ID,
+                        'required' => false,
+                        'desc' => $this->translator()->trans('The project id from cloud.walletconnect.com, if you want to offer WalletConnect wallets. Public, like the Xaman key.', [], self::DOMAIN),
+                    ],
+                ],
+                'submit' => [
+                    'title' => $this->translator()->trans('Save', [], self::DOMAIN),
+                    'class' => 'btn btn-default pull-right',
+                ],
+            ],
+        ];
     }
 
     /**

@@ -4,6 +4,7 @@ use LedgerDirect\Admin\ConfigurationForm;
 use LedgerDirect\Admin\OrderPanel;
 use LedgerDirect\Install\Installer;
 use LedgerDirect\Port\PrestaShopConfigProvider;
+use LedgerDirect\Presentation\PaymentIntentPresenter;
 use LedgerDirect\Service\ServiceFactory;
 use PrestaShop\PrestaShop\Core\Payment\PaymentOption;
 
@@ -27,7 +28,7 @@ class Ledgerdirect extends PaymentModule
     {
         $this->name = 'ledgerdirect';
         $this->tab = 'payments_gateways';
-        $this->version = '0.4.0';
+        $this->version = '0.5.0';
         $this->author = 'Hardcastle';
         $this->bootstrap = true;
         parent::__construct();
@@ -46,6 +47,7 @@ class Ledgerdirect extends PaymentModule
         return parent::install()
             && $this->registerHook('paymentOptions')
             && $this->registerHook('displayAdminOrderSide')
+            && $this->registerHook('overrideLayoutTemplate')
             && Installer::install($this->name);
     }
 
@@ -113,13 +115,11 @@ class Ledgerdirect extends PaymentModule
                 continue;
             }
 
-            $amount = is_array($quote->amountRequested)
-                ? number_format((float) $quote->amountRequested['value'], 2, '.', '')
-                : number_format($quote->amountRequested, 5, '.', '');
-
+            // The amount as the core states it — a plain decimal, not rounded a
+            // second time here; the payment page shows the same number.
             $this->smarty->assign([
                 'ld_asset' => $asset,
-                'ld_amount' => $amount,
+                'ld_amount' => PaymentIntentPresenter::plainAmount($quote->amountRequested),
                 'ld_network' => $network,
                 'ld_is_testnet' => $network === PrestaShopConfigProvider::NETWORK_TESTNET,
             ]);
@@ -127,6 +127,7 @@ class Ledgerdirect extends PaymentModule
             $option = new PaymentOption();
             $option->setModuleName($this->name)
                 ->setCallToActionText($this->trans('Pay with %s', [$asset], 'Modules.Ledgerdirect.Shop'))
+                ->setLogo(Media::getMediaPath(_PS_MODULE_DIR_ . $this->name . '/views/img/' . strtolower($asset) . '_payment.svg'))
                 ->setAction($this->context->link->getModuleLink(
                     $this->name,
                     'validation',
@@ -164,6 +165,37 @@ class Ledgerdirect extends PaymentModule
     public function hookDisplayAdminOrderSide(array $params): string
     {
         return (new OrderPanel($this))->render((int) ($params['id_order'] ?? 0));
+    }
+
+    /**
+     * The payment page stands on its own, without the theme's header, footer
+     * and columns — it is the page a customer looks at while a wallet is
+     * open next to it, and nothing on it should lead away. PrestaShop asks
+     * every module for a layout; this one answers only for its own page and
+     * hands back the theme's content-only layout, which keeps the theme's
+     * <head> and stylesheets. Any other page keeps whatever layout it has.
+     *
+     * The page is recognised by its controller, not by the `entity` name:
+     * for every front controller of a payment module PrestaShop names the
+     * page `module-payment-submit`, so the name cannot tell the payment page
+     * from the poll or the cron endpoint.
+     *
+     * @param array<string, mixed> $params
+     */
+    public function hookOverrideLayoutTemplate(array $params): ?string
+    {
+        if (!($params['controller'] ?? null) instanceof LedgerdirectPaymentModuleFrontController) {
+            return null;
+        }
+
+        $layout = 'layout-content-only';
+        if (!is_file(_PS_THEME_DIR_ . 'templates/layouts/' . $layout . '.tpl')) {
+            // A theme without that layout keeps its default one; the page
+            // then renders inside the theme's frame, which is still a page.
+            return null;
+        }
+
+        return $this->context->shop->theme->getLayoutPath($layout);
     }
 
     /**
