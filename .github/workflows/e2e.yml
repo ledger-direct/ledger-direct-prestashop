@@ -1,0 +1,96 @@
+# Nightly end-to-end run against the XRPL testnet (Handover-E2E-Teststrategie.md, stage 1).
+#
+# The same throwaway PrestaShop as the integration suite (dev/ci/docker-compose.yml,
+# Flashlight), the module installed into it, then the harness `ledger-direct-e2e`
+# drives the case catalogue PS-01…PS-11 over the shop's HTTP face and its helper
+# script. Real transactions on the testnet: a fresh receiving account per run, paid
+# from the treasury the organisation secrets name. Not a merge gate — the testnet
+# and its faucet are not deterministic — so it runs on a schedule and on demand.
+#
+# Secrets (organisation-wide, shared by the plugin repos):
+#   LEDGERDIRECT_CI_XRPL_TREASURY_SEED / _ADDRESS   the CI payer wallet (XRP, RLUSD, USDC), separate from the local one
+# The harness repository ledger-direct/ledger-direct-e2e is public; its checkout needs no token.
+name: E2E (testnet)
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+    inputs:
+      cases:
+        description: 'Case IDs, "automated" or "all" (all includes PS-10, 35 minutes)'
+        default: 'all'
+
+env:
+  PHP_MIN: '8.2'
+
+jobs:
+  e2e:
+    name: ld-e2e against Flashlight
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_MIN }}
+          coverage: none
+
+      # Flashlight mounts this checkout as modules/ledgerdirect; the module needs its vendor/.
+      - name: Install module dependencies
+        uses: ramsey/composer-install@v4
+
+      - name: Start PrestaShop Flashlight
+        run: docker compose -f dev/ci/docker-compose.yml up -d --wait --quiet-pull
+
+      - name: Install the module
+        run: docker compose -f dev/ci/docker-compose.yml exec -T prestashop php bin/console prestashop:module install ledgerdirect
+
+      - name: Check out the harness
+        uses: actions/checkout@v7
+        with:
+          repository: ledger-direct/ledger-direct-e2e
+          path: e2e
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: e2e/package-lock.json
+
+      - name: Build the harness
+        working-directory: e2e
+        run: npm ci && npm run build
+
+      # The harness reaches the shop on localhost:8000 and its helper script through
+      # `docker compose exec` in dev/ci. The seed comes from the environment only and
+      # is never printed: the harness redacts anything shaped like a seed.
+      - name: Run the case catalogue
+        working-directory: e2e
+        env:
+          # The harness reads the testnet treasury variables; in CI they hold the dedicated CI wallet.
+          LEDGERDIRECT_TESTNET_XRPL_TREASURY_SEED: ${{ secrets.LEDGERDIRECT_CI_XRPL_TREASURY_SEED }}
+          LEDGERDIRECT_TESTNET_XRPL_TREASURY_ADDRESS: ${{ secrets.LEDGERDIRECT_CI_XRPL_TREASURY_ADDRESS }}
+        run: >
+          node dist/cli.js run --target prestashop
+          --cases "${{ github.event.inputs.cases || 'all' }}"
+          --compose-dir "$GITHUB_WORKSPACE/dev/ci"
+          --base-url http://localhost:8000
+          --report out/report.json
+
+      - name: Upload the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ld-e2e-report
+          path: e2e/out/report.json
+          if-no-files-found: ignore
+
+      - name: Show container logs
+        if: failure()
+        run: docker compose -f dev/ci/docker-compose.yml logs --no-color
+
+      - name: Stop PrestaShop Flashlight
+        if: always()
+        run: docker compose -f dev/ci/docker-compose.yml down -v
