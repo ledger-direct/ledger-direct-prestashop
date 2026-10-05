@@ -126,6 +126,8 @@ plain form.
 
 ## Development
 
+How the whole of LedgerDirect is tested across the core, the shared page package and the four plugins — the layers, what each catches, the nightly end-to-end runs and the manual cases — is in [`docs/testing.md` of the core](https://github.com/ledger-direct/ledger-direct-core-php/blob/master/docs/testing.md).
+
 Development tooling lives in `dev/`, as a Composer project of its own. That separation is
 load-bearing: PrestaShop autoloads the module's `vendor/` on every request, so a dev dependency
 installed there can shadow the shop's own copy of the same package. `dev/vendor/` is never
