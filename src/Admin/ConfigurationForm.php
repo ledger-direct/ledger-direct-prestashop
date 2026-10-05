@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace LedgerDirect\Admin;
 
 use Configuration;
+use Hardcastle\LedgerDirect\Core\Presentation\AccentColor;
 use Hardcastle\LedgerDirect\Core\Xrpl\StablecoinRegistry;
 use LedgerDirect\Port\PrestaShopConfigProvider;
-use LedgerDirect\Presentation\AccentColor;
 use LedgerDirect\Presentation\PageLogo;
 use LedgerDirect\Validation\XrplAddress;
 use Module;

@@ -11,6 +11,7 @@ use BaconQrCode\Writer;
 use Brick\Math\BigDecimal;
 use Hardcastle\LedgerDirect\Core\Payment\PaymentIntent;
 use Hardcastle\LedgerDirect\Core\Payment\PaymentStatus;
+use Hardcastle\LedgerDirect\Core\Payment\PaymentUri;
 use Hardcastle\LedgerDirect\Core\Payment\SettlementPolicy;
 use Hardcastle\LedgerDirect\Core\Xrpl\XrplAmount;
 
