@@ -61,6 +61,39 @@ function currentState(int $orderId): int
     return (int) db()->getValue('SELECT current_state FROM ' . _DB_PREFIX_ . 'orders WHERE id_order = ' . $orderId, false);
 }
 
+const TEST_PRODUCT_REFERENCE = 'LD-E2E-001';
+
+/**
+ * A 1.00 article, created once: the catalogue wants small orders, where rounding
+ * bites hardest — and a nightly run must not spend ten times the amount because the
+ * demo catalogue starts at 9.00 plus shipping. Virtual and untaxed, so the order
+ * total is exactly the price. Same reference as in the other drivers of the harness.
+ */
+function ensureTestProduct(): int
+{
+    $existing = (int) db()->getValue('SELECT id_product FROM ' . _DB_PREFIX_ . "product WHERE reference = '" . pSQL(TEST_PRODUCT_REFERENCE) . "'");
+    if ($existing > 0) {
+        return $existing;
+    }
+
+    $product = new Product();
+    $product->reference = TEST_PRODUCT_REFERENCE;
+    $product->price = 1.0;
+    $product->id_tax_rules_group = 0;
+    $product->is_virtual = true;
+    $product->active = true;
+    $product->id_category_default = (int) Configuration::get('PS_HOME_CATEGORY');
+    foreach (Language::getIDs(false) as $langId) {
+        $product->name[$langId] = 'LedgerDirect E2E test article';
+        $product->link_rewrite[$langId] = 'ledgerdirect-e2e-test-article';
+    }
+    $product->add();
+    $product->addToCategories([$product->id_category_default]);
+    StockAvailable::setQuantity((int) $product->id, 0, 100000);
+
+    return (int) $product->id;
+}
+
 switch ($command) {
     case 'configure':
         // The shop's receiving account for this run, plus network and assets.
@@ -74,6 +107,7 @@ switch ($command) {
         Configuration::updateValue(PrestaShopConfigProvider::KEY_QUOTE_EXPIRY, (int) ($args['quote-expiry'] ?? 300));
         emit([
             'account' => $account,
+            'test_product' => ensureTestProduct(),
             'network' => Configuration::get(PrestaShopConfigProvider::KEY_NETWORK),
             'assets' => $assets,
             'quote_expiry' => (int) Configuration::get(PrestaShopConfigProvider::KEY_QUOTE_EXPIRY),
@@ -87,7 +121,7 @@ switch ($command) {
         // validation controller takes, minus the browser.
         $asset = $args['asset'] ?? 'XRP';
         $customerId = (int) ($args['customer'] ?? 2);
-        $productId = (int) ($args['product'] ?? db()->getValue('SELECT id_product FROM ' . _DB_PREFIX_ . 'product WHERE active = 1 ORDER BY price ASC'));
+        $productId = (int) ($args['product'] ?? ensureTestProduct());
         $quantity = (int) ($args['quantity'] ?? 1);
 
         $context = Context::getContext();
