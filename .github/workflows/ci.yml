@@ -220,7 +220,7 @@ jobs:
         working-directory: build
         run: zip -qr ledgerdirect.zip ledgerdirect
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v6
         with:
           name: ledgerdirect
           path: build/ledgerdirect.zip
