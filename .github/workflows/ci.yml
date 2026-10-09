@@ -123,6 +123,15 @@ jobs:
         with:
           working-directory: dev
 
+      # Docker Hub counts anonymous pulls per IP, and GitHub-hosted runners share
+      # theirs with everyone, so pulls failed at random with "toomanyrequests".
+      # Logged in, they count against the organisation's account instead.
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Run PHPStan inside prestashop/prestashop:${{ matrix.prestashop }}
         run: |
           docker run --rm \
@@ -153,6 +162,15 @@ jobs:
         uses: ramsey/composer-install@v4
         with:
           working-directory: dev
+
+      # Docker Hub counts anonymous pulls per IP, and GitHub-hosted runners share
+      # theirs with everyone, so pulls failed at random with "toomanyrequests".
+      # Logged in, they count against the organisation's account instead.
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Start PrestaShop Flashlight
         run: docker compose -f dev/ci/docker-compose.yml up -d --wait --quiet-pull

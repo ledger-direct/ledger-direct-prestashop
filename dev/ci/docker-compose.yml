@@ -10,7 +10,9 @@
 #     php dev/vendor/bin/phpunit -c dev/phpunit.xml.dist --testsuite integration
 services:
   mysql:
-    image: mariadb:11
+    # The Docker Official Image from AWS's public mirror, which has no pull rate
+    # limit; Docker Hub counts anonymous pulls per IP, shared on CI runners.
+    image: public.ecr.aws/docker/library/mariadb:11
     environment:
       MYSQL_ROOT_PASSWORD: prestashop
       MYSQL_DATABASE: prestashop
