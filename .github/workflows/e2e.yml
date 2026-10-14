@@ -62,7 +62,7 @@ jobs:
           repository: ledger-direct/ledger-direct-e2e
           path: e2e
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
@@ -90,7 +90,7 @@ jobs:
 
       - name: Upload the report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ld-e2e-report
           path: e2e/out/report.json
