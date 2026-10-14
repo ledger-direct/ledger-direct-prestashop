@@ -253,6 +253,15 @@ switch ($command) {
         }
         emit(['id_order' => $orderId, 'state' => currentState($orderId)]);
 
+    case 'transactions':
+        // PS-11: what the merchant can see for a receiving account and tag — every
+        // transaction the module has stored, whatever order it belongs to.
+        $account = (string) ($args['account'] ?? fail('--account is required'));
+        $tag = (int) ($args['tag'] ?? fail('--tag is required'));
+        $transactions = ServiceFactory::getInstance()->getSyncService()->findTransactions($account, $tag);
+        emit(['hashes' => array_map(static fn ($transaction): string => $transaction->hash, $transactions)]);
+
+        // no break
     default:
-        emit(['commands' => ['configure', 'create-order', 'find-products', 'order-state', 'sync-marker', 'close-order']]);
+        emit(['commands' => ['configure', 'create-order', 'find-products', 'order-state', 'sync-marker', 'close-order', 'transactions']]);
 }

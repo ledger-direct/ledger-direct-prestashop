@@ -33,18 +33,29 @@ final class PaymentSyncService
     }
 
     /**
-     * Syncs the ledger once, then tries to settle every order still waiting.
+     * Syncs the configured receiving account, then every other account the
+     * waiting orders were quoted against, then tries to settle every order
+     * still waiting.
+     *
+     * The configured account is synced whether or not an order points at it,
+     * so a payment on an order the merchant has already cancelled still
+     * reaches the transaction table and the order panel. The accounts of the
+     * waiting orders are synced besides: a shop with a test phase has orders
+     * on both networks, and an order quoted against an earlier receiving
+     * address still has to settle after the merchant changed it.
      *
      * @return array{synced: bool, checked: int, settled: int}
      */
     public function syncAndMatchAll(): array
     {
         $synced = $this->syncLedger();
+        $orderIds = $this->findAwaitingOrderIds();
+        $this->syncAccountsOf($orderIds);
 
         $checked = 0;
         $settled = 0;
 
-        foreach ($this->findAwaitingOrderIds() as $orderId) {
+        foreach ($orderIds as $orderId) {
             ++$checked;
             if ($this->matchOrder($orderId)) {
                 ++$settled;
@@ -52,6 +63,48 @@ final class PaymentSyncService
         }
 
         return ['synced' => $synced, 'checked' => $checked, 'settled' => $settled];
+    }
+
+    /**
+     * One node request per further (network, account) pair the given orders
+     * were quoted against; the configured pair is left to syncLedger().
+     *
+     * @param int[] $orderIds
+     */
+    private function syncAccountsOf(array $orderIds): void
+    {
+        $configProvider = $this->services->getConfigProvider();
+        $configured = $configProvider->getNetwork(PrestaShopConfigProvider::CHAIN_XRPL)
+            . '|' . $configProvider->getDestinationAccount(PrestaShopConfigProvider::CHAIN_XRPL);
+
+        $pairs = [];
+        foreach ($orderIds as $orderId) {
+            try {
+                $intent = $this->intents->find($orderId);
+            } catch (\Throwable) {
+                continue; // matchOrder() logs the unreadable record
+            }
+            if ($intent === null) {
+                continue;
+            }
+            $key = $intent->network . '|' . $intent->destinationAccount;
+            if ($key !== $configured) {
+                $pairs[$key] = [$intent->destinationAccount, $intent->network];
+            }
+        }
+
+        foreach ($pairs as [$account, $network]) {
+            try {
+                $this->services->getSyncService()->syncTransactions($account, $network);
+            } catch (\Throwable $exception) {
+                // One account must not stop the others; the next run retries it.
+                $this->services->getLogger()->warning('Could not sync a receiving account of a waiting order', [
+                    'account' => $account,
+                    'network' => $network,
+                    'exception' => $exception->getMessage(),
+                ]);
+            }
+        }
     }
 
     /**
