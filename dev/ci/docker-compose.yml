@@ -10,9 +10,12 @@
 #     php dev/vendor/bin/phpunit -c dev/phpunit.xml.dist --testsuite integration
 services:
   mysql:
-    # The Docker Official Image from AWS's public mirror, which has no pull rate
-    # limit; Docker Hub counts anonymous pulls per IP, shared on CI runners.
-    image: public.ecr.aws/docker/library/mariadb:11
+    # From Docker Hub, pulled logged in: CI and the nightly run log in before
+    # `compose up` (docker/login-action), so the pull counts against the
+    # organisation's account, not the runner's shared IP. The AWS public mirror
+    # used before has an anonymous data quota of its own that the shared runner
+    # IPs exhaust mid-month ("toomanyrequests: Data limit exceeded", 2026-10-16).
+    image: mariadb:11
     environment:
       MYSQL_ROOT_PASSWORD: prestashop
       MYSQL_DATABASE: prestashop
