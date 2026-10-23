@@ -81,6 +81,11 @@ jobs:
           # The harness reads the testnet treasury variables; in CI they hold the dedicated CI wallet.
           LEDGERDIRECT_TESTNET_XRPL_TREASURY_SEED: ${{ secrets.LEDGERDIRECT_CI_XRPL_TREASURY_SEED }}
           LEDGERDIRECT_TESTNET_XRPL_TREASURY_ADDRESS: ${{ secrets.LEDGERDIRECT_CI_XRPL_TREASURY_ADDRESS }}
+          # Spending limits, in the asset's units. A full run with the 1.00 test article spends about
+          # 5.3 XRP, 1.9 RLUSD and 1.1 USDC; a run that wants more (a pricier article, a falling XRP
+          # price, a loop) fails loudly instead of emptying the CI wallet. No other asset gets anything.
+          LD_E2E_MAX_PAYMENT: '5'
+          LD_E2E_RUN_BUDGET: XRP=15,RLUSD=5,USDC=5
         run: >
           node dist/cli.js run --target prestashop
           --cases "${{ github.event.inputs.cases || 'all' }}"
