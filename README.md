@@ -66,7 +66,8 @@ old payments.
 
 Upgrading from an earlier version runs the module's migrations (`upgrade/`) through PrestaShop's
 usual upgrade step in the Module Manager. Version 0.2.0 adds a `network` column to the synced
-transactions; existing rows are backfilled from their CTID.
+transactions; existing rows are backfilled from their CTID. Version 0.5.2 renames the CTID column
+to `tx_ctid`, the name core 0.9 uses on every platform.
 
 ## Configuration
 

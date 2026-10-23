@@ -9,9 +9,10 @@ use LedgerDirect\Install\Installer;
 use LedgerDirect\Port\PrestaShopXrplTransactionRepository;
 
 /**
- * The 0.1.0 -> 0.2.0 schema migration, against the real table.
+ * The schema migrations since 0.1.0, against the real table.
  *
- * Runs the migration backwards first: drops what 0.2.0 added, so the table
+ * Runs them backwards first: drops what 0.2.0 added and undoes the 0.5.2
+ * column rename, so the table
  * looks like a 0.1.0 install with rows in it, then brings it forward again
  * through the same code the upgrade script and install() use. Every step is
  * wrapped so a failing assertion still leaves the table current.
@@ -41,6 +42,7 @@ final class InstallerSchemaTest extends IntegrationTestCase
         self::assertTrue(Installer::ensureSchema());
         self::assertTrue(Installer::ensureSchema());
         self::assertTrue($this->hasNetworkColumn());
+        self::assertSame(['tx_ctid'], $this->ctidColumns());
     }
 
     public function testUpgradeAddsTheNetworkColumnAndBackfillsItFromTheCtid(): void
@@ -54,9 +56,11 @@ final class InstallerSchemaTest extends IntegrationTestCase
 
         $this->downgradeToInitialSchema();
         self::assertFalse($this->hasNetworkColumn());
+        self::assertSame(['ctid'], $this->ctidColumns());
 
         self::assertTrue(Installer::ensureSchema());
         self::assertTrue($this->hasNetworkColumn());
+        self::assertSame(['tx_ctid'], $this->ctidColumns());
 
         $byHash = [];
         foreach ($repository->findTransactions($this->account, 77) as $transaction) {
@@ -74,6 +78,19 @@ final class InstallerSchemaTest extends IntegrationTestCase
         $db = \Db::getInstance();
         $db->execute('ALTER TABLE `' . $this->table . '` DROP KEY `idx_ledger_direct_cursor`');
         $db->execute('ALTER TABLE `' . $this->table . '` DROP COLUMN `network`');
+        $db->execute('ALTER TABLE `' . $this->table . '` CHANGE COLUMN `tx_ctid` `ctid` VARCHAR(16) NOT NULL');
+    }
+
+    /**
+     * @return string[] the CTID column(s) the table carries, old name and new
+     */
+    private function ctidColumns(): array
+    {
+        $rows = \Db::getInstance()->executeS(
+            'SHOW COLUMNS FROM `' . $this->table . '` WHERE `Field` IN ("ctid", "tx_ctid")'
+        );
+
+        return is_array($rows) ? array_column($rows, 'Field') : [];
     }
 
     private function hasNetworkColumn(): bool

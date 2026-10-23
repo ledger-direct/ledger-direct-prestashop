@@ -125,7 +125,7 @@ final class PrestaShopXrplTransactionRepository implements XrplTransactionReposi
         // `hash` is what actually guarantees uniqueness; IGNORE just lets the
         // loser of the race proceed quietly instead of erroring.
         $sql = 'INSERT IGNORE INTO `' . self::table(Installer::TABLE_TX) . '`
-                    (`network`, `ledger_index`, `hash`, `ctid`, `account`, `destination`, `destination_tag`, `date`, `meta`, `tx`)
+                    (`network`, `ledger_index`, `hash`, `tx_ctid`, `account`, `destination`, `destination_tag`, `date`, `meta`, `tx`)
                 VALUES ' . implode(',', $values);
 
         if (!\Db::getInstance()->execute($sql)) {
@@ -199,7 +199,7 @@ final class PrestaShopXrplTransactionRepository implements XrplTransactionReposi
             network: (string) $row['network'],
             ledgerIndex: (string) $row['ledger_index'],
             hash: (string) $row['hash'],
-            ctid: (string) $row['ctid'],
+            ctid: (string) $row['tx_ctid'],
             account: (string) $row['account'],
             destination: (string) $row['destination'],
             destinationTag: $row['destination_tag'] === null ? null : (int) $row['destination_tag'],
