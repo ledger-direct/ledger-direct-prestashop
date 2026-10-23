@@ -100,11 +100,27 @@ final class Installer
      * its last four hex digits are the XRPL network id, 0 mainnet, 1 testnet
      * (XLS-37) — so the cursor keeps working for rows synced before the
      * column existed. Anything else stays '' and simply never feeds a cursor.
+     *
+     * 0.5.2 (core 0.9): the CTID column is `tx_ctid`. PostgreSQL gives every
+     * table a system column called `ctid`, and no user column may take that
+     * name, so the core fixes `tx_ctid` for every adapter and the plugins
+     * follow (INVARIANTS.md, "Tables"); the payment record keeps its `ctid`
+     * field. Renamed in place, before the backfill reads it.
      */
     public static function ensureSchema(): bool
     {
         $db = \Db::getInstance();
         $table = _DB_PREFIX_ . self::TABLE_TX;
+
+        if (self::columnExists($table, 'ctid') && !self::columnExists($table, 'tx_ctid')) {
+            $renamed = $db->execute(
+                'ALTER TABLE `' . $table . '`
+                 CHANGE COLUMN `ctid` `tx_ctid` VARCHAR(16) NOT NULL'
+            );
+            if (!$renamed) {
+                return false;
+            }
+        }
 
         if (!self::columnExists($table, 'network')) {
             $added = $db->execute(
@@ -128,7 +144,7 @@ final class Installer
 
         return $db->execute(
             'UPDATE `' . $table . '`
-                SET `network` = CASE RIGHT(`ctid`, 4)
+                SET `network` = CASE RIGHT(`tx_ctid`, 4)
                                     WHEN "0000" THEN "mainnet"
                                     WHEN "0001" THEN "testnet"
                                     ELSE ""
@@ -185,7 +201,7 @@ final class Installer
             `network` VARCHAR(16) NOT NULL,
             `ledger_index` BIGINT UNSIGNED NOT NULL,
             `hash` VARCHAR(64) NOT NULL,
-            `ctid` VARCHAR(16) NOT NULL,
+            `tx_ctid` VARCHAR(16) NOT NULL,
             `account` VARCHAR(64) NOT NULL,
             `destination` VARCHAR(64) NOT NULL,
             `destination_tag` INT UNSIGNED NULL DEFAULT NULL,
