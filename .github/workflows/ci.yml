@@ -244,8 +244,8 @@ jobs:
         working-directory: build/ledgerdirect
         run: |
           test -f config.xml || { echo "::error::config.xml is missing from the release archive"; exit 1; }
-          class_version=$(sed -nE "s/.*\\\$this->version = '([^']+)'.*/\\1/p" ledgerdirect.php)
-          xml_version=$(sed -nE 's#.*<version><!\[CDATA\[([^]]+)\]\]></version>.*#\1#p' config.xml)
+          class_version=$(grep -oE "this->version = '[^']+'" ledgerdirect.php | grep -oE "'[^']+'" | tr -d "'")
+          xml_version=$(grep -oE '<version><!\[CDATA\[[^]]+\]\]>' config.xml | grep -oE '\[[^]]+\]' | tr -d '[]')
           echo "ledgerdirect.php: $class_version, config.xml: $xml_version"
           test -n "$class_version" && test "$class_version" = "$xml_version" \
             || { echo "::error::config.xml says version '$xml_version' but ledgerdirect.php says '$class_version' — regenerate it (load the module once in a shop) and commit it with the version bump"; exit 1; }
