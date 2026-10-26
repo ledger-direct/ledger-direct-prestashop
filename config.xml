@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module>
+    <name>ledgerdirect</name>
+    <displayName><![CDATA[LedgerDirect]]></displayName>
+    <version><![CDATA[0.5.2]]></version>
+    <description><![CDATA[Accept XRP, RLUSD and USDC directly on the XRP Ledger.]]></description>
+    <author><![CDATA[Hardcastle]]></author>
+    <tab><![CDATA[payments_gateways]]></tab>
+    <is_configurable>1</is_configurable>
+    <need_instance>1</need_instance>
+</module>

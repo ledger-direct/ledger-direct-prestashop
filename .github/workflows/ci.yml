@@ -234,6 +234,22 @@ jobs:
           done
           test -f ledgerdirect.php && test -f logo.png && test -f LICENSE.md && test -d vendor/hardcastle/ledger-direct-core
 
+      # config.xml is PrestaShop's cached copy of the module class's properties.
+      # Shipping it lets the upgrade scripts run right after the zip is uploaded
+      # (devdocs, "config.xml file"), as ps_wirepayment and ps_checkpayment do.
+      # PrestaShop regenerates it whenever it is older than ledgerdirect.php, so
+      # the committed copy must say the same version as the class, or every
+      # dev shop rewrites it and the working tree is dirty again.
+      - name: Check config.xml against the module class
+        working-directory: build/ledgerdirect
+        run: |
+          test -f config.xml || { echo "::error::config.xml is missing from the release archive"; exit 1; }
+          class_version=$(sed -nE "s/.*\\\$this->version = '([^']+)'.*/\\1/p" ledgerdirect.php)
+          xml_version=$(sed -nE 's#.*<version><!\[CDATA\[([^]]+)\]\]></version>.*#\1#p' config.xml)
+          echo "ledgerdirect.php: $class_version, config.xml: $xml_version"
+          test -n "$class_version" && test "$class_version" = "$xml_version" \
+            || { echo "::error::config.xml says version '$xml_version' but ledgerdirect.php says '$class_version' — regenerate it (load the module once in a shop) and commit it with the version bump"; exit 1; }
+
       - name: Create the zip
         working-directory: build
         run: zip -qr ledgerdirect.zip ledgerdirect
