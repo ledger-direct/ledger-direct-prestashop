@@ -251,11 +251,6 @@ jobs:
             echo "::error::config.xml says version '$xml_version' but ledgerdirect.php says '$class_version' — load the module once in a shop so PrestaShop regenerates it, then commit it with the version bump"
             exit 1
           fi
-          class_version=$(grep -oE "this->version = '[^']+'" ledgerdirect.php | grep -oE "'[^']+'" | tr -d "'")
-          xml_version=$(grep -oE '<version><!\[CDATA\[[^]]+\]\]>' config.xml | grep -oE '\[[^]]+\]' | tr -d '[]')
-          echo "ledgerdirect.php: $class_version, config.xml: $xml_version"
-          test -n "$class_version" && test "$class_version" = "$xml_version" \
-            || { echo "::error::config.xml says version '$xml_version' but ledgerdirect.php says '$class_version' — regenerate it (load the module once in a shop) and commit it with the version bump"; exit 1; }
 
       - name: Create the zip
         working-directory: build
