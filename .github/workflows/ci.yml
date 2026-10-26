@@ -244,6 +244,13 @@ jobs:
         working-directory: build/ledgerdirect
         run: |
           test -f config.xml || { echo "::error::config.xml is missing from the release archive"; exit 1; }
+          class_version=$(grep -o "this->version = '[^']*'" ledgerdirect.php | sed "s/.*'\(.*\)'/\1/")
+          xml_version=$(grep -o '<version>.*</version>' config.xml | sed -e 's/.*CDATA\[//' -e 's/\]\].*//')
+          echo "ledgerdirect.php: $class_version, config.xml: $xml_version"
+          if [ -z "$class_version" ] || [ "$class_version" != "$xml_version" ]; then
+            echo "::error::config.xml says version '$xml_version' but ledgerdirect.php says '$class_version' — load the module once in a shop so PrestaShop regenerates it, then commit it with the version bump"
+            exit 1
+          fi
           class_version=$(grep -oE "this->version = '[^']+'" ledgerdirect.php | grep -oE "'[^']+'" | tr -d "'")
           xml_version=$(grep -oE '<version><!\[CDATA\[[^]]+\]\]>' config.xml | grep -oE '\[[^]]+\]' | tr -d '[]')
           echo "ledgerdirect.php: $class_version, config.xml: $xml_version"
