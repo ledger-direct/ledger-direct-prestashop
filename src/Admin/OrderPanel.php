@@ -6,6 +6,7 @@ namespace LedgerDirect\Admin;
 
 use Hardcastle\LedgerDirect\Core\Payment\PaymentStatus;
 use Hardcastle\LedgerDirect\Core\Xrpl\XrplTransaction;
+use LedgerDirect\Install\PendingUpgrade;
 use LedgerDirect\Presentation\PaymentIntentPresenter;
 use LedgerDirect\Service\ServiceFactory;
 use LedgerDirect\Storage\OrderPaymentIntentRepository;
@@ -45,15 +46,23 @@ final class OrderPanel
             return '';
         }
 
+        // Read before the record: a database behind the files is the likeliest
+        // reason the record cannot be read, and then the warning is all
+        // the panel has left to show.
+        $pendingUpgrade = PendingUpgrade::detect($this->module);
+        $upgradeWarning = $pendingUpgrade?->message($this->module);
+
         try {
             $paymentIntent = (new OrderPaymentIntentRepository())->find($orderId);
         } catch (\Throwable $exception) {
             ServiceFactory::getInstance()->getLogger()->error('Could not render the order panel', [
                 'id_order' => $orderId,
                 'exception' => $exception->getMessage(),
-            ]);
+            ] + ($pendingUpgrade?->logContext() ?? []));
 
-            return '';
+            return $upgradeWarning === null
+                ? ''
+                : $this->module->displayError(htmlspecialchars($upgradeWarning, ENT_QUOTES, 'UTF-8'));
         }
 
         // Not one of ours — every other payment module's order.
@@ -82,6 +91,7 @@ final class OrderPanel
             'ld_state_label' => $this->stateLabel($view['state']),
             'ld_transactions' => $transactions,
             'ld_explorer' => self::EXPLORER[$paymentIntent->network] ?? null,
+            'ld_upgrade_warning' => $upgradeWarning,
         ]);
 
         return $this->module->fetch('module:ledgerdirect/views/templates/hook/admin_order_side.tpl');

@@ -69,6 +69,11 @@ usual upgrade step in the Module Manager. Version 0.2.0 adds a `network` column 
 transactions; existing rows are backfilled from their CTID. Version 0.5.2 renames the CTID column
 to `tx_ctid`, the name core 0.9 uses on every platform.
 
+PrestaShop does not run that step by itself when newer files arrive. Until it has run, the
+module's configuration page and the LedgerDirect panel on each order name both versions, and a
+failed sync says in the log (Advanced Parameters → Logs) that the upgrade is pending — payments may
+not be confirmed while the database is behind the files.
+
 ## Configuration
 
 Modules → LedgerDirect → Configure:
