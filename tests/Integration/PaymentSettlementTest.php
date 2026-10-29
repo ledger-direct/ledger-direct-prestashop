@@ -336,6 +336,61 @@ final class PaymentSettlementTest extends IntegrationTestCase
         self::assertStringContainsString('10.06378', $html);
         self::assertStringContainsString('https://testnet.xrpl.org/transactions/' . $hash, $html);
         self::assertStringContainsString((string) $this->destinationTag, $html);
+        self::assertStringNotContainsString('data-ld-admin-upgrade', $html);
+    }
+
+    /**
+     * Files ahead of the database: the panel says so above everything else,
+     * because a sync that fails on the old schema leaves a paid order
+     * waiting and this panel is where the merchant looks for the reason.
+     */
+    public function testTheOrderPanelWarnsWhileTheModuleUpgradeIsPending(): void
+    {
+        $module = \Module::getInstanceByName('ledgerdirect');
+        self::assertInstanceOf(\Ledgerdirect::class, $module);
+
+        $recorded = PendingUpgradeTest::readRecordedVersion();
+        PendingUpgradeTest::recordVersion('0.0.1');
+        try {
+            $html = $module->hookDisplayAdminOrderSide(['id_order' => (int) $this->order->id]);
+        } finally {
+            PendingUpgradeTest::recordVersion($recorded);
+        }
+
+        self::assertStringContainsString('data-ld-admin-upgrade', $html);
+        self::assertStringContainsString('0.0.1', $html);
+        self::assertStringContainsString('data-ld-admin-state="waiting"', $html);
+    }
+
+    /**
+     * The log line that once said only "Unknown column 'tx_ctid'" names the
+     * pending upgrade and both versions.
+     */
+    public function testAFailureToMatchNamesThePendingUpgrade(): void
+    {
+        \Db::getInstance()->execute(
+            'UPDATE `' . _DB_PREFIX_ . Installer::TABLE_ORDER_PAYMENT_INTENT . '`
+             SET `payment_intent` = "{" WHERE `id_order` = ' . (int) $this->order->id
+        );
+
+        $recorded = PendingUpgradeTest::readRecordedVersion();
+        PendingUpgradeTest::recordVersion('0.0.1');
+        try {
+            self::assertFalse($this->sync()->matchOrder((int) $this->order->id));
+        } finally {
+            PendingUpgradeTest::recordVersion($recorded);
+        }
+
+        $line = (string) \Db::getInstance()->getValue(
+            'SELECT `message` FROM `' . _DB_PREFIX_ . 'log`
+             WHERE `message` LIKE "[LedgerDirect] Cannot match order%"
+             ORDER BY `id_log` DESC',
+            false
+        );
+
+        self::assertStringContainsString('the module upgrade has not run', $line);
+        self::assertStringContainsString('"installed_version":"0.0.1"', $line);
+        self::assertStringContainsString('"id_order":' . (int) $this->order->id, $line);
     }
 
     public function testTheOrderPanelIsEmptyForAnOrderOfAnotherPaymentModule(): void

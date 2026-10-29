@@ -9,6 +9,9 @@
     </h3>
   </div>
   <div class="card-body">
+    {if $ld_upgrade_warning}
+      <div class="alert alert-danger" role="alert" data-ld-admin-upgrade>{$ld_upgrade_warning|escape:'html':'UTF-8'}</div>
+    {/if}
     <dl class="row mb-0">
       <dt class="col-5">{l s='State' d='Modules.Ledgerdirect.Admin'}</dt>
       <dd class="col-7"><strong data-ld-admin-state="{$ld_panel.state|escape:'html':'UTF-8'}">{$ld_state_label|escape:'html':'UTF-8'}</strong></dd>

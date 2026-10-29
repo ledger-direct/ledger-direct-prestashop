@@ -158,6 +158,10 @@
         <source>Waiting for payment</source>
         <target state="translated">Esperando el pago</target>
       </trans-unit>
+      <trans-unit id="9bd3c1bceeeb2fdcae59254afd5df238">
+        <source>The module's database is at version %s, its files at %s. Payments may not be confirmed until the upgrade has run: Modules → Module Manager → LedgerDirect → Upgrade.</source>
+        <target state="translated">La base de datos del módulo está en la versión %s, sus archivos en la %s. Es posible que los pagos no se confirmen hasta que se haya ejecutado la actualización: Módulos → Gestor de módulos → LedgerDirect → Actualizar.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

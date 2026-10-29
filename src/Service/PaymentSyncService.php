@@ -6,6 +6,7 @@ namespace LedgerDirect\Service;
 
 use Hardcastle\LedgerDirect\Core\Payment\PaymentIntent;
 use LedgerDirect\Install\Installer;
+use LedgerDirect\Install\PendingUpgrade;
 use LedgerDirect\Port\PrestaShopConfigProvider;
 use LedgerDirect\Storage\OrderPaymentIntentRepository;
 use Order;
@@ -21,6 +22,11 @@ use Order;
  */
 final class PaymentSyncService
 {
+    private const MODULE_NAME = 'ledgerdirect';
+
+    private bool $upgradeChecked = false;
+    private ?PendingUpgrade $pendingUpgrade = null;
+
     public function __construct(
         private readonly ServiceFactory $services,
         private readonly OrderPaymentIntentRepository $intents,
@@ -98,7 +104,7 @@ final class PaymentSyncService
                 $this->services->getSyncService()->syncTransactions($account, $network);
             } catch (\Throwable $exception) {
                 // One account must not stop the others; the next run retries it.
-                $this->services->getLogger()->warning('Could not sync a receiving account of a waiting order', [
+                $this->logFailure('warning', 'Could not sync a receiving account of a waiting order', [
                     'account' => $account,
                     'network' => $network,
                     'exception' => $exception->getMessage(),
@@ -132,7 +138,7 @@ final class PaymentSyncService
         try {
             $paymentIntent = $this->intents->find($orderId);
         } catch (\Throwable $exception) {
-            $this->services->getLogger()->error('Cannot match order, its payment intent is unreadable', [
+            $this->logFailure('error', 'Cannot match order, its payment intent is unreadable', [
                 'id_order' => $orderId,
                 'exception' => $exception->getMessage(),
             ]);
@@ -376,7 +382,7 @@ final class PaymentSyncService
         } catch (\Throwable $exception) {
             // A node that is down must not take the checkout with it: matching
             // still runs against whatever is already stored locally.
-            $this->services->getLogger()->error('Ledger sync failed', [
+            $this->logFailure('error', 'Ledger sync failed', [
                 'destination_account' => $destinationAccount,
                 'exception' => $exception->getMessage(),
             ]);
@@ -385,6 +391,31 @@ final class PaymentSyncService
         }
 
         return true;
+    }
+
+    /**
+     * A failure to sync or to read a stored record, naming a pending module
+     * upgrade when there is one. Files ahead of the database are the cause a
+     * merchant can fix with one click, and the exception alone ("Unknown
+     * column 'tx_ctid'") does not say so. Checked once per run, and only on
+     * this path: a healthy sync never pays for the query.
+     *
+     * @param 'error'|'warning' $level
+     * @param array<string, mixed> $context
+     */
+    private function logFailure(string $level, string $message, array $context): void
+    {
+        if (!$this->upgradeChecked) {
+            $this->pendingUpgrade = PendingUpgrade::detectFor(self::MODULE_NAME);
+            $this->upgradeChecked = true;
+        }
+
+        if ($this->pendingUpgrade !== null) {
+            $message .= ' - the module upgrade has not run (Modules > Module Manager > LedgerDirect > Upgrade)';
+            $context += $this->pendingUpgrade->logContext();
+        }
+
+        $this->services->getLogger()->log($level, $message, $context);
     }
 
     /**

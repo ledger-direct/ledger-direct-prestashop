@@ -7,6 +7,7 @@ namespace LedgerDirect\Admin;
 use Configuration;
 use Hardcastle\LedgerDirect\Core\Presentation\AccentColor;
 use Hardcastle\LedgerDirect\Core\Xrpl\StablecoinRegistry;
+use LedgerDirect\Install\PendingUpgrade;
 use LedgerDirect\Port\PrestaShopConfigProvider;
 use LedgerDirect\Presentation\PageLogo;
 use LedgerDirect\Validation\XrplAddress;
@@ -52,7 +53,7 @@ final class ConfigurationForm
 
     public function handle(): string
     {
-        $output = '';
+        $output = $this->renderPendingUpgrade();
 
         if (\Tools::isSubmit(self::SUBMIT_ACTION)) {
             $errors = $this->save();
@@ -373,6 +374,22 @@ final class ConfigurationForm
      * straight into their hosting panel. Without this the token is only
      * reachable through the database.
      */
+    /**
+     * On top of the settings, because a merchant who opens them after an
+     * update is the one who can still run the upgrade before an order waits.
+     */
+    private function renderPendingUpgrade(): string
+    {
+        $pendingUpgrade = PendingUpgrade::detect($this->module);
+        if ($pendingUpgrade === null) {
+            return '';
+        }
+
+        return $this->module->displayError(
+            htmlspecialchars($pendingUpgrade->message($this->module), ENT_QUOTES, 'UTF-8')
+        );
+    }
+
     private function renderCronPanel(): string
     {
         $url = \Context::getContext()->link->getModuleLink(
