@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Payment page package 0.3.1 (`views/js/ledger-direct-payment-ui/`): the wallet bundle is built without
+  the AMD branch of its dependencies' UMD wrappers. The fix is for Magento, whose pages have RequireJS;
+  PrestaShop pages have none and behaved the same before, so nothing changes here — checked on the dev
+  shop: wallet list, QR code and console as before
+
 ## 0.5.3
 
 - The module says so when its database upgrade has not run: the configuration page and the
