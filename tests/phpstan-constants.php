@@ -1,8 +1,20 @@
 <?php
 
+/**
+ * LedgerDirect for PrestaShop
+ *
+ * Copyright (c) 2026 Hardcastle
+ * This source file is subject to the MIT license that is bundled with this module in LICENSE.md
+ * and available at https://opensource.org/licenses/MIT.
+ *
+ * @author    Hardcastle <https://www.ledger-direct.com>
+ * @copyright 2026 Hardcastle
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
+
 declare(strict_types=1);
 
-/**
+/*
  * Constants PrestaShop defines at runtime, declared here so static analysis
  * does not report every use of them as undefined.
  *
