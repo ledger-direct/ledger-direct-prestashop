@@ -10,6 +10,8 @@ command -v "$CHROME" >/dev/null 2>&1 || [ -x "$CHROME" ] || { echo "Chrome not f
 
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
+# The tag when rendering at one, else the commit: what the PDF's GitHub links point at.
+revision=$(git describe --tags --exact-match 2>/dev/null || git rev-parse HEAD)
 
 {
   cat <<'HTML'
@@ -25,9 +27,10 @@ trap 'rm -rf "$work"' EXIT
 </style></head><body>
 HTML
   # Relative links (LICENSE.md, CHANGELOG.md, …) would point into the temporary directory, which is
-  # gone when the PDF is read; they become links to the file on GitHub instead.
+  # gone when the PDF is read; they become links to the file on GitHub, at the revision the PDF
+  # was rendered from, so the PDF shipped with a release points at that release.
   npx --yes marked --gfm < README.md \
-    | sed -E 's#href="([^"#/][^":]*)"#href="https://github.com/ledger-direct/ledger-direct-prestashop/blob/main/\1"#g'
+    | sed -E "s#href=\"([^\"\#/][^\":]*)\"#href=\"https://github.com/ledger-direct/ledger-direct-prestashop/blob/$revision/\1\"#g"
   echo '</body></html>'
 } > "$work/readme.html"
 
