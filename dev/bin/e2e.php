@@ -1,6 +1,18 @@
 <?php
 
 /**
+ * LedgerDirect for PrestaShop
+ *
+ * Copyright (c) 2026 Hardcastle
+ * This source file is subject to the MIT license that is bundled with this module in LICENSE.md
+ * and available at https://opensource.org/licenses/MIT.
+ *
+ * @author    Hardcastle <https://www.ledger-direct.com>
+ * @copyright 2026 Hardcastle
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
+
+/*
  * Helper for the end-to-end harness (ledger-direct/ledger-direct-e2e).
  *
  * Runs inside the PrestaShop container, as www-data:

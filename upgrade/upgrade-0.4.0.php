@@ -1,6 +1,18 @@
 <?php
 
 /**
+ * LedgerDirect for PrestaShop
+ *
+ * Copyright (c) 2026 Hardcastle
+ * This source file is subject to the MIT license that is bundled with this module in LICENSE.md
+ * and available at https://opensource.org/licenses/MIT.
+ *
+ * @author    Hardcastle <https://www.ledger-direct.com>
+ * @copyright 2026 Hardcastle
+ * @license   https://opensource.org/licenses/MIT MIT License
+ */
+
+/*
  * 0.3.0 -> 0.4.0: the "XRPL payment incomplete" order state and the
  * LedgerDirect panel on the Back Office order page.
  *
