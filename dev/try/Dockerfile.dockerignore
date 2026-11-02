@@ -1,0 +1,17 @@
+# The build context is the repository root; only the module and the try files are needed.
+.git
+.github
+.idea
+.vscode
+build
+vendor
+dev/vendor
+dev/.phpunit.cache
+dev/try/browser
+tests
+**/node_modules
+**/.DS_Store
+payment_page.png
+Handover-*.md
+CLAUDE.md
+.env
