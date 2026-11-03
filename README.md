@@ -19,7 +19,7 @@ money. You need Docker and about 2 GB of disk.
 ```
 git clone https://github.com/ledger-direct/ledger-direct-prestashop.git
 cd ledger-direct-prestashop/dev/try
-docker compose up -d --wait        # first start sets up the shop: well under a minute
+docker compose up -d --wait        # first start builds and sets up the shop: about two minutes
 ```
 
 1. Open http://localhost:8089/ (German at http://localhost:8089/de/): the home page explains the
@@ -50,8 +50,9 @@ LD_TESTNET_ACCOUNT=r... docker compose up -d --wait
 Setting `LD_TESTNET_ACCOUNT` later works too: the next `up` applies it to the existing shop.
 `LD_TRY_PORT` moves the shop off port 8089. `docker compose down` stops the stack and keeps the shop
 and its orders; `docker compose down -v` resets everything, and the next `up` sets up a fresh shop.
-`docker compose up --build` builds the image from your checkout instead of pulling the published
-one. The shop is [PrestaShop Flashlight](https://github.com/PrestaShop/prestashop-flashlight),
+The shop image is always built from your checkout; none is published, because the PrestaShop base
+image bundles PrestaShop SA's modules under licences of their own. After a `git pull`,
+`docker compose up -d --wait` builds the new state and updates the existing shop. The shop is [PrestaShop Flashlight](https://github.com/PrestaShop/prestashop-flashlight),
 PrestaShop's own pre-installed image; this is not an official PrestaShop image, and the shop is for
 trying the module, not for production. The folder also works as `LD_E2E_PRESTASHOP_COMPOSE_DIR` for
 the [end-to-end harness](https://github.com/ledger-direct/ledger-direct-e2e) (base URL
