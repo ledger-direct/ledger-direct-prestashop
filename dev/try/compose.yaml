@@ -1,0 +1,60 @@
+# LedgerDirect for PrestaShop — try it in five minutes, on the XRP Ledger testnet.
+#
+#   docker compose up -d --wait          # first start sets up the shop, well under a minute
+#   open http://localhost:8089/
+#   docker compose down                  # stop; the shop and its orders stay in the volumes
+#   docker compose down -v               # reset: the next `up` sets up a fresh shop
+#
+# Settings (environment or a .env file next to this one):
+#   LD_TRY_PORT          host port of the shop (default 8089, bound to 127.0.0.1 only)
+#   LD_TESTNET_ACCOUNT   your testnet receiving address (it needs the RLUSD and USDC trust lines).
+#                        Without it the shop creates its own testnet wallet with those trust lines.
+#   LD_TRY_IMAGE         the tag the shop image is built under (default ledger-direct/try-prestashop:local)
+#
+# The shop service is named as the end-to-end harness expects (prestashop, with dev/bin/e2e.php in
+# the module), so this folder works as LD_E2E_PRESTASHOP_COMPOSE_DIR. Nothing but the shop is
+# published to the host; the database stays inside this stack. The shop's state lives in named
+# volumes, so recreating a container (a new image, a changed LD_TESTNET_ACCOUNT) keeps the shop and
+# its orders.
+name: ledger-direct-try-prestashop
+
+services:
+  prestashop:
+    image: ${LD_TRY_IMAGE:-ledger-direct/try-prestashop:local}
+    # Built from this checkout, never pulled: no image is published (the PrestaShop base image
+    # bundles PrestaShop SA's modules under licences of their own).
+    pull_policy: build
+    build:
+      context: ../..
+      dockerfile: dev/try/Dockerfile
+    environment:
+      LD_DOMAIN: localhost:${LD_TRY_PORT:-8089}
+      LD_TESTNET_ACCOUNT: ${LD_TESTNET_ACCOUNT:-}
+      LD_STABLECOINS: ${LD_STABLECOINS:-1}
+    ports:
+      - "127.0.0.1:${LD_TRY_PORT:-8089}:80"
+    volumes:
+      - shop-img:/var/www/html/img
+      - shop-state:/var/lib/ledger-direct
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mariadb:11.4.13
+    environment:
+      MARIADB_ROOT_PASSWORD: prestashop
+      MARIADB_DATABASE: prestashop
+      MARIADB_USER: prestashop
+      MARIADB_PASSWORD: prestashop
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      retries: 30
+
+volumes:
+  shop-img:
+  shop-state:
+  db-data:

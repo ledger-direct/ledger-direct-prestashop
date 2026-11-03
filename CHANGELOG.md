@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Try it in five minutes: `dev/try` starts a complete PrestaShop 9.1 shop with the module on the XRP
+  Ledger testnet (`docker compose up -d --wait`): English and German, a home page that explains the
+  demo and offers three hand-painted miniatures (2–4 EUR; their pictures and texts are not under the
+  MIT licence, `dev/try/catalog/NOTICE.md`), a demo article for 1 EUR, the shop's own testnet wallet
+  with trust lines for RLUSD and USDC, and a demo Back Office login. `.github/workflows/try.yml`
+  builds and smoke-tests it on every pull request, with a browser walk through the guest checkout
+  for XRP, RLUSD and USDC
 - Payment page package 0.3.1 (`views/js/ledger-direct-payment-ui/`): the wallet bundle is built without
   the AMD branch of its dependencies' UMD wrappers. The fix is for Magento, whose pages have RequireJS;
   PrestaShop pages have none and behaved the same before, so nothing changes here — checked on the dev

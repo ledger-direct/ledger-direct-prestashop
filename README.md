@@ -11,6 +11,53 @@ shared package that holds the XRPL and pricing logic. Everything platform-specif
 checkout, order states, the settings screen — lives here; price conversion, the oracle set, the
 stablecoin registry and ledger sync live in the core and are not reimplemented.
 
+## Try it in five minutes
+
+A complete PrestaShop 9 shop with the module, on the XRP Ledger **testnet** — no account, no real
+money. You need Docker and about 2 GB of disk.
+
+```
+git clone https://github.com/ledger-direct/ledger-direct-prestashop.git
+cd ledger-direct-prestashop/dev/try
+docker compose up -d --wait        # first start builds and sets up the shop: about two minutes
+```
+
+1. Open http://localhost:8089/ (German at http://localhost:8089/de/): the home page explains the
+   demo and offers three hand-painted **miniatures** (2–4 EUR). They are demo articles: their
+   pictures and texts are not under the MIT licence; see
+   [`dev/try/catalog/NOTICE.md`](dev/try/catalog/NOTICE.md). Put one in the cart and check out as a
+   guest with *Pay with XRP*, *RLUSD* or *USDC*.
+2. The payment page shows the amount, the receiving account and the destination tag. Pay it from a
+   testnet wallet — [Xaman](https://xaman.app/) in testnet mode or [Crossmark](https://crossmark.io/)
+   — funded from the [XRP Testnet faucet](https://xrpl.org/resources/dev-tools/xrp-faucets); RLUSD
+   and USDC come from the [RLUSD faucet](https://tryrlusd.com/) and the
+   [Circle faucet](https://faucet.circle.com/). Send the amount exactly as shown, **with the
+   destination tag**, or connect the wallet with the buttons on the page.
+3. The page notices the payment within seconds and moves on to the order confirmation; the order is
+   *Payment accepted* in the Back Office at http://localhost:8089/admin-dev/ (demo login
+   `demo@example.com` / `demo-ledgerdirect-1` — a local demo login, never reuse it).
+
+On its first start the shop creates its own testnet wallet from the faucet and sets the trust lines
+to the RLUSD and USDC issuers on it, so all three assets can be paid right away (`docker compose logs
+prestashop` names the address). The wallet's seed stays in the stack's volume, testnet only. When
+the testnet has been reset, the next start notices and creates a new wallet. To receive into an
+address of your own instead — it then needs the trust lines itself:
+
+```
+LD_TESTNET_ACCOUNT=r... docker compose up -d --wait
+```
+
+Setting `LD_TESTNET_ACCOUNT` later works too: the next `up` applies it to the existing shop.
+`LD_TRY_PORT` moves the shop off port 8089. `docker compose down` stops the stack and keeps the shop
+and its orders; `docker compose down -v` resets everything, and the next `up` sets up a fresh shop.
+The shop image is always built from your checkout; none is published, because the PrestaShop base
+image bundles PrestaShop SA's modules under licences of their own. After a `git pull`,
+`docker compose up -d --wait` builds the new state and updates the existing shop. The shop is [PrestaShop Flashlight](https://github.com/PrestaShop/prestashop-flashlight),
+PrestaShop's own pre-installed image; this is not an official PrestaShop image, and the shop is for
+trying the module, not for production. The folder also works as `LD_E2E_PRESTASHOP_COMPOSE_DIR` for
+the [end-to-end harness](https://github.com/ledger-direct/ledger-direct-e2e) (base URL
+`http://localhost:8089`).
+
 ## How it works
 
 A customer picks XRP, RLUSD or USDC at checkout. The order is placed straight away in a

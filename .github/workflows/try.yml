@@ -1,0 +1,107 @@
+# The try-it stack in dev/try: every pull request and every push to main builds the image from the
+# checkout, starts the stack the way a visitor does and runs dev/try/smoke.sh against it (storefront
+# in English and German, guest checkout, payment page markup contract, status endpoint PS-01 and
+# PS-07), then walks the storefront in a real browser with each LedgerDirect method.
+#
+# No image is published: the PrestaShop base image bundles PrestaShop SA's modules under licences of
+# their own, which a derived public image would redistribute. Visitors build the shop from the
+# checkout on its first `docker compose up`.
+name: Try stack
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ['*']
+  workflow_dispatch:
+
+concurrency:
+  group: try-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  IMAGE: ledger-direct/try-prestashop
+
+jobs:
+  smoke:
+    name: Build, start and smoke-test the try stack
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+
+      # Flashlight and MariaDB come from Docker Hub; logged in, the pulls count against the
+      # organisation's account instead of the runner's shared IP (see ci.yml). Skipped where the
+      # secrets are missing (Dependabot, forks).
+      - name: Log in to Docker Hub
+        if: ${{ env.DOCKERHUB_USERNAME != '' && env.DOCKERHUB_TOKEN != '' }}
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build the shop image from this checkout
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: dev/try/Dockerfile
+          tags: ${{ env.IMAGE }}:ci
+          load: true
+          cache-from: type=gha,scope=try-prestashop
+          cache-to: type=gha,mode=max,scope=try-prestashop
+
+      - name: Start the stack
+        working-directory: dev/try
+        env:
+          LD_TRY_IMAGE: ${{ env.IMAGE }}:ci
+          # Empty unless set: the shop then takes a fresh account from the testnet faucet.
+          LD_TESTNET_ACCOUNT: ${{ vars.LD_TRY_TESTNET_ACCOUNT }}
+        run: |
+          started=$(date +%s)
+          docker compose up -d --wait --no-build --quiet-pull
+          echo "Stack up, shop set up: $(( $(date +%s) - started )) s" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Smoke test
+        # smoke.sh's own exit status decides the step, not tee's; the summary fence is closed either way.
+        run: |
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          set +e
+          dev/try/smoke.sh 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
+          status=${PIPESTATUS[0]}
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
+
+      # The storefront the way a prospect sees it, in a real browser: home page, cart, guest
+      # checkout with each LedgerDirect method, payment page. GitHub's runners ship Chrome.
+      - name: Browser walk (XRP, RLUSD, USDC)
+        working-directory: dev/try/browser
+        env:
+          CHROME: /usr/bin/google-chrome
+        run: |
+          npm install --no-audit --no-fund
+          mkdir -p screenshots
+          for asset in XRP RLUSD USDC; do
+            echo "== $asset"
+            node visitor.mjs http://localhost:8089 screenshots "$asset"
+          done
+
+      - name: Screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: try-stack-screenshots
+          path: dev/try/browser/screenshots
+          if-no-files-found: ignore
+
+      - name: Shop log
+        if: always()
+        working-directory: dev/try
+        run: docker compose logs --no-color --tail 200 prestashop
