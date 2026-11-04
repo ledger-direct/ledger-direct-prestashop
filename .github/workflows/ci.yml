@@ -71,7 +71,9 @@ jobs:
   coding-standard:
     name: PHP-CS-Fixer
     needs: changes
-    if: needs.changes.outputs.docs_only != 'true'
+    # Fail-safe: a failed `changes` job leaves the output empty and the job runs; a skipped
+    # job would count as passed.
+    if: ${{ !cancelled() && needs.changes.outputs.docs_only != 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -93,7 +95,9 @@ jobs:
   unit:
     name: Unit tests (PHP ${{ matrix.php }})
     needs: changes
-    if: needs.changes.outputs.docs_only != 'true'
+    # Fail-safe: a failed `changes` job leaves the output empty and the job runs; a skipped
+    # job would count as passed.
+    if: ${{ !cancelled() && needs.changes.outputs.docs_only != 'true' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -125,7 +129,9 @@ jobs:
   phpstan:
     name: PHPStan (PrestaShop ${{ matrix.prestashop }})
     needs: changes
-    if: needs.changes.outputs.docs_only != 'true'
+    # Fail-safe: a failed `changes` job leaves the output empty and the job runs; a skipped
+    # job would count as passed.
+    if: ${{ !cancelled() && needs.changes.outputs.docs_only != 'true' }}
     runs-on: ubuntu-latest
     env:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -179,7 +185,9 @@ jobs:
   integration:
     name: Integration tests (Flashlight)
     needs: changes
-    if: needs.changes.outputs.docs_only != 'true'
+    # Fail-safe: a failed `changes` job leaves the output empty and the job runs; a skipped
+    # job would count as passed.
+    if: ${{ !cancelled() && needs.changes.outputs.docs_only != 'true' }}
     runs-on: ubuntu-latest
     env:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -240,7 +248,9 @@ jobs:
   build:
     name: Release archive
     needs: changes
-    if: needs.changes.outputs.docs_only != 'true'
+    # Fail-safe: a failed `changes` job leaves the output empty and the job runs; a skipped
+    # job would count as passed.
+    if: ${{ !cancelled() && needs.changes.outputs.docs_only != 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
