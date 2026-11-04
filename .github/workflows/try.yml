@@ -1,23 +1,32 @@
-# The try-it stack in dev/try: every pull request and every push to main builds the image from the
-# checkout, starts the stack the way a visitor does and runs dev/try/smoke.sh against it (storefront
+# The try-it stack in dev/try: a pull request or a push to main that changes something the shop runs
+# (module code, dependencies, dev/try, this workflow — decided by the `changes` job,
+# .github/actions/changes) builds the image from the checkout, starts the stack the way a visitor
+# does and runs dev/try/smoke.sh against it (storefront
 # in English and German, guest checkout, payment page markup contract, status endpoint PS-01 and
 # PS-07), then walks the storefront in a real browser with each LedgerDirect method.
 #
 # No image is published: the PrestaShop base image bundles PrestaShop SA's modules under licences of
 # their own, which a derived public image would redistribute. Visitors build the shop from the
 # checkout on its first `docker compose up`.
+#
+# Documentation-only and test-only changes skip the stack (the job reports "skipped"). Tags and
+# manual runs always build it. A newer push to the same pull request cancels the run in progress.
 name: Try stack
 
 on:
   pull_request:
   push:
     branches: [main]
-    tags: ['*']
+    # version tags only (1.2.0): the release's own run of the stack
+    tags: ['[0-9]+.[0-9]+.[0-9]+']
   workflow_dispatch:
 
+# A newer push to the same pull request cancels its run in progress. Every other run (push to main,
+# tag, manual) gets a group of its own: GitHub keeps only one pending run per group, so a shared
+# group would cancel a pending main run whose changes the next run never classifies again.
 concurrency:
-  group: try-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -26,8 +35,26 @@ env:
   IMAGE: ledger-direct/try-prestashop
 
 jobs:
+  changes:
+    name: What changed
+    runs-on: ubuntu-latest
+    outputs:
+      docs_only: ${{ steps.changes.outputs.docs_only }}
+      runtime: ${{ steps.changes.outputs.runtime }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # pull_request: the merge commit and both parents; push: the pushed range
+          fetch-depth: ${{ github.event_name == 'pull_request' && 2 || 0 }}
+      - id: changes
+        uses: ./.github/actions/changes
+
   smoke:
     name: Build, start and smoke-test the try stack
+    needs: changes
+    # Fail-safe: if the `changes` job did not succeed, the stack runs anyway; a skipped job would
+    # count as passed.
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.runtime == 'true') }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
