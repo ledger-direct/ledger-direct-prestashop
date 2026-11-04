@@ -11,6 +11,11 @@
 # The development tooling lives in dev/ as a separate Composer project so it
 # never lands in the module's vendor/ (PrestaShop autoloads that on every
 # request). Every job that needs it installs both projects.
+#
+# The `changes` job classifies what a run changed (.github/actions/changes): a pull
+# request that only touches documentation runs the syntax check and nothing else;
+# every other change runs every job. A newer push to the same pull request cancels
+# the run in progress; pushes to main always run to the end.
 name: CI
 
 on:
@@ -19,8 +24,8 @@ on:
   pull_request:
 
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -30,6 +35,20 @@ env:
   PHP_MIN: '8.2'
 
 jobs:
+  changes:
+    name: What changed
+    runs-on: ubuntu-latest
+    outputs:
+      docs_only: ${{ steps.changes.outputs.docs_only }}
+      runtime: ${{ steps.changes.outputs.runtime }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # pull_request: the merge commit and both parents; push: the pushed range
+          fetch-depth: ${{ github.event_name == 'pull_request' && 2 || 0 }}
+      - id: changes
+        uses: ./.github/actions/changes
+
   # Syntax check across every PHP version the module claims to support. The
   # PHP version is part of the action path, and `uses:` cannot take an
   # expression, so the steps are spelled out.
@@ -51,6 +70,8 @@ jobs:
   # PrestaShop's coding standard (prestashop/php-dev-tools), checked, not fixed.
   coding-standard:
     name: PHP-CS-Fixer
+    needs: changes
+    if: needs.changes.outputs.docs_only != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -71,6 +92,8 @@ jobs:
   # No PrestaShop, no database, no network. Runs on the oldest and newest PHP.
   unit:
     name: Unit tests (PHP ${{ matrix.php }})
+    needs: changes
+    if: needs.changes.outputs.docs_only != 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -101,6 +124,8 @@ jobs:
   # scans, so the analysis in CI matches the one run against the local shop.
   phpstan:
     name: PHPStan (PrestaShop ${{ matrix.prestashop }})
+    needs: changes
+    if: needs.changes.outputs.docs_only != 'true'
     runs-on: ubuntu-latest
     env:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -153,6 +178,8 @@ jobs:
   # install minus the Back Office.
   integration:
     name: Integration tests (Flashlight)
+    needs: changes
+    if: needs.changes.outputs.docs_only != 'true'
     runs-on: ubuntu-latest
     env:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -212,6 +239,8 @@ jobs:
   # for a module. Every directory gets an index.php, as the validator requires.
   build:
     name: Release archive
+    needs: changes
+    if: needs.changes.outputs.docs_only != 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
