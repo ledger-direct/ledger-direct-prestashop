@@ -78,7 +78,7 @@ jobs:
 
       # The same image the try workflow builds; its layer cache is read, not written.
       - name: Build the shop image from this checkout
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: dev/try/Dockerfile
