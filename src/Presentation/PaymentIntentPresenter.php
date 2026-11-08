@@ -56,11 +56,6 @@ final class PaymentIntentPresenter
      */
     private const RATE_DECIMALS = 6;
 
-    private const EXPLORER = [
-        'mainnet' => 'https://livenet.xrpl.org/transactions/',
-        'testnet' => 'https://testnet.xrpl.org/transactions/',
-    ];
-
     /**
      * @param int|null $now unix timestamp for the state derivation; defaults to the clock
      *
@@ -81,6 +76,7 @@ final class PaymentIntentPresenter
         $paymentUri = PaymentUri::forIntent($paymentIntent, $amountDue);
 
         return [
+            'chain' => $paymentIntent->chain,
             'base_asset' => $paymentIntent->baseAsset,
             'network' => $paymentIntent->network,
             'is_testnet' => $paymentIntent->network !== 'mainnet',
@@ -108,7 +104,7 @@ final class PaymentIntentPresenter
             'amount_drops' => $isToken ? null : XrplAmount::xrpToDrops($amountDue),
             // The payment request behind the QR code; see PaymentUri for what it carries.
             'payment_uri' => $paymentUri,
-            'explorer_base' => self::EXPLORER[$paymentIntent->network] ?? self::EXPLORER['testnet'],
+            'explorer_base' => Explorer::transactionBase($paymentIntent->chain, $paymentIntent->network),
             'paid_share' => self::paidShare($amountPaid, $amountRequested, $state),
             'hash' => $paymentIntent->hash,
             'qr_data_uri' => self::renderQrCode($paymentUri),

@@ -19,6 +19,7 @@ namespace LedgerDirect\Admin;
 use Hardcastle\LedgerDirect\Core\Payment\PaymentStatus;
 use Hardcastle\LedgerDirect\Core\Xrpl\XrplTransaction;
 use LedgerDirect\Install\PendingUpgrade;
+use LedgerDirect\Presentation\Explorer;
 use LedgerDirect\Presentation\PaymentIntentPresenter;
 use LedgerDirect\Service\ServiceFactory;
 use LedgerDirect\Storage\OrderPaymentIntentRepository;
@@ -42,11 +43,6 @@ final class OrderPanel
 
     /** Seconds between the Unix epoch and the Ripple epoch (2000-01-01). */
     private const RIPPLE_EPOCH_OFFSET = 946684800;
-
-    private const EXPLORER = [
-        'mainnet' => 'https://livenet.xrpl.org/transactions/',
-        'testnet' => 'https://testnet.xrpl.org/transactions/',
-    ];
 
     public function __construct(private readonly \Ledgerdirect $module)
     {
@@ -87,7 +83,7 @@ final class OrderPanel
 
         $transactions = [];
         try {
-            foreach ($services->getSyncService()->findTransactions($paymentIntent->destinationAccount, $paymentIntent->destinationTag) as $transaction) {
+            foreach ($services->getSyncService($paymentIntent->chain)->findTransactions($paymentIntent->destinationAccount, $paymentIntent->destinationTag) as $transaction) {
                 $transactions[] = $this->presentTransaction($transaction);
             }
         } catch (\Throwable $exception) {
@@ -102,7 +98,7 @@ final class OrderPanel
             'ld_panel' => $view,
             'ld_state_label' => $this->stateLabel($view['state']),
             'ld_transactions' => $transactions,
-            'ld_explorer' => self::EXPLORER[$paymentIntent->network] ?? null,
+            'ld_explorer' => Explorer::transactionBase($paymentIntent->chain, $paymentIntent->network) ?: null,
             'ld_upgrade_warning' => $upgradeWarning,
         ]);
 

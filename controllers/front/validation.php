@@ -12,6 +12,7 @@
  * @license   https://opensource.org/licenses/MIT MIT License
  */
 
+use LedgerDirect\Chain\SupportedChains;
 use LedgerDirect\Port\PrestaShopConfigProvider;
 use LedgerDirect\Service\ServiceFactory;
 use LedgerDirect\Storage\OrderPaymentIntentRepository;
@@ -71,10 +72,12 @@ class LedgerdirectValidationModuleFrontController extends ModuleFrontController
         // Never trust the asset from the request: it decides which currency
         // the customer is asked to send. Only an asset the merchant has
         // actually enabled is allowed through.
+        // The chain and asset the customer chose; a link from before 0.6.0 names the asset alone.
         $asset = (string) Tools::getValue('ld_asset');
+        $chain = (string) Tools::getValue('ld_chain', PrestaShopConfigProvider::CHAIN_XRPL);
         if (
-            !in_array($asset, Ledgerdirect::SUPPORTED_ASSETS, true)
-            || !$services->getConfigProvider()->isAssetEnabled(PrestaShopConfigProvider::CHAIN_XRPL, $asset)
+            !SupportedChains::offers($chain, $asset)
+            || !$services->getConfigProvider()->isAssetEnabled($chain, $asset)
         ) {
             $this->redirectToCheckout();
 
@@ -88,10 +91,11 @@ class LedgerdirectValidationModuleFrontController extends ModuleFrontController
         // the customer goes back to the checkout instead of ending up with an
         // order nobody can tell them how to pay.
         try {
-            $paymentIntent = $services->getPaymentIntentService()
+            $paymentIntent = $services->getPaymentIntentService($chain)
                 ->quoteForOrder($total, $currency->iso_code, $asset);
         } catch (Throwable $exception) {
             $services->getLogger()->error('Could not build a payment intent, aborting checkout', [
+                'chain' => $chain,
                 'asset' => $asset,
                 'id_cart' => (int) $cart->id,
                 'exception' => $exception->getMessage(),

@@ -17,8 +17,10 @@ declare(strict_types=1);
 namespace LedgerDirect\Port;
 
 use Configuration;
+use Hardcastle\LedgerDirect\Core\ChainCatalog;
 use Hardcastle\LedgerDirect\Core\Port\ConfigProviderInterface;
 use Hardcastle\LedgerDirect\Core\Presentation\AccentColor;
+use LedgerDirect\Chain\SupportedChains;
 use LedgerDirect\Presentation\PageLogo;
 
 /**
@@ -32,7 +34,8 @@ use LedgerDirect\Presentation\PageLogo;
  */
 final class PrestaShopConfigProvider implements ConfigProviderInterface
 {
-    public const CHAIN_XRPL = 'XRPL';
+    public const CHAIN_XRPL = ChainCatalog::XRPL;
+    public const CHAIN_XAHAU = ChainCatalog::XAHAU;
 
     public const NETWORK_MAINNET = 'mainnet';
     public const NETWORK_TESTNET = 'testnet';
@@ -60,6 +63,16 @@ final class PrestaShopConfigProvider implements ConfigProviderInterface
     public const KEY_WALLETCONNECT_PROJECT_ID = 'LEDGERDIRECT_WALLETCONNECT_PROJECT_ID';
 
     /**
+     * Xahau's keys follow the pattern every chain after the XRP Ledger takes:
+     * LEDGERDIRECT_<CHAIN>_NETWORK, one account per network, one switch per asset. The XRPL
+     * keys above predate the pattern (one account for both networks) and stay as they are.
+     */
+    public const KEY_XAHAU_NETWORK = 'LEDGERDIRECT_XAHAU_NETWORK';
+    public const KEY_XAHAU_ACCOUNT_MAINNET = 'LEDGERDIRECT_XAHAU_ACCOUNT_MAINNET';
+    public const KEY_XAHAU_ACCOUNT_TESTNET = 'LEDGERDIRECT_XAHAU_ACCOUNT_TESTNET';
+    public const KEY_XAHAU_ASSET_XAH = 'LEDGERDIRECT_XAHAU_ASSET_XAH';
+
+    /**
      * Five minutes. Long enough for a customer to open their wallet and send,
      * short enough that the shop isn't holding a stale exchange rate. The
      * quote is fixed for this whole window — it lives in the stored
@@ -79,11 +92,17 @@ final class PrestaShopConfigProvider implements ConfigProviderInterface
         'USDC' => self::KEY_ASSET_USDC,
     ];
 
+    /**
+     * A chain the module carries nothing on is answered with its testnet, no account and no
+     * asset — never with another chain's settings.
+     */
     public function getNetwork(string $chain): string
     {
-        self::assertXrpl($chain);
+        if (!SupportedChains::supports($chain)) {
+            return self::NETWORK_TESTNET;
+        }
 
-        $network = (string) \Configuration::get(self::KEY_NETWORK);
+        $network = (string) \Configuration::get(self::networkKey($chain));
 
         // Anything unrecognised falls back to testnet: an unconfigured or
         // corrupted setting must not silently start taking real money.
@@ -92,23 +111,48 @@ final class PrestaShopConfigProvider implements ConfigProviderInterface
 
     public function getDestinationAccount(string $chain): string
     {
-        self::assertXrpl($chain);
+        if (!SupportedChains::supports($chain)) {
+            return '';
+        }
 
-        return trim((string) \Configuration::get(self::KEY_DESTINATION_ACCOUNT));
+        return trim((string) \Configuration::get(self::accountKey($chain, $this->getNetwork($chain))));
     }
 
     public function isAssetEnabled(string $chain, string $baseAsset): bool
     {
-        if ($chain !== self::CHAIN_XRPL) {
-            return false;
+        $key = self::assetKey($chain, $baseAsset);
+
+        return $key !== null && (bool) \Configuration::get($key);
+    }
+
+    /** The key of a chain's network setting. */
+    public static function networkKey(string $chain): string
+    {
+        return $chain === self::CHAIN_XRPL ? self::KEY_NETWORK : 'LEDGERDIRECT_' . strtoupper($chain) . '_NETWORK';
+    }
+
+    /**
+     * The key of a chain's receiving account on a network. The XRP Ledger has one account for
+     * both networks; every other chain one per network.
+     */
+    public static function accountKey(string $chain, string $network): string
+    {
+        return $chain === self::CHAIN_XRPL
+            ? self::KEY_DESTINATION_ACCOUNT
+            : 'LEDGERDIRECT_' . strtoupper($chain) . '_ACCOUNT_' . strtoupper($network);
+    }
+
+    /** The key of an asset's switch, or null for an asset the module does not offer. */
+    public static function assetKey(string $chain, string $asset): ?string
+    {
+        $asset = strtoupper($asset);
+        if (!SupportedChains::offers($chain, $asset)) {
+            return null;
         }
 
-        $key = self::ASSET_KEYS[$baseAsset] ?? null;
-        if ($key === null) {
-            return false;
-        }
-
-        return (bool) \Configuration::get($key);
+        return $chain === self::CHAIN_XRPL
+            ? self::ASSET_KEYS[$asset]
+            : 'LEDGERDIRECT_' . strtoupper($chain) . '_ASSET_' . $asset;
     }
 
     public function getQuoteExpirySeconds(): int
@@ -164,6 +208,10 @@ final class PrestaShopConfigProvider implements ConfigProviderInterface
             self::KEY_ASSET_XRP => true,
             self::KEY_ASSET_RLUSD => false,
             self::KEY_ASSET_USDC => false,
+            self::KEY_XAHAU_NETWORK => self::NETWORK_TESTNET,
+            self::KEY_XAHAU_ACCOUNT_MAINNET => '',
+            self::KEY_XAHAU_ACCOUNT_TESTNET => '',
+            self::KEY_XAHAU_ASSET_XAH => false,
             self::KEY_PAGE_LOGO_MODE => PageLogo::MODE_SHOP,
             self::KEY_PAGE_LOGO_PATH => '',
             self::KEY_PAGE_ACCENT => AccentColor::DEFAULT,
@@ -191,12 +239,5 @@ final class PrestaShopConfigProvider implements ConfigProviderInterface
     public static function getCronToken(): string
     {
         return (string) \Configuration::getGlobalValue(self::KEY_CRON_TOKEN);
-    }
-
-    private static function assertXrpl(string $chain): void
-    {
-        if ($chain !== self::CHAIN_XRPL) {
-            throw new \InvalidArgumentException("LedgerDirect has no configuration for chain '{$chain}'; only '" . self::CHAIN_XRPL . "' is supported.");
-        }
     }
 }

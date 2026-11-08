@@ -206,6 +206,50 @@
         <source>The module's database is at version %s, its files at %s. Payments may not be confirmed until the upgrade has run: Modules → Module Manager → LedgerDirect → Upgrade.</source>
         <target state="translated">Die Datenbank des Moduls steht auf Version %s, seine Dateien auf %s. Zahlungen werden womöglich erst bestätigt, wenn das Upgrade gelaufen ist: Module → Modul-Manager → LedgerDirect → Upgrade.</target>
       </trans-unit>
+      <trans-unit id="eaa9ab847684a20e51790dd71afa14d6">
+        <source>Choose either mainnet or testnet for Xahau.</source>
+        <target state="translated">Wählen Sie für Xahau Mainnet oder Testnet.</target>
+      </trans-unit>
+      <trans-unit id="dacfdf8f6cc84822fcf0ab0bb478ecb0">
+        <source>The Xahau receiving address is not a valid account address. It starts with "r", like an XRP Ledger address.</source>
+        <target state="translated">Die Xahau-Empfangsadresse ist keine gültige Kontoadresse. Sie beginnt mit "r", wie eine XRP-Ledger-Adresse.</target>
+      </trans-unit>
+      <trans-unit id="bac55c3e6e628eb28e673ff698eec7a2">
+        <source>Enter a Xahau receiving address for the selected network, or do not accept XAH.</source>
+        <target state="translated">Geben Sie eine Xahau-Empfangsadresse für das gewählte Netzwerk ein, oder akzeptieren Sie kein XAH.</target>
+      </trans-unit>
+      <trans-unit id="98189805c3abfc60b53ad19fdef4b286">
+        <source>Xahau settings</source>
+        <target state="translated">Xahau-Einstellungen</target>
+      </trans-unit>
+      <trans-unit id="3adea09ab8ca16476231995d7b769023">
+        <source>Xahau is a network of its own that speaks the XRP Ledger's protocol: payments in XAH, by destination tag, to an account of the same form. Use an account that receives on Xahau alone, not one that also receives on the XRP Ledger.</source>
+        <target state="translated">Xahau ist ein eigenes Netzwerk mit dem Protokoll des XRP Ledger: Zahlungen in XAH, per Destination Tag, an ein Konto derselben Form. Verwenden Sie ein Konto, das nur auf Xahau empfängt, nicht eines, das auch auf dem XRP Ledger empfängt.</target>
+      </trans-unit>
+      <trans-unit id="6cd2967fb4264de13c2ee470fd3f64d4">
+        <source>Receiving address (testnet)</source>
+        <target state="translated">Empfangsadresse (Testnet)</target>
+      </trans-unit>
+      <trans-unit id="9074a258f7804ffcdd69010c042eb45e">
+        <source>Receiving address (mainnet)</source>
+        <target state="translated">Empfangsadresse (Mainnet)</target>
+      </trans-unit>
+      <trans-unit id="e6bbeb2d0fb51ce32a8c78f8db9a5033">
+        <source>The native asset of Xahau. Needs no trustline. Priced from Coingecko and Bitrue.</source>
+        <target state="translated">Das native Asset von Xahau. Braucht keine Trustline. Kurs von Coingecko und Bitrue.</target>
+      </trans-unit>
+      <trans-unit id="71656044189175604d1e50a70bf80247">
+        <source>Xahau payment</source>
+        <target state="translated">Xahau-Zahlung</target>
+      </trans-unit>
+      <trans-unit id="9827c095c753bb349a61863b92571025">
+        <source>Accept XRP, RLUSD and USDC directly on the XRP Ledger, and XAH on Xahau.</source>
+        <target state="translated">Akzeptieren Sie XRP, RLUSD und USDC direkt auf dem XRP Ledger und XAH auf Xahau.</target>
+      </trans-unit>
+      <trans-unit id="960e7a19e3c24fd227f36ffb2c0c5152">
+        <source>The Xahau receiving address %s is also the XRP Ledger's. The two are different accounts on different chains; use one account per chain.</source>
+        <target state="translated">Die Xahau-Empfangsadresse %s ist auch die des XRP Ledger. Die beiden sind verschiedene Konten auf verschiedenen Chains; verwenden Sie ein Konto je Chain.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

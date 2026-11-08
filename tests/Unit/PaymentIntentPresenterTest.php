@@ -80,6 +80,38 @@ final class PaymentIntentPresenterTest extends TestCase
     public function testThePageKnowsTheExplorerOfTheNetwork(): void
     {
         self::assertSame('https://testnet.xrpl.org/transactions/', $this->present(self::xrpIntent())['explorer_base']);
+        self::assertSame('XRPL', $this->present(self::xrpIntent())['chain']);
+    }
+
+    /**
+     * A Xahau order is native like XRP (drops, no issuer), named by its chain, with Xahau's
+     * explorer and a payment request that names the network so Xaman offers to switch.
+     */
+    public function testAXahauOrderIsNamedByItsChain(): void
+    {
+        $intent = PaymentIntent::quote(
+            type: 'xahau-xah-payment',
+            chain: 'XAHAU',
+            network: 'testnet',
+            baseAsset: 'XAH',
+            quoteCurrency: 'EUR',
+            pairing: 'XAH/EUR',
+            exchangeRate: 0.0091,
+            amountRequested: 109.89011,
+            destinationAccount: 'raXkRCAYkqaoFYCeVej93SzCTtiAbbRzAg',
+            destinationTag: 123456,
+            expiry: self::NOW + 300,
+        );
+
+        $view = $this->present($intent);
+
+        self::assertSame('XAHAU', $view['chain']);
+        self::assertSame('XAH', $view['base_asset']);
+        self::assertSame('109890110', $view['amount_drops']);
+        self::assertNull($view['issuer']);
+        self::assertSame('https://explorer.xahau-test.net/tx/', $view['explorer_base']);
+        self::assertStringContainsString('network=XAHAUTESTNET', $view['payment_uri']);
+        self::assertStringNotContainsString('network=', $this->present(self::xrpIntent())['payment_uri'], 'XRPL requests are unchanged');
     }
 
     public function testAnExpiredQuoteWithNothingPaidIsExpired(): void

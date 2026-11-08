@@ -5,7 +5,7 @@
 <div class="card mt-2" id="ledgerdirect-order-panel">
   <div class="card-header">
     <h3 class="card-header-title">
-      LedgerDirect &mdash; {l s='XRPL payment' d='Modules.Ledgerdirect.Admin'}
+      LedgerDirect &mdash; {if $ld_panel.chain == 'XAHAU'}{l s='Xahau payment' d='Modules.Ledgerdirect.Admin'}{else}{l s='XRPL payment' d='Modules.Ledgerdirect.Admin'}{/if}
     </h3>
   </div>
   <div class="card-body">

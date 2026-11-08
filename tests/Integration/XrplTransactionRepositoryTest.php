@@ -24,14 +24,19 @@ use LedgerDirect\Port\PrestaShopXrplTransactionRepository;
 /**
  * The persistence port, against the real database.
  */
-final class XrplTransactionRepositoryTest extends IntegrationTestCase
+class XrplTransactionRepositoryTest extends IntegrationTestCase
 {
+    /** The chain whose tables the test works on; XahauTransactionRepositoryTest runs the same contract on Xahau's. */
+    protected const CHAIN = 'XRPL';
+    protected const TABLE_TX = Installer::TABLE_TX;
+    protected const TABLE_DESTINATION_TAG = Installer::TABLE_DESTINATION_TAG;
+
     private PrestaShopXrplTransactionRepository $repository;
     private string $account;
 
     protected function setUp(): void
     {
-        $this->repository = new PrestaShopXrplTransactionRepository();
+        $this->repository = new PrestaShopXrplTransactionRepository(static::CHAIN);
         $this->account = 'rTest' . bin2hex(random_bytes(8));
     }
 
@@ -39,11 +44,11 @@ final class XrplTransactionRepositoryTest extends IntegrationTestCase
     {
         $db = \Db::getInstance();
         $db->execute(
-            'DELETE FROM `' . _DB_PREFIX_ . Installer::TABLE_TX . '`
+            'DELETE FROM `' . _DB_PREFIX_ . static::TABLE_TX . '`
              WHERE `destination` = "' . pSQL($this->account) . '"'
         );
         $db->execute(
-            'DELETE FROM `' . _DB_PREFIX_ . Installer::TABLE_DESTINATION_TAG . '`
+            'DELETE FROM `' . _DB_PREFIX_ . static::TABLE_DESTINATION_TAG . '`
              WHERE `destination_account` = "' . pSQL($this->account) . '"'
         );
     }
@@ -79,7 +84,7 @@ final class XrplTransactionRepositoryTest extends IntegrationTestCase
             self::assertSame($first + 2, $this->repository->nextDestinationTagSequence($this->account));
         } finally {
             \Db::getInstance()->execute(
-                'DELETE FROM `' . _DB_PREFIX_ . Installer::TABLE_DESTINATION_TAG . '`
+                'DELETE FROM `' . _DB_PREFIX_ . static::TABLE_DESTINATION_TAG . '`
                  WHERE `destination_account` = "' . pSQL($other) . '"'
             );
         }
@@ -230,7 +235,7 @@ final class XrplTransactionRepositoryTest extends IntegrationTestCase
     private function countRows(): int
     {
         return (int) \Db::getInstance()->getValue(
-            'SELECT COUNT(*) FROM `' . _DB_PREFIX_ . Installer::TABLE_TX . '`
+            'SELECT COUNT(*) FROM `' . _DB_PREFIX_ . static::TABLE_TX . '`
              WHERE `destination` = "' . pSQL($this->account) . '"',
             false
         );

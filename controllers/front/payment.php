@@ -14,6 +14,7 @@
 
 use Hardcastle\LedgerDirect\Core\Payment\PaymentIntent;
 use Hardcastle\LedgerDirect\Core\Presentation\AccentColor;
+use LedgerDirect\Chain\SupportedChains;
 use LedgerDirect\Presentation\PageLogo;
 use LedgerDirect\Presentation\PaymentIntentPresenter;
 use LedgerDirect\Service\PaymentSyncService;
@@ -232,13 +233,15 @@ class LedgerdirectPaymentModuleFrontController extends ModuleFrontController
             return $paymentIntent;
         }
 
-        $asset = $paymentIntent->baseAsset ?? self::assetFromOrder($order);
+        [$chain, $asset] = $paymentIntent !== null
+            ? [$paymentIntent->chain, $paymentIntent->baseAsset]
+            : (self::chainAndAssetFromOrder($order) ?? [null, null]);
         if ($asset === null) {
             return $paymentIntent;
         }
 
         $currency = new Currency((int) $order->id_currency);
-        $refreshed = ServiceFactory::getInstance()->getPaymentIntentService()->quoteForOrder(
+        $refreshed = ServiceFactory::getInstance()->getPaymentIntentService($chain)->quoteForOrder(
             (float) $order->total_paid,
             $currency->iso_code,
             $asset,
@@ -306,16 +309,18 @@ class LedgerdirectPaymentModuleFrontController extends ModuleFrontController
     }
 
     /**
-     * Recovers the asset from the order's payment label for the one case where
+     * Recovers the chain and asset from the order's payment label for the one case where
      * the intent is missing entirely: the order was created but storing the
      * intent failed. The label is written by this module in the validation
      * controller, so its shape is ours, not free text.
      */
-    private static function assetFromOrder(Order $order): ?string
+    private static function chainAndAssetFromOrder(Order $order): ?array
     {
-        foreach (Ledgerdirect::SUPPORTED_ASSETS as $asset) {
-            if (str_contains((string) $order->payment, '(' . $asset . ')')) {
-                return $asset;
+        foreach (SupportedChains::chains() as $chain) {
+            foreach (SupportedChains::descriptor($chain)->assetCodes() as $asset) {
+                if (str_contains((string) $order->payment, '(' . $asset . ')')) {
+                    return [$chain, $asset];
+                }
             }
         }
 

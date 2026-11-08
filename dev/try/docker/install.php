@@ -226,6 +226,10 @@ function configure(): void
         PrestaShopConfigProvider::KEY_ASSET_XRP => 1,
         PrestaShopConfigProvider::KEY_ASSET_RLUSD => $stablecoins ? 1 : 0,
         PrestaShopConfigProvider::KEY_ASSET_USDC => $stablecoins ? 1 : 0,
+        // Xahau stays off, on its testnet: whoever switches XAH on in the Back Office pays on the
+        // Xahau testnet, with an account they enter there.
+        PrestaShopConfigProvider::KEY_XAHAU_NETWORK => PrestaShopConfigProvider::NETWORK_TESTNET,
+        PrestaShopConfigProvider::KEY_XAHAU_ASSET_XAH => 0,
     ] as $key => $value) {
         Configuration::updateValue($key, $value);
     }

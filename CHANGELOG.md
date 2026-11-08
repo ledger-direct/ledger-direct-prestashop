@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+- Xahau: XAH on the [Xahau](https://xahau.network) network, a chain of its own that speaks the XRP
+  Ledger's protocol, paid by destination tag. A fieldset *Xahau settings* (network, receiving address
+  per network, *Accept XAH*, off by default) under the XRP Ledger's, and the payment option "Pay with
+  XAH" in the checkout. The payment request behind the QR code names the Xahau network, so Xaman offers
+  to switch if it is set to another one; the browser-wallet buttons stay off on a Xahau page. Xahau has
+  its own tables (`ledger_direct_xahau_tx`, `ledger_direct_xahau_destination_tag`, created by the
+  upgrade) and shares nothing with the XRP Ledger, also for an account that exists on both. The cron
+  syncs the configured account of each chain. Saving a Xahau address that is also the XRP Ledger's shows a
+  warning: the same address is a different account on each chain. Needs `hardcastle/ledger-direct-core` 0.11
+- The payment options come from the core's chain catalogue: one per chain and asset, and a test that
+  turns red when the core adds a chain the module has not decided on. The validation controller takes
+  `ld_chain` next to `ld_asset`; a link without it means the XRP Ledger, as before
+- `dev/bin/e2e.php` takes `--chain` on `configure`, `create-order`, `sync-marker` and `transactions`,
+  and reads the sync marker under the core 0.11 key (chain, network, account digest)
+- `e2e.yml` runs the case catalogue on Xahau too, after the XRP Ledger, from a CI treasury of its own
+  (`LEDGERDIRECT_CI_XAHAU_TREASURY_SEED` / `_ADDRESS`)
 - Try it in five minutes: `dev/try` starts a complete PrestaShop 9.1 shop with the module on the XRP
   Ledger testnet (`docker compose up -d --wait`): English and German, a home page that explains the
   demo and offers three hand-painted miniatures (2–4 EUR; their pictures and texts are not under the

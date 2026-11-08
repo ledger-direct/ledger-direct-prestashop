@@ -14,6 +14,7 @@
 
 use LedgerDirect\Admin\ConfigurationForm;
 use LedgerDirect\Admin\OrderPanel;
+use LedgerDirect\Chain\SupportedChains;
 use LedgerDirect\Install\Installer;
 use LedgerDirect\Port\PrestaShopConfigProvider;
 use LedgerDirect\Presentation\PaymentIntentPresenter;
@@ -33,9 +34,6 @@ if (file_exists(__DIR__ . '/vendor/autoload.php')) {
 
 class Ledgerdirect extends PaymentModule
 {
-    /** Offered in this order in the checkout. */
-    public const SUPPORTED_ASSETS = ['XRP', 'RLUSD', 'USDC'];
-
     public function __construct()
     {
         $this->name = 'ledgerdirect';
@@ -47,7 +45,7 @@ class Ledgerdirect extends PaymentModule
 
         $this->displayName = $this->trans('LedgerDirect', [], 'Modules.Ledgerdirect.Admin');
         $this->description = $this->trans(
-            'Accept XRP, RLUSD and USDC directly on the XRP Ledger.',
+            'Accept XRP, RLUSD and USDC directly on the XRP Ledger, and XAH on Xahau.',
             [],
             'Modules.Ledgerdirect.Admin'
         );
@@ -95,62 +93,66 @@ class Ledgerdirect extends PaymentModule
 
         $services = ServiceFactory::getInstance();
         $configProvider = $services->getConfigProvider();
-
-        // No receiving address configured means there is nowhere for the money
-        // to go — offering the method would produce an unpayable order.
-        if ($configProvider->getDestinationAccount(PrestaShopConfigProvider::CHAIN_XRPL) === '') {
-            return [];
-        }
-
-        $network = $configProvider->getNetwork(PrestaShopConfigProvider::CHAIN_XRPL);
         $currency = new Currency((int) $cart->id_currency);
         $total = (float) $cart->getOrderTotal(true, Cart::BOTH);
 
+        // One option per (chain, asset) the configuration has switched on, in catalogue order.
         $options = [];
-        foreach (self::SUPPORTED_ASSETS as $asset) {
-            if (!$configProvider->isAssetEnabled(PrestaShopConfigProvider::CHAIN_XRPL, $asset)) {
+        foreach (SupportedChains::chains() as $chain) {
+            // No receiving address configured means there is nowhere for the money
+            // to go — offering the method would produce an unpayable order.
+            if ($configProvider->getDestinationAccount($chain) === '') {
                 continue;
             }
 
-            try {
-                $quote = $services->getPriceService()
-                    ->getCryptoPriceForOrder($total, $currency->iso_code, $asset, $network);
-            } catch (Throwable $exception) {
-                // An asset that cannot be priced right now is simply not
-                // offered. Letting the customer pick it would mean failing
-                // after they committed, which is the worse moment.
-                $services->getLogger()->error('Hiding payment option, no price available', [
-                    'asset' => $asset,
-                    'currency' => $currency->iso_code,
-                    'exception' => $exception->getMessage(),
+            $network = $configProvider->getNetwork($chain);
+            foreach (SupportedChains::descriptor($chain)->assets as $asset) {
+                if (!$configProvider->isAssetEnabled($chain, $asset->code)) {
+                    continue;
+                }
+
+                try {
+                    $quote = $services->getPriceService()
+                        ->getCryptoPriceForOrder($total, $currency->iso_code, $asset->code, $network);
+                } catch (Throwable $exception) {
+                    // An asset that cannot be priced right now is simply not
+                    // offered. Letting the customer pick it would mean failing
+                    // after they committed, which is the worse moment.
+                    $services->getLogger()->error('Hiding payment option, no price available', [
+                        'chain' => $chain,
+                        'asset' => $asset->code,
+                        'currency' => $currency->iso_code,
+                        'exception' => $exception->getMessage(),
+                    ]);
+                    continue;
+                }
+
+                // The amount as the core states it — a plain decimal, not rounded a
+                // second time here; the payment page shows the same number.
+                $this->smarty->assign([
+                    'ld_chain' => $chain,
+                    'ld_asset' => $asset->code,
+                    'ld_amount' => PaymentIntentPresenter::plainAmount($quote->amountRequested),
+                    'ld_network' => $network,
+                    'ld_is_testnet' => $network === PrestaShopConfigProvider::NETWORK_TESTNET,
                 ]);
-                continue;
+
+                $option = new PaymentOption();
+                $option->setModuleName($this->name)
+                    ->setCallToActionText($this->trans('Pay with %s', [$asset->code], 'Modules.Ledgerdirect.Shop'))
+                    ->setLogo(Media::getMediaPath(_PS_MODULE_DIR_ . $this->name . '/views/img/' . strtolower($asset->code) . '_payment.svg'))
+                    ->setAction($this->context->link->getModuleLink(
+                        $this->name,
+                        'validation',
+                        ['ld_chain' => $chain, 'ld_asset' => $asset->code],
+                        true
+                    ))
+                    ->setAdditionalInformation(
+                        $this->fetch('module:ledgerdirect/views/templates/front/payment_option.tpl')
+                    );
+
+                $options[] = $option;
             }
-
-            // The amount as the core states it — a plain decimal, not rounded a
-            // second time here; the payment page shows the same number.
-            $this->smarty->assign([
-                'ld_asset' => $asset,
-                'ld_amount' => PaymentIntentPresenter::plainAmount($quote->amountRequested),
-                'ld_network' => $network,
-                'ld_is_testnet' => $network === PrestaShopConfigProvider::NETWORK_TESTNET,
-            ]);
-
-            $option = new PaymentOption();
-            $option->setModuleName($this->name)
-                ->setCallToActionText($this->trans('Pay with %s', [$asset], 'Modules.Ledgerdirect.Shop'))
-                ->setLogo(Media::getMediaPath(_PS_MODULE_DIR_ . $this->name . '/views/img/' . strtolower($asset) . '_payment.svg'))
-                ->setAction($this->context->link->getModuleLink(
-                    $this->name,
-                    'validation',
-                    ['ld_asset' => $asset],
-                    true
-                ))
-                ->setAdditionalInformation(
-                    $this->fetch('module:ledgerdirect/views/templates/front/payment_option.tpl')
-                );
-
-            $options[] = $option;
         }
 
         return $options;

@@ -6,7 +6,7 @@
   <p>
     {l s='Pay approximately' d='Modules.Ledgerdirect.Shop'}
     <strong>{$ld_amount|escape:'html':'UTF-8'} {$ld_asset|escape:'html':'UTF-8'}</strong>
-    {l s='on the XRP Ledger.' d='Modules.Ledgerdirect.Shop'}
+    {if $ld_chain == 'XAHAU'}{l s='on Xahau.' d='Modules.Ledgerdirect.Shop'}{else}{l s='on the XRP Ledger.' d='Modules.Ledgerdirect.Shop'}{/if}
   </p>
   {if $ld_is_testnet}
     <p class="alert alert-warning">

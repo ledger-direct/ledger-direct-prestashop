@@ -2,7 +2,8 @@
 
 [![CI](https://github.com/ledger-direct/ledger-direct-prestashop/actions/workflows/ci.yml/badge.svg)](https://github.com/ledger-direct/ledger-direct-prestashop/actions/workflows/ci.yml)
 
-Accept XRP, RLUSD and USDC directly on the XRP Ledger — no payment processor, no custody, funds
+Accept XRP, RLUSD and USDC directly on the XRP Ledger, and XAH on [Xahau](https://xahau.network) — no
+payment processor, no custody, funds
 land in the merchant's own wallet.
 
 The module is the PrestaShop 9 adapter over
@@ -100,6 +101,8 @@ no login is required.
 - PHP 8.2 or newer
 - An XRP Ledger account. Accepting RLUSD or USDC additionally requires a **trustline** to the
   respective issuer on that account, or payments will fail on the ledger.
+- For XAH, an account on Xahau. Use one that receives on Xahau alone: the same address is a different
+  account on each chain, and the module keeps the two apart.
 
 ## Installation
 
@@ -137,6 +140,14 @@ Modules → LedgerDirect → Configure:
 
 Issuer addresses are shown on that screen but cannot be edited. They are fixed in the core: a wrong
 issuer would send customer funds to a dead trustline.
+
+**Xahau settings** is the fieldset below: the network, one receiving address per network, and the
+switch *Accept XAH*, off by default. Xahau speaks the XRP Ledger's protocol on a network of its own:
+payments in XAH by destination tag, priced from Coingecko and Bitrue (XAH trades on Bitrue alone; a
+euro price rests on Coingecko). The payment request behind the QR code names the Xahau network, so
+Xaman offers to switch if it is set to another one; the browser-wallet buttons stay off on a Xahau
+page. Xahau's transactions and tag counter live in tables of their own (`ledger_direct_xahau_tx`,
+`ledger_direct_xahau_destination_tag`), shared with the XRP Ledger's in nothing.
 
 The same screen shows the cron URL, including its token:
 
