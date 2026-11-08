@@ -9,7 +9,8 @@
   to switch if it is set to another one; the browser-wallet buttons stay off on a Xahau page. Xahau has
   its own tables (`ledger_direct_xahau_tx`, `ledger_direct_xahau_destination_tag`, created by the
   upgrade) and shares nothing with the XRP Ledger, also for an account that exists on both. The cron
-  syncs the configured account of each chain. Needs `hardcastle/ledger-direct-core` 0.11
+  syncs the configured account of each chain. Saving a Xahau address that is also the XRP Ledger's shows a
+  warning: the same address is a different account on each chain. Needs `hardcastle/ledger-direct-core` 0.11
 - The payment options come from the core's chain catalogue: one per chain and asset, and a test that
   turns red when the core adds a chain the module has not decided on. The validation controller takes
   `ld_chain` next to `ld_asset`; a link without it means the XRP Ledger, as before

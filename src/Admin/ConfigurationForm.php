@@ -51,6 +51,9 @@ final class ConfigurationForm
     /** Public identifiers only (Xaman API key, WalletConnect project id): plain characters, no secrets. */
     private const IDENTIFIER_PATTERN = '/^[A-Za-z0-9._-]{0,128}$/';
 
+    /** @var string[] what the last save() wants the merchant to know without refusing anything */
+    private array $warnings = [];
+
     public function __construct(private readonly \Module $module)
     {
     }
@@ -74,6 +77,10 @@ final class ConfigurationForm
             $output .= $errors === []
                 ? $this->module->displayConfirmation($this->translator()->trans('Settings saved.', [], self::DOMAIN))
                 : $this->module->displayError(implode('<br>', $errors));
+
+            if ($this->warnings !== []) {
+                $output .= $this->module->displayWarning(implode('<br>', $this->warnings));
+            }
         }
 
         return $output . $this->renderCronPanel() . $this->renderForm();
@@ -129,6 +136,12 @@ final class ConfigurationForm
         }
         if ($xahEnabled && ($xahauAccounts[$xahauNetwork] ?? '') === '') {
             $errors[] = $this->translator()->trans('Enter a Xahau receiving address for the selected network, or do not accept XAH.', [], self::DOMAIN);
+        }
+        // The same r-address is a different account on each chain, and a payment sent on the wrong
+        // one reaches no order. The core's contract asks the adapter to warn; it cannot refuse,
+        // the formats are identical (INVARIANTS.md, "Xahau").
+        if ($destinationAccount !== '' && in_array($destinationAccount, $xahauAccounts, true)) {
+            $this->warnings[] = $this->translator()->trans('The Xahau receiving address %s is also the XRP Ledger\'s. The two are different accounts on different chains; use one account per chain.', [$destinationAccount], self::DOMAIN);
         }
 
         if ($quoteExpiry < self::QUOTE_EXPIRY_MIN || $quoteExpiry > self::QUOTE_EXPIRY_MAX) {

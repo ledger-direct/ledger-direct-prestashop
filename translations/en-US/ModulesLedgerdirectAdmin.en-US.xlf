@@ -246,6 +246,10 @@
         <source>Accept XRP, RLUSD and USDC directly on the XRP Ledger, and XAH on Xahau.</source>
         <target state="translated">Accept XRP, RLUSD and USDC directly on the XRP Ledger, and XAH on Xahau.</target>
       </trans-unit>
+      <trans-unit id="960e7a19e3c24fd227f36ffb2c0c5152">
+        <source>The Xahau receiving address %s is also the XRP Ledger's. The two are different accounts on different chains; use one account per chain.</source>
+        <target state="translated">The Xahau receiving address %s is also the XRP Ledger's. The two are different accounts on different chains; use one account per chain.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>
