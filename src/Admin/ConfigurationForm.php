@@ -141,7 +141,7 @@ final class ConfigurationForm
         // one reaches no order. The core's contract asks the adapter to warn; it cannot refuse,
         // the formats are identical (INVARIANTS.md, "Xahau").
         if ($destinationAccount !== '' && in_array($destinationAccount, $xahauAccounts, true)) {
-            $this->warnings[] = $this->translator()->trans('The Xahau receiving address %s is also the XRP Ledger\'s. The two are different accounts on different chains; use one account per chain.', [$destinationAccount], self::DOMAIN);
+            $this->warnings[] = $this->translator()->trans('The Xahau receiving address %s is also the XRP Ledger\'s. The two are different accounts on different chains; use one account per chain.', [htmlspecialchars($destinationAccount, ENT_QUOTES, 'UTF-8')], self::DOMAIN);
         }
 
         if ($quoteExpiry < self::QUOTE_EXPIRY_MIN || $quoteExpiry > self::QUOTE_EXPIRY_MAX) {
