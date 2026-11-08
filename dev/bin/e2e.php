@@ -30,6 +30,7 @@
 declare(strict_types=1);
 
 use Hardcastle\LedgerDirect\Core\Payment\PaymentStatus;
+use LedgerDirect\Chain\SupportedChains;
 use LedgerDirect\Install\Installer;
 use LedgerDirect\Port\PrestaShopConfigProvider;
 use LedgerDirect\Service\ServiceFactory;
@@ -108,19 +109,26 @@ function ensureTestProduct(): int
 
 switch ($command) {
     case 'configure':
-        // The shop's receiving account for this run, plus network and assets.
+        // The shop's receiving account for this run, plus network and assets, on the chain
+        // named (the XRP Ledger without one). The other chains' settings are left as they are.
+        $chain = strtoupper((string) ($args['chain'] ?? PrestaShopConfigProvider::CHAIN_XRPL));
+        if (!SupportedChains::supports($chain)) {
+            fail("chain {$chain} is not carried by this module");
+        }
         $account = $args['account'] ?? fail('--account is required');
-        Configuration::updateValue(PrestaShopConfigProvider::KEY_DESTINATION_ACCOUNT, $account);
-        Configuration::updateValue(PrestaShopConfigProvider::KEY_NETWORK, $args['network'] ?? 'testnet');
-        $assets = explode(',', $args['assets'] ?? 'XRP');
-        Configuration::updateValue(PrestaShopConfigProvider::KEY_ASSET_XRP, in_array('XRP', $assets, true) ? 1 : 0);
-        Configuration::updateValue(PrestaShopConfigProvider::KEY_ASSET_RLUSD, in_array('RLUSD', $assets, true) ? 1 : 0);
-        Configuration::updateValue(PrestaShopConfigProvider::KEY_ASSET_USDC, in_array('USDC', $assets, true) ? 1 : 0);
+        $network = $args['network'] ?? 'testnet';
+        Configuration::updateValue(PrestaShopConfigProvider::accountKey($chain, $network), $account);
+        Configuration::updateValue(PrestaShopConfigProvider::networkKey($chain), $network);
+        $assets = explode(',', $args['assets'] ?? SupportedChains::descriptor($chain)->nativeAsset);
+        foreach (SupportedChains::descriptor($chain)->assetCodes() as $code) {
+            Configuration::updateValue(PrestaShopConfigProvider::assetKey($chain, $code), in_array($code, $assets, true) ? 1 : 0);
+        }
         Configuration::updateValue(PrestaShopConfigProvider::KEY_QUOTE_EXPIRY, (int) ($args['quote-expiry'] ?? 300));
         emit([
+            'chain' => $chain,
             'account' => $account,
             'test_product' => ensureTestProduct(),
-            'network' => Configuration::get(PrestaShopConfigProvider::KEY_NETWORK),
+            'network' => Configuration::get(PrestaShopConfigProvider::networkKey($chain)),
             'assets' => $assets,
             'quote_expiry' => (int) Configuration::get(PrestaShopConfigProvider::KEY_QUOTE_EXPIRY),
             'cron_url' => Context::getContext()->link->getModuleLink('ledgerdirect', 'cron', ['token' => PrestaShopConfigProvider::getCronToken()], true),
@@ -132,6 +140,7 @@ switch ($command) {
         // (oracle price, destination tag from the counter) — the same path the
         // validation controller takes, minus the browser.
         $asset = $args['asset'] ?? 'XRP';
+        $chain = strtoupper((string) ($args['chain'] ?? PrestaShopConfigProvider::CHAIN_XRPL));
         $customerId = (int) ($args['customer'] ?? 2);
         $productId = (int) ($args['product'] ?? ensureTestProduct());
         $quantity = (int) ($args['quantity'] ?? 1);
@@ -162,7 +171,7 @@ switch ($command) {
 
         $total = (float) $cart->getOrderTotal(true, Cart::BOTH);
         $services = ServiceFactory::getInstance();
-        $intent = $services->getPaymentIntentService()->quoteForOrder($total, $context->currency->iso_code, $asset);
+        $intent = $services->getPaymentIntentService($chain)->quoteForOrder($total, $context->currency->iso_code, $asset);
 
         $module = Module::getInstanceByName('ledgerdirect');
         $module->validateOrder((int) $cart->id, Installer::getOrderStateId(), $total, $module->displayName . ' (' . $asset . ')', null, [], (int) $context->currency->id, false, $customer->secure_key);
@@ -245,8 +254,16 @@ switch ($command) {
         // The throttle's mark for the configured account: its stored value
         // changes only when a sync ran. Two polls inside the window leave it
         // untouched — that is how PS-08 is proven without grepping logs.
+        // The key as the core's SyncThrottle builds it (0.11): chain, network and the account as
+        // a digest, so the key stays within what PSR-16 guarantees.
+        $chain = strtoupper((string) ($args['chain'] ?? PrestaShopConfigProvider::CHAIN_XRPL));
         $config = ServiceFactory::getInstance()->getConfigProvider();
-        $key = 'ledger-direct.sync.v1.' . $config->getNetwork(PrestaShopConfigProvider::CHAIN_XRPL) . '.' . $config->getDestinationAccount(PrestaShopConfigProvider::CHAIN_XRPL);
+        $key = implode('.', [
+            'ledger-direct.sync.v2',
+            strtolower($chain),
+            $config->getNetwork($chain),
+            substr(hash('sha256', $config->getDestinationAccount($chain)), 0, 16),
+        ]);
         $row = db()->getRow('SELECT value, expires_at FROM ' . _DB_PREFIX_ . Installer::TABLE_RATE_CACHE . ' WHERE cache_key = "' . pSQL($key) . '"', false);
         emit(['key' => $key, 'value' => $row['value'] ?? null, 'expires_at' => isset($row['expires_at']) ? (int) $row['expires_at'] : null]);
 
@@ -270,7 +287,8 @@ switch ($command) {
         // transaction the module has stored, whatever order it belongs to.
         $account = (string) ($args['account'] ?? fail('--account is required'));
         $tag = (int) ($args['tag'] ?? fail('--tag is required'));
-        $transactions = ServiceFactory::getInstance()->getSyncService()->findTransactions($account, $tag);
+        $chain = strtoupper((string) ($args['chain'] ?? PrestaShopConfigProvider::CHAIN_XRPL));
+        $transactions = ServiceFactory::getInstance()->getSyncService($chain)->findTransactions($account, $tag);
         emit(['hashes' => array_map(static fn ($transaction): string => $transaction->hash, $transactions)]);
 
         // no break

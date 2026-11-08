@@ -17,19 +17,32 @@ declare(strict_types=1);
 namespace LedgerDirect\Port;
 
 use Db;
+use Hardcastle\LedgerDirect\Core\ChainCatalog;
 use Hardcastle\LedgerDirect\Core\Port\XrplTransactionRepositoryInterface;
+use Hardcastle\LedgerDirect\Core\Xrpl\Schema;
 use Hardcastle\LedgerDirect\Core\Xrpl\XrplTransaction;
-use LedgerDirect\Install\Installer;
 
 /**
- * Persistence for the two XRPL tables, on PrestaShop's `Db` layer.
+ * Persistence for the two tables of one chain, on PrestaShop's `Db` layer.
  *
  * The core knows only the logical table names and builds no SQL at all, so
  * every physical name is assembled here as `_DB_PREFIX_` + base name — in one
  * place, via self::table(), so the rule can't drift between queries.
+ *
+ * One instance per chain: Xahau's transactions and tag counter live in tables of
+ * their own (the core's Schema names them, the Installer creates them), shared with
+ * the XRP Ledger's in nothing, not even for an account that exists on both chains.
  */
 final class PrestaShopXrplTransactionRepository implements XrplTransactionRepositoryInterface
 {
+    private readonly string $txTable;
+    private readonly string $tagTable;
+
+    public function __construct(string $chain = ChainCatalog::XRPL)
+    {
+        [$this->txTable, $this->tagTable] = array_keys(Schema::tables($chain));
+    }
+
     /**
      * Issues the next sequence number for $destinationAccount: a random start
      * in [0, 2^31 - 1] on the first call for that account, then +1 per call.
@@ -62,7 +75,7 @@ final class PrestaShopXrplTransactionRepository implements XrplTransactionReposi
         // contract's [0, 2^31 - 1].
         $start = random_int(1, 2 ** 31);
 
-        $sql = 'INSERT INTO `' . self::table(Installer::TABLE_DESTINATION_TAG) . '`
+        $sql = 'INSERT INTO `' . self::table($this->tagTable) . '`
                     (`destination_account`, `sequence`)
                 VALUES ("' . self::esc($destinationAccount) . '", LAST_INSERT_ID(' . $start . '))
                 ON DUPLICATE KEY UPDATE `sequence` = LAST_INSERT_ID(`sequence` + 1)';
@@ -94,7 +107,7 @@ final class PrestaShopXrplTransactionRepository implements XrplTransactionReposi
         }
 
         $rows = \Db::getInstance()->executeS(
-            'SELECT `hash` FROM `' . self::table(Installer::TABLE_TX) . '`
+            'SELECT `hash` FROM `' . self::table($this->txTable) . '`
              WHERE `hash` IN (' . implode(',', $escaped) . ')'
         );
 
@@ -136,7 +149,7 @@ final class PrestaShopXrplTransactionRepository implements XrplTransactionReposi
         // can still race between that check and this write. The unique index on
         // `hash` is what actually guarantees uniqueness; IGNORE just lets the
         // loser of the race proceed quietly instead of erroring.
-        $sql = 'INSERT IGNORE INTO `' . self::table(Installer::TABLE_TX) . '`
+        $sql = 'INSERT IGNORE INTO `' . self::table($this->txTable) . '`
                     (`network`, `ledger_index`, `hash`, `tx_ctid`, `account`, `destination`, `destination_tag`, `date`, `meta`, `tx`)
                 VALUES ' . implode(',', $values);
 
@@ -156,10 +169,10 @@ final class PrestaShopXrplTransactionRepository implements XrplTransactionReposi
     public function findTransactions(string $destination, int $destinationTag): array
     {
         $rows = \Db::getInstance()->executeS(
-            'SELECT * FROM `' . self::table(Installer::TABLE_TX) . '`
+            'SELECT * FROM `' . self::table($this->txTable) . '`
              WHERE `destination` = "' . self::esc($destination) . '"
                AND `destination_tag` = ' . $destinationTag . '
-             ORDER BY `ledger_index` DESC, `id_ledger_direct_xrpl_tx` DESC'
+             ORDER BY `ledger_index` DESC, `id_' . $this->txTable . '` DESC'
         );
 
         if (!is_array($rows)) {
@@ -181,7 +194,7 @@ final class PrestaShopXrplTransactionRepository implements XrplTransactionReposi
         // lexicographically would order "9" above "10" and the sync would then
         // re-fetch from the wrong point forever.
         $value = \Db::getInstance()->getValue(
-            'SELECT MAX(`ledger_index`) FROM `' . self::table(Installer::TABLE_TX) . '`
+            'SELECT MAX(`ledger_index`) FROM `' . self::table($this->txTable) . '`
              WHERE `destination` = "' . self::esc($destinationAccount) . '"
                AND `network` = "' . self::esc($network) . '"',
             false
@@ -197,7 +210,7 @@ final class PrestaShopXrplTransactionRepository implements XrplTransactionReposi
      */
     public function truncate(): void
     {
-        if (!\Db::getInstance()->execute('TRUNCATE TABLE `' . self::table(Installer::TABLE_TX) . '`')) {
+        if (!\Db::getInstance()->execute('TRUNCATE TABLE `' . self::table($this->txTable) . '`')) {
             throw new \RuntimeException('LedgerDirect: could not truncate the XRPL transaction table.');
         }
     }

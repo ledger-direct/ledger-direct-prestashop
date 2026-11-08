@@ -21,15 +21,23 @@ use LedgerDirect\Port\PrestaShopConfigProvider;
 /**
  * Schema and order-state setup for install()/uninstall().
  *
- * The core deliberately ships no DDL — it knows only the logical table names
- * (`ledger_direct_xrpl_tx`, `ledger_direct_xrpl_destination_tag`) and never
- * builds SQL. Prepending `_DB_PREFIX_` and creating the tables is entirely
+ * The core deliberately ships no DDL for this adapter — it knows only the logical table
+ * names (`ledger_direct_xrpl_tx`, `ledger_direct_xrpl_destination_tag`, and Xahau's
+ * `ledger_direct_xahau_*`) and never builds SQL here. Prepending `_DB_PREFIX_` and creating the tables is entirely
  * this adapter's job (INVARIANTS.md, "Tables").
  */
 final class Installer
 {
     public const TABLE_TX = 'ledger_direct_xrpl_tx';
     public const TABLE_DESTINATION_TAG = 'ledger_direct_xrpl_destination_tag';
+
+    /**
+     * Xahau's tables (0.6.0): the same columns under names of their own, as the
+     * core's Schema names them for every adapter. Nothing is shared with the XRP
+     * Ledger's tables, not even for an account that exists on both chains.
+     */
+    public const TABLE_XAHAU_TX = 'ledger_direct_xahau_tx';
+    public const TABLE_XAHAU_DESTINATION_TAG = 'ledger_direct_xahau_destination_tag';
 
     /**
      * Adapter-owned, not one of the core's two tables — PrestaShop has no
@@ -118,11 +126,19 @@ final class Installer
      * name, so the core fixes `tx_ctid` for every adapter and the plugins
      * follow (INVARIANTS.md, "Tables"); the payment record keeps its `ctid`
      * field. Renamed in place, before the backfill reads it.
+     *
+     * 0.6.0 (core 0.11): Xahau's two tables, created when missing. An upgrade
+     * reaches here without createTables(), so the chain's tables come from the
+     * same statements a fresh install runs.
      */
     public static function ensureSchema(): bool
     {
         $db = \Db::getInstance();
         $table = _DB_PREFIX_ . self::TABLE_TX;
+
+        if (!self::createChainTables(self::TABLE_XAHAU_TX, self::TABLE_XAHAU_DESTINATION_TAG)) {
+            return false;
+        }
 
         if (self::columnExists($table, 'ctid') && !self::columnExists($table, 'tx_ctid')) {
             $renamed = $db->execute(
@@ -184,7 +200,7 @@ final class Installer
     }
 
     /**
-     * Deliberately keeps both tables. `ledger_direct_xrpl_tx` is a re-syncable
+     * Deliberately keeps every chain's tables. `ledger_direct_xrpl_tx` is a re-syncable
      * cache, but `ledger_direct_xrpl_destination_tag` is not: it holds the
      * per-account counter that guarantees a destination tag is never issued
      * twice. Dropping it would restart the sequence at 0 and hand a fresh
@@ -208,36 +224,6 @@ final class Installer
     {
         $engine = _MYSQL_ENGINE_;
 
-        $tx = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . self::TABLE_TX . '` (
-            `id_ledger_direct_xrpl_tx` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-            `network` VARCHAR(16) NOT NULL,
-            `ledger_index` BIGINT UNSIGNED NOT NULL,
-            `hash` VARCHAR(64) NOT NULL,
-            `tx_ctid` VARCHAR(16) NOT NULL,
-            `account` VARCHAR(64) NOT NULL,
-            `destination` VARCHAR(64) NOT NULL,
-            `destination_tag` INT UNSIGNED NULL DEFAULT NULL,
-            `date` INT UNSIGNED NOT NULL,
-            `meta` LONGTEXT NOT NULL,
-            `tx` LONGTEXT NOT NULL,
-            PRIMARY KEY (`id_ledger_direct_xrpl_tx`),
-            UNIQUE KEY `uniq_ledger_direct_hash` (`hash`),
-            KEY `idx_ledger_direct_destination` (`destination`, `destination_tag`),
-            KEY `idx_ledger_direct_ledger_index` (`ledger_index`),
-            KEY `idx_ledger_direct_cursor` (`destination`, `network`, `ledger_index`)
-        ) ENGINE=' . $engine . ' DEFAULT CHARSET=utf8mb4;';
-
-        // One row per destination account, not one per issued tag: the core's
-        // DestinationTagService derives the tag from this counter via a fixed
-        // bijection, so the table stays constant-size per account. The counter
-        // starts at a random offset (see the repository), so INT UNSIGNED has
-        // to hold 2^31 plus every tag issued after it — it does, with room.
-        $destinationTag = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . self::TABLE_DESTINATION_TAG . '` (
-            `destination_account` VARCHAR(64) NOT NULL,
-            `sequence` INT UNSIGNED NOT NULL,
-            PRIMARY KEY (`destination_account`)
-        ) ENGINE=' . $engine . ' DEFAULT CHARSET=utf8mb4;';
-
         $orderPaymentIntent = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . self::TABLE_ORDER_PAYMENT_INTENT . '` (
             `id_order` INT UNSIGNED NOT NULL,
             `payment_intent` LONGTEXT NOT NULL,
@@ -256,10 +242,53 @@ final class Installer
             KEY `idx_ledger_direct_rate_expires` (`expires_at`)
         ) ENGINE=' . $engine . ' DEFAULT CHARSET=utf8mb4;';
 
-        return \Db::getInstance()->execute($tx)
-            && \Db::getInstance()->execute($destinationTag)
+        return self::createChainTables(self::TABLE_TX, self::TABLE_DESTINATION_TAG)
+            && self::createChainTables(self::TABLE_XAHAU_TX, self::TABLE_XAHAU_DESTINATION_TAG)
             && \Db::getInstance()->execute($orderPaymentIntent)
             && \Db::getInstance()->execute($rateCache);
+    }
+
+    /**
+     * The two tables of one chain: its transactions and its per-account tag
+     * counter. The same shape for every chain the core serves with its XRPL
+     * classes; only the names differ, and with them the primary key's name,
+     * which PrestaShop derives from the table's.
+     */
+    private static function createChainTables(string $txTable, string $tagTable): bool
+    {
+        $engine = _MYSQL_ENGINE_;
+
+        $tx = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . $txTable . '` (
+            `id_' . $txTable . '` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+            `network` VARCHAR(16) NOT NULL,
+            `ledger_index` BIGINT UNSIGNED NOT NULL,
+            `hash` VARCHAR(64) NOT NULL,
+            `tx_ctid` VARCHAR(16) NOT NULL,
+            `account` VARCHAR(64) NOT NULL,
+            `destination` VARCHAR(64) NOT NULL,
+            `destination_tag` INT UNSIGNED NULL DEFAULT NULL,
+            `date` INT UNSIGNED NOT NULL,
+            `meta` LONGTEXT NOT NULL,
+            `tx` LONGTEXT NOT NULL,
+            PRIMARY KEY (`id_' . $txTable . '`),
+            UNIQUE KEY `uniq_ledger_direct_hash` (`hash`),
+            KEY `idx_ledger_direct_destination` (`destination`, `destination_tag`),
+            KEY `idx_ledger_direct_ledger_index` (`ledger_index`),
+            KEY `idx_ledger_direct_cursor` (`destination`, `network`, `ledger_index`)
+        ) ENGINE=' . $engine . ' DEFAULT CHARSET=utf8mb4;';
+
+        // One row per destination account, not one per issued tag: the core's
+        // DestinationTagService derives the tag from this counter via a fixed
+        // bijection, so the table stays constant-size per account. The counter
+        // starts at a random offset (see the repository), so INT UNSIGNED has
+        // to hold 2^31 plus every tag issued after it — it does, with room.
+        $destinationTag = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . $tagTable . '` (
+            `destination_account` VARCHAR(64) NOT NULL,
+            `sequence` INT UNSIGNED NOT NULL,
+            PRIMARY KEY (`destination_account`)
+        ) ENGINE=' . $engine . ' DEFAULT CHARSET=utf8mb4;';
+
+        return \Db::getInstance()->execute($tx) && \Db::getInstance()->execute($destinationTag);
     }
 
     /**

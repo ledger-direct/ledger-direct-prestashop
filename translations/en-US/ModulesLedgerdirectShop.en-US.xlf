@@ -310,6 +310,26 @@
         <source>Pay with %s</source>
         <target state="translated">Pay with %s</target>
       </trans-unit>
+      <trans-unit id="1c9d9385942b8e8264da9454389966ee">
+        <source>on Xahau.</source>
+        <target state="translated">on Xahau.</target>
+      </trans-unit>
+      <trans-unit id="eb9b6074ae4cda36ce18cde153fd7ddb">
+        <source>Xahau Mainnet</source>
+        <target state="translated">Xahau Mainnet</target>
+      </trans-unit>
+      <trans-unit id="9ff2cc77b25f70cc6003274be4c9725f">
+        <source>Xahau Testnet</source>
+        <target state="translated">Xahau Testnet</target>
+      </trans-unit>
+      <trans-unit id="7d4125b24ffd8aee2ec64aa1372da5fe">
+        <source>Paid directly on the Xahau network, with no intermediary.</source>
+        <target state="translated">Paid directly on the Xahau network, with no intermediary.</target>
+      </trans-unit>
+      <trans-unit id="5d5ab272cad27dca5d50e249c3a12e24">
+        <source>Scan with Xaman. Address, destination tag and amount are filled in, and Xaman offers to switch to the Xahau network if it is set to another one – please check them before sending.</source>
+        <target state="translated">Scan with Xaman. Address, destination tag and amount are filled in, and Xaman offers to switch to the Xahau network if it is set to another one – please check them before sending.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

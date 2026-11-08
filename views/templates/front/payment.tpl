@@ -59,6 +59,7 @@
        data-ld-page
        data-ld-state="{$state|escape:'html':'UTF-8'}"
        data-ld-poll-url="{$ld_poll_url|escape:'html':'UTF-8'}"
+       data-ld-chain="{$ld_intent.chain|escape:'html':'UTF-8'}"
        data-ld-asset="{$asset}"
        data-ld-network="{$ld_intent.network|escape:'html':'UTF-8'}"
        data-ld-explorer-base="{$ld_intent.explorer_base|escape:'html':'UTF-8'}"
@@ -205,7 +206,7 @@
                   <div data-ld-qr data-ld-qr-label="{l s='QR code with address, destination tag and amount' d='Modules.Ledgerdirect.Shop'}"><img src="{$ld_intent.qr_data_uri|escape:'html':'UTF-8'}" alt="{l s='QR code with address, destination tag and amount' d='Modules.Ledgerdirect.Shop'}" width="220" height="220"></div>
                   <div class="ld-qr-void" data-ld-qr-void{if $state !== 'expired'} hidden{/if}>{l s='Expired – please request a new amount' d='Modules.Ledgerdirect.Shop'}</div>
                 </div>
-                <p class="ld-qr-caption">{l s='Scan with Xaman or another XRPL wallet. Address, destination tag and amount are filled in – please check them before sending.' d='Modules.Ledgerdirect.Shop'}</p>
+                <p class="ld-qr-caption">{if $ld_intent.chain == 'XAHAU'}{l s='Scan with Xaman. Address, destination tag and amount are filled in, and Xaman offers to switch to the Xahau network if it is set to another one – please check them before sending.' d='Modules.Ledgerdirect.Shop'}{else}{l s='Scan with Xaman or another XRPL wallet. Address, destination tag and amount are filled in – please check them before sending.' d='Modules.Ledgerdirect.Shop'}{/if}</p>
               </details>
 
               {* Browser wallets, loaded only on click. Every sentence the module can show is rendered here. *}
@@ -234,14 +235,14 @@
                 <span hidden data-ld-wallet-text="error-network">{l s='The connection to the wallet failed – please try again.' d='Modules.Ledgerdirect.Shop'}</span>
                 <span hidden data-ld-wallet-text="error-mismatch">{l s='Your wallet is set to another network. Please switch to %network%.' sprintf=['%network%' => '%network%'] d='Modules.Ledgerdirect.Shop'}</span>
                 <span hidden data-ld-wallet-text="error-other">{l s='The payment through the wallet failed. Please use the QR code or copy the details.' d='Modules.Ledgerdirect.Shop'}</span>
-                <span hidden data-ld-wallet-text="network-mainnet">{l s='XRPL Mainnet' d='Modules.Ledgerdirect.Shop'}</span>
-                <span hidden data-ld-wallet-text="network-testnet">{l s='XRPL Testnet' d='Modules.Ledgerdirect.Shop'}</span>
+                <span hidden data-ld-wallet-text="network-mainnet">{if $ld_intent.chain == 'XAHAU'}{l s='Xahau Mainnet' d='Modules.Ledgerdirect.Shop'}{else}{l s='XRPL Mainnet' d='Modules.Ledgerdirect.Shop'}{/if}</span>
+                <span hidden data-ld-wallet-text="network-testnet">{if $ld_intent.chain == 'XAHAU'}{l s='Xahau Testnet' d='Modules.Ledgerdirect.Shop'}{else}{l s='XRPL Testnet' d='Modules.Ledgerdirect.Shop'}{/if}</span>
               </div>
 
               <dl class="ld-details">
                 <dt>{l s='Order total' d='Modules.Ledgerdirect.Shop'}</dt><dd>{$ld_order_total|escape:'html':'UTF-8'}</dd>
                 <dt>{l s='Rate' d='Modules.Ledgerdirect.Shop'}</dt><dd>{l s='1 %asset% = %rate% %currency%' sprintf=['%asset%' => $asset, '%rate%' => $ld_intent.exchange_rate|escape:'html':'UTF-8', '%currency%' => $ld_intent.quote_currency|escape:'html':'UTF-8'] d='Modules.Ledgerdirect.Shop'}</dd>
-                <dt>{l s='Network' d='Modules.Ledgerdirect.Shop'}</dt><dd>{if $ld_intent.is_testnet}{l s='XRPL Testnet' d='Modules.Ledgerdirect.Shop'}{else}{l s='XRPL Mainnet' d='Modules.Ledgerdirect.Shop'}{/if}</dd>
+                <dt>{l s='Network' d='Modules.Ledgerdirect.Shop'}</dt><dd>{if $ld_intent.chain == 'XAHAU'}{if $ld_intent.is_testnet}{l s='Xahau Testnet' d='Modules.Ledgerdirect.Shop'}{else}{l s='Xahau Mainnet' d='Modules.Ledgerdirect.Shop'}{/if}{else}{if $ld_intent.is_testnet}{l s='XRPL Testnet' d='Modules.Ledgerdirect.Shop'}{else}{l s='XRPL Mainnet' d='Modules.Ledgerdirect.Shop'}{/if}{/if}</dd>
               </dl>
             </aside>
           </div>
@@ -280,7 +281,7 @@
 
     <footer class="ld-foot">
       <a href="{$ld_cart_url|escape:'html':'UTF-8'}">{l s='Back to cart' d='Modules.Ledgerdirect.Shop'}</a>
-      <span>{l s='Paid directly on the XRP Ledger, with no intermediary.' d='Modules.Ledgerdirect.Shop'}</span>
+      <span>{if $ld_intent.chain == 'XAHAU'}{l s='Paid directly on the Xahau network, with no intermediary.' d='Modules.Ledgerdirect.Shop'}{else}{l s='Paid directly on the XRP Ledger, with no intermediary.' d='Modules.Ledgerdirect.Shop'}{/if}</span>
     </footer>
   </div>
 

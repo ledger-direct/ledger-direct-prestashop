@@ -17,6 +17,7 @@ declare(strict_types=1);
 namespace LedgerDirect\Admin;
 
 use Configuration;
+use Hardcastle\LedgerDirect\Core\ChainCatalog;
 use Hardcastle\LedgerDirect\Core\Presentation\AccentColor;
 use Hardcastle\LedgerDirect\Core\Xrpl\StablecoinRegistry;
 use LedgerDirect\Install\PendingUpgrade;
@@ -108,6 +109,28 @@ final class ConfigurationForm
             $errors[] = $this->translator()->trans('Choose either mainnet or testnet.', [], self::DOMAIN);
         }
 
+        // Xahau: the network, one account per network, the XAH switch. The account's form is the
+        // XRP Ledger's; the catalogue checks it, checksum included.
+        $xahau = ChainCatalog::chain(PrestaShopConfigProvider::CHAIN_XAHAU);
+        $xahauNetwork = (string) \Tools::getValue(PrestaShopConfigProvider::KEY_XAHAU_NETWORK);
+        $xahauAccounts = [
+            PrestaShopConfigProvider::NETWORK_MAINNET => trim((string) \Tools::getValue(PrestaShopConfigProvider::KEY_XAHAU_ACCOUNT_MAINNET)),
+            PrestaShopConfigProvider::NETWORK_TESTNET => trim((string) \Tools::getValue(PrestaShopConfigProvider::KEY_XAHAU_ACCOUNT_TESTNET)),
+        ];
+        $xahEnabled = (bool) \Tools::getValue(PrestaShopConfigProvider::KEY_XAHAU_ASSET_XAH);
+        if (!in_array($xahauNetwork, [PrestaShopConfigProvider::NETWORK_MAINNET, PrestaShopConfigProvider::NETWORK_TESTNET], true)) {
+            $errors[] = $this->translator()->trans('Choose either mainnet or testnet for Xahau.', [], self::DOMAIN);
+        }
+        foreach ($xahauAccounts as $xahauAccount) {
+            if ($xahauAccount !== '' && !$xahau->isValidAccount($xahauAccount)) {
+                $errors[] = $this->translator()->trans('The Xahau receiving address is not a valid account address. It starts with "r", like an XRP Ledger address.', [], self::DOMAIN);
+                break;
+            }
+        }
+        if ($xahEnabled && ($xahauAccounts[$xahauNetwork] ?? '') === '') {
+            $errors[] = $this->translator()->trans('Enter a Xahau receiving address for the selected network, or do not accept XAH.', [], self::DOMAIN);
+        }
+
         if ($quoteExpiry < self::QUOTE_EXPIRY_MIN || $quoteExpiry > self::QUOTE_EXPIRY_MAX) {
             $errors[] = $this->translator()->trans(
                 'The quote validity must be between %d and %d seconds.',
@@ -164,6 +187,11 @@ final class ConfigurationForm
             \Configuration::updateValue($key, (bool) \Tools::getValue($key));
         }
 
+        \Configuration::updateValue(PrestaShopConfigProvider::KEY_XAHAU_NETWORK, $xahauNetwork);
+        \Configuration::updateValue(PrestaShopConfigProvider::KEY_XAHAU_ACCOUNT_MAINNET, $xahauAccounts[PrestaShopConfigProvider::NETWORK_MAINNET]);
+        \Configuration::updateValue(PrestaShopConfigProvider::KEY_XAHAU_ACCOUNT_TESTNET, $xahauAccounts[PrestaShopConfigProvider::NETWORK_TESTNET]);
+        \Configuration::updateValue(PrestaShopConfigProvider::KEY_XAHAU_ASSET_XAH, $xahEnabled);
+
         \Configuration::updateValue(PrestaShopConfigProvider::KEY_PAGE_LOGO_MODE, $logoMode);
         \Configuration::updateValue(PrestaShopConfigProvider::KEY_PAGE_LOGO_PATH, $logoPath);
         \Configuration::updateValue(PrestaShopConfigProvider::KEY_PAGE_ACCENT, (string) $normalizedAccent);
@@ -198,6 +226,15 @@ final class ConfigurationForm
             $helper->fields_value[$key] = \Configuration::get($key);
         }
 
+        foreach ([
+            PrestaShopConfigProvider::KEY_XAHAU_NETWORK,
+            PrestaShopConfigProvider::KEY_XAHAU_ACCOUNT_MAINNET,
+            PrestaShopConfigProvider::KEY_XAHAU_ACCOUNT_TESTNET,
+            PrestaShopConfigProvider::KEY_XAHAU_ASSET_XAH,
+        ] as $key) {
+            $helper->fields_value[$key] = \Configuration::get($key);
+        }
+
         $configProvider = new PrestaShopConfigProvider();
         $helper->fields_value[PrestaShopConfigProvider::KEY_PAGE_LOGO_MODE] = $configProvider->getPageLogoMode();
         $helper->fields_value[PrestaShopConfigProvider::KEY_PAGE_LOGO_PATH] = $configProvider->getPageLogoPath();
@@ -205,7 +242,65 @@ final class ConfigurationForm
         $helper->fields_value[PrestaShopConfigProvider::KEY_XAMAN_API_KEY] = $configProvider->getXamanApiKey();
         $helper->fields_value[PrestaShopConfigProvider::KEY_WALLETCONNECT_PROJECT_ID] = $configProvider->getWalletConnectProjectId();
 
-        return $helper->generateForm([$this->formDefinition(), $this->paymentPageFormDefinition()]);
+        return $helper->generateForm([$this->formDefinition(), $this->xahauFormDefinition(), $this->paymentPageFormDefinition()]);
+    }
+
+    /**
+     * Xahau: a network of its own that speaks the XRP Ledger's protocol. Its fieldset follows
+     * the pattern every chain after the XRP Ledger takes - the network, one account per
+     * network, a switch per asset - and sits right under the XRP Ledger's.
+     */
+    private function xahauFormDefinition(): array
+    {
+        $networks = [
+            ['id' => PrestaShopConfigProvider::NETWORK_TESTNET, 'name' => $this->translator()->trans('Testnet (no real funds)', [], self::DOMAIN)],
+            ['id' => PrestaShopConfigProvider::NETWORK_MAINNET, 'name' => $this->translator()->trans('Mainnet (live)', [], self::DOMAIN)],
+        ];
+
+        return [
+            'form' => [
+                'legend' => [
+                    'title' => $this->translator()->trans('Xahau settings', [], self::DOMAIN),
+                    'icon' => 'icon-cogs',
+                ],
+                'description' => $this->translator()->trans('Xahau is a network of its own that speaks the XRP Ledger\'s protocol: payments in XAH, by destination tag, to an account of the same form. Use an account that receives on Xahau alone, not one that also receives on the XRP Ledger.', [], self::DOMAIN),
+                'input' => [
+                    [
+                        'type' => 'select',
+                        'label' => $this->translator()->trans('Network', [], self::DOMAIN),
+                        'name' => PrestaShopConfigProvider::KEY_XAHAU_NETWORK,
+                        'options' => ['query' => $networks, 'id' => 'id', 'name' => 'name'],
+                    ],
+                    [
+                        'type' => 'text',
+                        'label' => $this->translator()->trans('Receiving address (testnet)', [], self::DOMAIN),
+                        'name' => PrestaShopConfigProvider::KEY_XAHAU_ACCOUNT_TESTNET,
+                        'required' => false,
+                    ],
+                    [
+                        'type' => 'text',
+                        'label' => $this->translator()->trans('Receiving address (mainnet)', [], self::DOMAIN),
+                        'name' => PrestaShopConfigProvider::KEY_XAHAU_ACCOUNT_MAINNET,
+                        'required' => false,
+                    ],
+                    [
+                        'type' => 'switch',
+                        'label' => $this->translator()->trans('Accept %s', ['XAH'], self::DOMAIN),
+                        'name' => PrestaShopConfigProvider::KEY_XAHAU_ASSET_XAH,
+                        'is_bool' => true,
+                        'desc' => $this->translator()->trans('The native asset of Xahau. Needs no trustline. Priced from Coingecko and Bitrue.', [], self::DOMAIN),
+                        'values' => [
+                            ['id' => PrestaShopConfigProvider::KEY_XAHAU_ASSET_XAH . '_on', 'value' => 1, 'label' => $this->translator()->trans('Yes', [], self::DOMAIN)],
+                            ['id' => PrestaShopConfigProvider::KEY_XAHAU_ASSET_XAH . '_off', 'value' => 0, 'label' => $this->translator()->trans('No', [], self::DOMAIN)],
+                        ],
+                    ],
+                ],
+                'submit' => [
+                    'title' => $this->translator()->trans('Save', [], self::DOMAIN),
+                    'class' => 'btn btn-default pull-right',
+                ],
+            ],
+        ];
     }
 
     /**

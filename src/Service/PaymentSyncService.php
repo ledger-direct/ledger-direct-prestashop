@@ -17,9 +17,9 @@ declare(strict_types=1);
 namespace LedgerDirect\Service;
 
 use Hardcastle\LedgerDirect\Core\Payment\PaymentIntent;
+use LedgerDirect\Chain\SupportedChains;
 use LedgerDirect\Install\Installer;
 use LedgerDirect\Install\PendingUpgrade;
-use LedgerDirect\Port\PrestaShopConfigProvider;
 use LedgerDirect\Storage\OrderPaymentIntentRepository;
 use Order;
 
@@ -92,8 +92,11 @@ final class PaymentSyncService
     private function syncAccountsOf(array $orderIds): void
     {
         $configProvider = $this->services->getConfigProvider();
-        $configured = $configProvider->getNetwork(PrestaShopConfigProvider::CHAIN_XRPL)
-            . '|' . $configProvider->getDestinationAccount(PrestaShopConfigProvider::CHAIN_XRPL);
+        $configured = [];
+        foreach (SupportedChains::chains() as $chain) {
+            $configured[] = $chain . '|' . $configProvider->getNetwork($chain)
+                . '|' . $configProvider->getDestinationAccount($chain);
+        }
 
         $pairs = [];
         foreach ($orderIds as $orderId) {
@@ -105,18 +108,19 @@ final class PaymentSyncService
             if ($intent === null) {
                 continue;
             }
-            $key = $intent->network . '|' . $intent->destinationAccount;
-            if ($key !== $configured) {
-                $pairs[$key] = [$intent->destinationAccount, $intent->network];
+            $key = $intent->chain . '|' . $intent->network . '|' . $intent->destinationAccount;
+            if (!in_array($key, $configured, true)) {
+                $pairs[$key] = [$intent->chain, $intent->destinationAccount, $intent->network];
             }
         }
 
-        foreach ($pairs as [$account, $network]) {
+        foreach ($pairs as [$chain, $account, $network]) {
             try {
-                $this->services->getSyncService()->syncTransactions($account, $network);
+                $this->services->getSyncService($chain)->syncTransactions($account, $network);
             } catch (\Throwable $exception) {
                 // One account must not stop the others; the next run retries it.
                 $this->logFailure('warning', 'Could not sync a receiving account of a waiting order', [
+                    'chain' => $chain,
                     'account' => $account,
                     'network' => $network,
                     'exception' => $exception->getMessage(),
@@ -179,7 +183,7 @@ final class PaymentSyncService
         // fulfillment only while nothing in the right one has arrived, so the
         // page can say "wrong token". Non-payments, unreadable amounts and the
         // other asset class are skipped and logged there.
-        $fulfilled = $this->services->getSyncService()->findFulfillmentFor($paymentIntent)?->applyTo($paymentIntent);
+        $fulfilled = $this->services->getSyncService($paymentIntent->chain)->findFulfillmentFor($paymentIntent)?->applyTo($paymentIntent);
         if ($fulfilled === null) {
             return false;
         }
@@ -290,7 +294,8 @@ final class PaymentSyncService
 
         $this->recordTransactionHash($order, $hash);
 
-        $this->services->getLogger()->info('Order settled on the XRP Ledger', [
+        $this->services->getLogger()->info('Order settled on the ledger', [
+            'chain' => $fulfilled->chain,
             'id_order' => $orderId,
             'hash' => $hash,
             'ctid' => $ctid,
@@ -367,17 +372,32 @@ final class PaymentSyncService
      *
      * @return bool whether the ledger was synced in this call
      */
+    /**
+     * Syncs the configured receiving account of every carried chain. True when at least one
+     * node request ran; a chain without an account, inside its throttle window or with a node
+     * that is down does not count.
+     */
     private function syncLedger(bool $throttled = false): bool
     {
+        $synced = false;
+        foreach (SupportedChains::chains() as $chain) {
+            $synced = $this->syncConfiguredAccount($chain, $throttled) || $synced;
+        }
+
+        return $synced;
+    }
+
+    private function syncConfiguredAccount(string $chain, bool $throttled): bool
+    {
         $configProvider = $this->services->getConfigProvider();
-        $destinationAccount = $configProvider->getDestinationAccount(PrestaShopConfigProvider::CHAIN_XRPL);
-        $network = $configProvider->getNetwork(PrestaShopConfigProvider::CHAIN_XRPL);
+        $destinationAccount = $configProvider->getDestinationAccount($chain);
+        $network = $configProvider->getNetwork($chain);
 
         if ($destinationAccount === '') {
             return false;
         }
 
-        $throttle = $this->services->getSyncThrottle();
+        $throttle = $this->services->getSyncThrottle($chain);
 
         if ($throttled && !$throttle->shouldSync($network, $destinationAccount)) {
             return false;
@@ -390,11 +410,12 @@ final class PaymentSyncService
         }
 
         try {
-            $this->services->getSyncService()->syncTransactions($destinationAccount, $network);
+            $this->services->getSyncService($chain)->syncTransactions($destinationAccount, $network);
         } catch (\Throwable $exception) {
             // A node that is down must not take the checkout with it: matching
             // still runs against whatever is already stored locally.
             $this->logFailure('error', 'Ledger sync failed', [
+                'chain' => $chain,
                 'destination_account' => $destinationAccount,
                 'exception' => $exception->getMessage(),
             ]);
@@ -405,16 +426,6 @@ final class PaymentSyncService
         return true;
     }
 
-    /**
-     * A failure to sync or to read a stored record, naming a pending module
-     * upgrade when there is one. Files ahead of the database are the cause a
-     * merchant can fix with one click, and the exception alone ("Unknown
-     * column 'tx_ctid'") does not say so. Checked once per run, and only on
-     * this path: a healthy sync never pays for the query.
-     *
-     * @param 'error'|'warning' $level
-     * @param array<string, mixed> $context
-     */
     private function logFailure(string $level, string $message, array $context): void
     {
         if (!$this->upgradeChecked) {

@@ -18,6 +18,7 @@ namespace LedgerDirect\Service;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\HttpFactory;
+use Hardcastle\LedgerDirect\Core\ChainCatalog;
 use Hardcastle\LedgerDirect\Core\Payment\PaymentIntentService;
 use Hardcastle\LedgerDirect\Core\Payment\SettlementPolicy;
 use Hardcastle\LedgerDirect\Core\Price\PriceService;
@@ -50,13 +51,17 @@ final class ServiceFactory
     private ?HttpFactory $httpFactory = null;
     private ?LoggerInterface $logger = null;
     private ?PrestaShopConfigProvider $configProvider = null;
-    private ?PrestaShopXrplTransactionRepository $transactionRepository = null;
+    /** @var array<string, PrestaShopXrplTransactionRepository> by chain */
+    private array $transactionRepositories = [];
     private ?SimpleCacheInterface $rateCache = null;
     private ?PriceService $priceService = null;
-    private ?PaymentIntentService $paymentIntentService = null;
-    private ?SyncService $syncService = null;
+    /** @var array<string, PaymentIntentService> by chain */
+    private array $paymentIntentServices = [];
+    /** @var array<string, SyncService> by chain */
+    private array $syncServices = [];
     private ?SettlementPolicy $settlementPolicy = null;
-    private ?SyncThrottle $syncThrottle = null;
+    /** @var array<string, SyncThrottle> by chain */
+    private array $syncThrottles = [];
 
     private function __construct()
     {
@@ -72,9 +77,15 @@ final class ServiceFactory
         return $this->configProvider ??= new PrestaShopConfigProvider();
     }
 
-    public function getTransactionRepository(): PrestaShopXrplTransactionRepository
+    /**
+     * The core's services come per chain. Xahau speaks the XRP Ledger's protocol on a
+     * network of its own, so the same classes serve it, built for the chain: another node,
+     * another transaction table and tag counter, another throttle mark. Without a chain the
+     * XRP Ledger's set is meant, as before.
+     */
+    public function getTransactionRepository(string $chain = ChainCatalog::XRPL): PrestaShopXrplTransactionRepository
     {
-        return $this->transactionRepository ??= new PrestaShopXrplTransactionRepository();
+        return $this->transactionRepositories[$chain] ??= new PrestaShopXrplTransactionRepository($chain);
     }
 
     public function getLogger(): LoggerInterface
@@ -123,12 +134,13 @@ final class ServiceFactory
         return $this->rateCache ??= new DbRateCache();
     }
 
-    public function getPaymentIntentService(): PaymentIntentService
+    public function getPaymentIntentService(string $chain = ChainCatalog::XRPL): PaymentIntentService
     {
-        return $this->paymentIntentService ??= new PaymentIntentService(
+        return $this->paymentIntentServices[$chain] ??= new PaymentIntentService(
             $this->getPriceService(),
-            new DestinationTagService($this->getTransactionRepository()),
-            $this->getConfigProvider()
+            new DestinationTagService($this->getTransactionRepository($chain)),
+            $this->getConfigProvider(),
+            chain: $chain
         );
     }
 
@@ -148,18 +160,24 @@ final class ServiceFactory
      * rate cache's store: the same "set within the last N seconds" semantics,
      * no schema of its own, and a table that is disposable anyway.
      */
-    public function getSyncThrottle(): SyncThrottle
+    public function getSyncThrottle(string $chain = ChainCatalog::XRPL): SyncThrottle
     {
-        return $this->syncThrottle ??= new SyncThrottle($this->getRateCache(), $this->getLogger());
+        return $this->syncThrottles[$chain] ??= new SyncThrottle($this->getRateCache(), $this->getLogger(), chain: $chain);
     }
 
-    public function getSyncService(): SyncService
+    public function getSyncService(string $chain = ChainCatalog::XRPL): SyncService
     {
-        return $this->syncService ??= new SyncService(
-            new XrplClient($this->getHttpClient(), $this->getHttpFactory(), $this->getHttpFactory()),
-            $this->getTransactionRepository(),
+        return $this->syncServices[$chain] ??= new SyncService(
+            $this->getXrplClient($chain),
+            $this->getTransactionRepository($chain),
             $this->getLogger()
         );
+    }
+
+    /** The node client of a chain: the XRP Ledger's or Xahau's nodes, fixed in the core. */
+    public function getXrplClient(string $chain = ChainCatalog::XRPL): XrplClient
+    {
+        return new XrplClient($this->getHttpClient(), $this->getHttpFactory(), $this->getHttpFactory(), $chain);
     }
 
     /** Guzzle's HttpFactory is both the PSR-17 request and stream factory. */
