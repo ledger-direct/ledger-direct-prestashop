@@ -148,12 +148,60 @@ final class PaymentSyncService
      */
     public function matchOrder(int $orderId, int $waitSeconds = 0): bool
     {
+        return $this->underOrderLock($orderId, $waitSeconds, fn (): bool => $this->matchOrderLocked($orderId)) === true;
+    }
+
+    /**
+     * Replaces the order's quote and matches what already arrived against it, as one step
+     * under the order's lock. Outside it, a run still holding the order would save the quote
+     * it read earlier over the new one, and the page would show a quote that forgets the
+     * payment on record.
+     *
+     * @param int $waitSeconds how long to wait for a run that holds this order
+     *
+     * @return bool false when another run still holds the order; the quote is then unchanged
+     */
+    public function storeRefreshedQuote(int $orderId, PaymentIntent $refreshed, int $waitSeconds): bool
+    {
+        return $this->underOrderLock($orderId, $waitSeconds, function () use ($orderId, $refreshed): bool {
+            // The run we waited for may have finished the order; its fulfillment stays on record.
+            if (self::isAwaitingPaymentById($orderId)) {
+                $previous = $this->intents->find($orderId);
+                $this->intents->save($orderId, $refreshed);
+                try {
+                    $this->matchOrderLocked($orderId);
+                } catch (\Throwable $exception) {
+                    $this->logFailure('error', 'Could not match a refreshed quote', [
+                        'id_order' => $orderId,
+                        'exception' => $exception->getMessage(),
+                    ]);
+                    // The new quote knows no payment until the match records one. If it failed
+                    // before that, the old record with its payment stays, or the page would ask for
+                    // the full amount. Without one the new quote stands. Either way the next poll
+                    // or cron run repeats the match.
+                    if ($previous?->hash !== null && $this->intents->find($orderId)?->hash === null) {
+                        $this->intents->save($orderId, $previous);
+                    }
+                }
+            }
+
+            return true;
+        }) !== null;
+    }
+
+    /**
+     * @param callable(): bool $work
+     *
+     * @return bool|null what $work returned, null when another run holds the order
+     */
+    private function underOrderLock(int $orderId, int $waitSeconds, callable $work): ?bool
+    {
         $lock = self::paymentLockName($orderId);
         $acquired = \Db::getInstance()->getValue('SELECT GET_LOCK("' . $lock . '", ' . $waitSeconds . ')', false);
 
         // Another run is matching this order right now and reports the result.
         if ($acquired === '0' || $acquired === 0) {
-            return false;
+            return null;
         }
 
         // A server that cannot give the lock must not leave paid orders open.
@@ -165,7 +213,7 @@ final class PaymentSyncService
         }
 
         try {
-            return $this->matchOrderLocked($orderId);
+            return $work();
         } finally {
             if ($locked) {
                 \Db::getInstance()->getValue('SELECT RELEASE_LOCK("' . $lock . '")', false);

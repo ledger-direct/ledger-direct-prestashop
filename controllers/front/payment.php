@@ -219,10 +219,11 @@ class LedgerdirectPaymentModuleFrontController extends ModuleFrontController
      * A refreshed quote starts without a fulfillment: quoteForOrder() carries
      * over the destination, not what already arrived on it. For an order with
      * a partial or wrong-asset payment that would wipe the trace the page is
-     * about to show, so the refresh re-runs the local match right away — no
-     * node request, the transactions are already synced — which stores the
-     * fulfillment against the new amount, or settles the order if the new
-     * rate turned the partial payment into a full one.
+     * about to show, so the refresh stores the quote and re-runs the local
+     * match as one step under the order's lock — no node request, the
+     * transactions are already synced — which records the fulfillment against
+     * the new amount, or settles the order if the new rate turned the partial
+     * payment into a full one.
      */
     private function resolvePaymentIntent(Order $order, OrderPaymentIntentRepository $repository): ?PaymentIntent
     {
@@ -250,17 +251,17 @@ class LedgerdirectPaymentModuleFrontController extends ModuleFrontController
             $paymentIntent
         );
 
-        $repository->save((int) $order->id, $refreshed);
+        if ($paymentIntent === null) {
+            $repository->save((int) $order->id, $refreshed);
 
-        if ($paymentIntent?->hash !== null) {
-            // Waits for a run holding this order: the page must not show the fresh quote without
-            // the payment already on record.
-            PaymentSyncService::create()->matchOrder((int) $order->id, self::REFRESH_MATCH_WAIT_SECONDS);
-
-            return $repository->find((int) $order->id) ?? $refreshed;
+            return $refreshed;
         }
 
-        return $refreshed;
+        // Waits for a run holding this order. If it still holds it, the expired quote stays:
+        // the page then shows the payment on record and offers the refresh again.
+        PaymentSyncService::create()->storeRefreshedQuote((int) $order->id, $refreshed, self::REFRESH_MATCH_WAIT_SECONDS);
+
+        return $repository->find((int) $order->id) ?? $paymentIntent;
     }
 
     /**
