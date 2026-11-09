@@ -17,9 +17,11 @@ declare(strict_types=1);
 namespace LedgerDirect\Tests\Integration;
 
 use Hardcastle\LedgerDirect\Core\Payment\PaymentIntent;
+use Hardcastle\LedgerDirect\Core\Xrpl\XrplTransaction;
 use LedgerDirect\Install\Installer;
 use LedgerDirect\Port\PrestaShopConfigProvider;
 use LedgerDirect\Service\PaymentSyncService;
+use LedgerDirect\Service\ServiceFactory;
 use LedgerDirect\Storage\OrderPaymentIntentRepository;
 
 /**
@@ -36,11 +38,13 @@ final class PaymentPageTest extends IntegrationTestCase
 {
     private const DESTINATION = 'raXkRCAYkqaoFYCeVej93SzCTtiAbbRzAg';
     private const AMOUNT_XRP = 15.06378;
+    private const PARTIAL_XRP = 5.0;
 
     private \Order $order;
     private \Cart $cart;
     private OrderPaymentIntentRepository $intents;
     private string $previousDestination;
+    private ?string $seededRateKey = null;
 
     protected function setUp(): void
     {
@@ -54,6 +58,10 @@ final class PaymentPageTest extends IntegrationTestCase
 
     protected function tearDown(): void
     {
+        if ($this->seededRateKey !== null) {
+            ServiceFactory::getInstance()->getRateCache()->delete($this->seededRateKey);
+        }
+
         if (isset($this->order) && \Validate::isLoadedObject($this->order)) {
             \Db::getInstance()->execute(
                 'DELETE FROM `' . _DB_PREFIX_ . Installer::TABLE_ORDER_PAYMENT_INTENT . '`
@@ -190,6 +198,123 @@ final class PaymentPageTest extends IntegrationTestCase
             'ledgerdirect',
             'payment',
             ['id_order' => (int) $this->order->id, 'key' => $this->order->secure_key],
+            true
+        ));
+    }
+
+    public function testARefreshBlockedByAnotherRunKeepsThePaymentOnThePage(): void
+    {
+        $orderId = (int) $this->order->id;
+        $this->expireQuoteWithPartialPayment(self::PARTIAL_XRP);
+        $before = $this->intents->find($orderId);
+        $this->seedExchangeRate();
+
+        $lock = PaymentSyncService::paymentLockName($orderId);
+        $otherConnection = new \PDO('mysql:host=' . _DB_SERVER_ . ';dbname=' . _DB_NAME_, _DB_USER_, _DB_PASSWD_);
+        $otherConnection->query("SELECT GET_LOCK('{$lock}', 0)");
+        $started = microtime(true);
+
+        try {
+            [$status, $html] = $this->fetchRefresh();
+        } finally {
+            $otherConnection->query("SELECT RELEASE_LOCK('{$lock}')");
+        }
+
+        self::assertGreaterThanOrEqual(4.9, microtime(true) - $started, 'the refresh waits before giving up');
+        self::assertSame(200, $status);
+        self::assertStringContainsString('data-ld-state="partial"', $html);
+        self::assertSame($before->expiry, $this->intents->find($orderId)?->expiry, 'the quote is unchanged');
+        self::assertSame($before->amountPaid, $this->intents->find($orderId)?->amountPaid, 'the payment stays on record');
+    }
+
+    public function testARefreshBlockedByAnotherRunLeavesAnUnpaidQuoteExpired(): void
+    {
+        $orderId = (int) $this->order->id;
+        $expired = PaymentIntent::fromArray(['expiry' => time() - 60] + $this->intents->find($orderId)->toArray());
+        $this->intents->save($orderId, $expired);
+        $this->seedExchangeRate();
+
+        $lock = PaymentSyncService::paymentLockName($orderId);
+        $otherConnection = new \PDO('mysql:host=' . _DB_SERVER_ . ';dbname=' . _DB_NAME_, _DB_USER_, _DB_PASSWD_);
+        $otherConnection->query("SELECT GET_LOCK('{$lock}', 0)");
+
+        try {
+            [, $html] = $this->fetchRefresh();
+        } finally {
+            $otherConnection->query("SELECT RELEASE_LOCK('{$lock}')");
+        }
+
+        self::assertStringContainsString('data-ld-state="expired"', $html);
+        self::assertSame($expired->expiry, $this->intents->find($orderId)?->expiry, 'the run holding the order must not be overwritten');
+    }
+
+    public function testARefreshCarriesThePaymentOverToTheNewQuote(): void
+    {
+        $orderId = (int) $this->order->id;
+        $this->expireQuoteWithPartialPayment(self::PARTIAL_XRP);
+        $this->seedExchangeRate();
+        $hash = $this->plantPayment((string) (self::PARTIAL_XRP * 1000000));
+
+        try {
+            [$status, $html] = $this->fetchRefresh();
+        } finally {
+            \Db::getInstance()->execute('DELETE FROM `' . _DB_PREFIX_ . 'ledger_direct_xrpl_tx` WHERE `hash` = "' . pSQL($hash) . '"');
+        }
+
+        $after = $this->intents->find($orderId);
+        self::assertSame(200, $status);
+        self::assertStringContainsString('data-ld-state="partial"', $html);
+        self::assertGreaterThan(time(), $after->expiry, 'the quote is new');
+        self::assertSame($hash, $after->hash);
+    }
+
+    private function expireQuoteWithPartialPayment(float $paid): void
+    {
+        $orderId = (int) $this->order->id;
+        $expired = PaymentIntent::fromArray(['expiry' => time() - 60] + $this->intents->find($orderId)->toArray());
+        $this->intents->save($orderId, $expired->withFulfillment('PARTIALHASH', $paid, 'C133E44700020001'));
+    }
+
+    /**
+     * The refresh prices the order through the core; a fresh cached rate keeps the test offline.
+     */
+    private function seedExchangeRate(): void
+    {
+        $key = 'ledger-direct.rate.v1.testnet.XRP.' . strtoupper((new \Currency((int) $this->order->id_currency))->iso_code);
+        ServiceFactory::getInstance()->getRateCache()->set($key, ['rate' => 2.0, 'fetched_at' => time()], 300);
+        $this->seededRateKey = $key;
+    }
+
+    private function plantPayment(string $drops): string
+    {
+        $hash = strtoupper(bin2hex(random_bytes(32)));
+        ServiceFactory::getInstance()->getTransactionRepository()->saveTransactions([
+            new XrplTransaction(
+                network: 'testnet',
+                ledgerIndex: '20180000',
+                hash: $hash,
+                ctid: 'C133E44700020001',
+                account: 'rSenderTest',
+                destination: self::DESTINATION,
+                destinationTag: $this->destinationTag(),
+                date: 800000000,
+                meta: ['delivered_amount' => $drops],
+                tx: ['TransactionType' => 'Payment'],
+            ),
+        ]);
+
+        return $hash;
+    }
+
+    /**
+     * @return array{int, string} HTTP status and body
+     */
+    private function fetchRefresh(): array
+    {
+        return $this->fetch(\Context::getContext()->link->getModuleLink(
+            'ledgerdirect',
+            'payment',
+            ['id_order' => (int) $this->order->id, 'key' => $this->order->secure_key, 'ld_refresh' => 1],
             true
         ));
     }
