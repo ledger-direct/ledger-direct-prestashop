@@ -142,12 +142,14 @@ final class PaymentSyncService
     }
 
     /**
+     * @param int $waitSeconds how long to wait for a run that holds this order; 0 leaves it to that run
+     *
      * @return bool true when the order is now settled
      */
-    public function matchOrder(int $orderId): bool
+    public function matchOrder(int $orderId, int $waitSeconds = 0): bool
     {
         $lock = self::paymentLockName($orderId);
-        $acquired = \Db::getInstance()->getValue('SELECT GET_LOCK("' . $lock . '", 0)', false);
+        $acquired = \Db::getInstance()->getValue('SELECT GET_LOCK("' . $lock . '", ' . $waitSeconds . ')', false);
 
         // Another run is matching this order right now and reports the result.
         if ($acquired === '0' || $acquired === 0) {

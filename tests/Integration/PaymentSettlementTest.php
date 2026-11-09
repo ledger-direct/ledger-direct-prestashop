@@ -121,6 +121,22 @@ final class PaymentSettlementTest extends IntegrationTestCase
         self::assertFalse(PaymentSyncService::create()->matchOrder((int) $this->order->id), 'booked once');
     }
 
+    public function testAMatchCanWaitForTheRunHoldingTheOrder(): void
+    {
+        $lock = PaymentSyncService::paymentLockName((int) $this->order->id);
+        $otherConnection = new \PDO('mysql:host=' . _DB_SERVER_ . ';dbname=' . _DB_NAME_, _DB_USER_, _DB_PASSWD_);
+        $otherConnection->query("SELECT GET_LOCK('{$lock}', 0)");
+        $started = microtime(true);
+
+        try {
+            self::assertFalse(PaymentSyncService::create()->matchOrder((int) $this->order->id, 1));
+        } finally {
+            $otherConnection->query("SELECT RELEASE_LOCK('{$lock}')");
+        }
+
+        self::assertGreaterThanOrEqual(0.9, microtime(true) - $started);
+    }
+
     public function testNoTransactionLeavesTheOrderAlone(): void
     {
         self::assertFalse($this->sync()->matchOrder((int) $this->order->id));

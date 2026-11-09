@@ -19,6 +19,7 @@ namespace LedgerDirect\Tests\Integration;
 use Hardcastle\LedgerDirect\Core\Payment\PaymentIntent;
 use LedgerDirect\Install\Installer;
 use LedgerDirect\Port\PrestaShopConfigProvider;
+use LedgerDirect\Service\PaymentSyncService;
 use LedgerDirect\Storage\OrderPaymentIntentRepository;
 
 /**
@@ -158,6 +159,31 @@ final class PaymentPageTest extends IntegrationTestCase
     /**
      * @return array{int, string} HTTP status and body
      */
+    public function testAPollThatFindsAnotherRunBookingStillMovesThePageOn(): void
+    {
+        $this->intents->save((int) $this->order->id, $this->intents->find((int) $this->order->id)->withFulfillment('HASH', self::AMOUNT_XRP, 'CTID'));
+        $lock = PaymentSyncService::paymentLockName((int) $this->order->id);
+        $otherConnection = new \PDO('mysql:host=' . _DB_SERVER_ . ';dbname=' . _DB_NAME_, _DB_USER_, _DB_PASSWD_);
+        $otherConnection->query("SELECT GET_LOCK('{$lock}', 0)");
+
+        try {
+            [$status, $body] = $this->fetch(\Context::getContext()->link->getModuleLink(
+                'ledgerdirect',
+                'poll',
+                ['id_order' => (int) $this->order->id, 'key' => $this->order->secure_key],
+                true
+            ));
+        } finally {
+            $otherConnection->query("SELECT RELEASE_LOCK('{$lock}')");
+        }
+
+        $payload = json_decode($body, true);
+        self::assertSame(200, $status);
+        self::assertSame('settled', $payload['state']);
+        self::assertArrayHasKey('redirect', $payload);
+        self::assertTrue(PaymentSyncService::isAwaitingPaymentById((int) $this->order->id), 'the booking is left to the other run');
+    }
+
     private function fetchPage(): array
     {
         return $this->fetch(\Context::getContext()->link->getModuleLink(

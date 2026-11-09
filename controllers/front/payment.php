@@ -37,6 +37,8 @@ if (!defined('_PS_VERSION_')) {
  */
 class LedgerdirectPaymentModuleFrontController extends ModuleFrontController
 {
+    private const REFRESH_MATCH_WAIT_SECONDS = 5;
+
     public $ssl = true;
 
     private ?Order $order = null;
@@ -251,7 +253,9 @@ class LedgerdirectPaymentModuleFrontController extends ModuleFrontController
         $repository->save((int) $order->id, $refreshed);
 
         if ($paymentIntent?->hash !== null) {
-            PaymentSyncService::create()->matchOrder((int) $order->id);
+            // Waits for a run holding this order: the page must not show the fresh quote without
+            // the payment already on record.
+            PaymentSyncService::create()->matchOrder((int) $order->id, self::REFRESH_MATCH_WAIT_SECONDS);
 
             return $repository->find((int) $order->id) ?? $refreshed;
         }
