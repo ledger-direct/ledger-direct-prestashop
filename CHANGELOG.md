@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- An order is booked as paid exactly once. Overlapping checks of the same order could record the payment
+  twice
+
 ## 0.6.0
 
 - Xahau: XAH on the [Xahau](https://xahau.network) network, a chain of its own that speaks the XRP

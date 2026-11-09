@@ -30,6 +30,10 @@ if (!defined('_DB_PREFIX_')) {
     define('_DB_PREFIX_', 'ps_');
 }
 
+if (!defined('_DB_NAME_')) {
+    define('_DB_NAME_', 'prestashop');
+}
+
 if (!defined('_MYSQL_ENGINE_')) {
     define('_MYSQL_ENGINE_', 'InnoDB');
 }

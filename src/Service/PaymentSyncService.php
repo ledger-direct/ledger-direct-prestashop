@@ -142,12 +142,55 @@ final class PaymentSyncService
     }
 
     /**
+     * @param int $waitSeconds how long to wait for a run that holds this order; 0 leaves it to that run
+     *
      * @return bool true when the order is now settled
      */
-    public function matchOrder(int $orderId): bool
+    public function matchOrder(int $orderId, int $waitSeconds = 0): bool
     {
+        $lock = self::paymentLockName($orderId);
+        $acquired = \Db::getInstance()->getValue('SELECT GET_LOCK("' . $lock . '", ' . $waitSeconds . ')', false);
+
+        // Another run is matching this order right now and reports the result.
+        if ($acquired === '0' || $acquired === 0) {
+            return false;
+        }
+
+        // A server that cannot give the lock must not leave paid orders open.
+        $locked = $acquired === '1' || $acquired === 1;
+        if (!$locked) {
+            $this->services->getLogger()->warning('No database lock available, matching the order without one', [
+                'id_order' => $orderId,
+            ]);
+        }
+
+        try {
+            return $this->matchOrderLocked($orderId);
+        } finally {
+            if ($locked) {
+                \Db::getInstance()->getValue('SELECT RELEASE_LOCK("' . $lock . '")', false);
+            }
+        }
+    }
+
+    /**
+     * The lock is server-wide, so its name carries the database and table prefix as a digest:
+     * two shops on one database server must not block each other. MySQL allows 64 characters.
+     */
+    public static function paymentLockName(int $orderId): string
+    {
+        return 'ld_pay_' . substr(md5(_DB_NAME_ . '|' . _DB_PREFIX_), 0, 12) . '_' . $orderId;
+    }
+
+    /**
+     * Decides and books on the order as the database has it now: the object cache of this
+     * request may still hold what was loaded before the lock was taken.
+     */
+    private function matchOrderLocked(int $orderId): bool
+    {
+        \Cache::clean('objectmodel_Order_' . $orderId . '_*');
         $order = new \Order($orderId);
-        if (!\Validate::isLoadedObject($order) || !self::isAwaitingPayment($order)) {
+        if (!\Validate::isLoadedObject($order) || !self::isAwaitingPaymentById($orderId)) {
             return false;
         }
 

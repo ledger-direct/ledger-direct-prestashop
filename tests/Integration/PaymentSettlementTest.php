@@ -102,6 +102,41 @@ final class PaymentSettlementTest extends IntegrationTestCase
         self::assertSame(0.0, (float) $this->order->total_paid_real);
     }
 
+    public function testAnOrderUnderAnotherRunsLockIsLeftToThatRun(): void
+    {
+        $this->plant(['delivered_amount' => self::AMOUNT_DROPS]);
+        $lock = PaymentSyncService::paymentLockName((int) $this->order->id);
+        $otherConnection = new \PDO('mysql:host=' . _DB_SERVER_ . ';dbname=' . _DB_NAME_, _DB_USER_, _DB_PASSWD_);
+        self::assertSame('1', (string) $otherConnection->query("SELECT GET_LOCK('{$lock}', 0)")->fetchColumn());
+
+        try {
+            self::assertFalse(PaymentSyncService::create()->matchOrder((int) $this->order->id));
+            self::assertTrue(PaymentSyncService::isAwaitingPaymentById((int) $this->order->id));
+        } finally {
+            $otherConnection->query("SELECT RELEASE_LOCK('{$lock}')");
+        }
+
+        self::assertTrue(PaymentSyncService::create()->matchOrder((int) $this->order->id));
+        self::assertFalse(PaymentSyncService::isAwaitingPaymentById((int) $this->order->id));
+        self::assertFalse(PaymentSyncService::create()->matchOrder((int) $this->order->id), 'booked once');
+    }
+
+    public function testAMatchCanWaitForTheRunHoldingTheOrder(): void
+    {
+        $lock = PaymentSyncService::paymentLockName((int) $this->order->id);
+        $otherConnection = new \PDO('mysql:host=' . _DB_SERVER_ . ';dbname=' . _DB_NAME_, _DB_USER_, _DB_PASSWD_);
+        $otherConnection->query("SELECT GET_LOCK('{$lock}', 0)");
+        $started = microtime(true);
+
+        try {
+            self::assertFalse(PaymentSyncService::create()->matchOrder((int) $this->order->id, 1));
+        } finally {
+            $otherConnection->query("SELECT RELEASE_LOCK('{$lock}')");
+        }
+
+        self::assertGreaterThanOrEqual(0.9, microtime(true) - $started);
+    }
+
     public function testNoTransactionLeavesTheOrderAlone(): void
     {
         self::assertFalse($this->sync()->matchOrder((int) $this->order->id));

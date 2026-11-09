@@ -85,7 +85,9 @@ class LedgerdirectPollModuleFrontController extends ModuleFrontController
 
         // Read from storage, not from the Order object loaded above: if the
         // sync settled the order in this very request, the object is stale.
-        if (!PaymentSyncService::isAwaitingPaymentById($orderId)) {
+        // A settled payment always moves the page on: its poll ends here, also while another run
+        // is still booking the order or a failed booking waits for the cron.
+        if ($payload['state'] === PaymentStatus::SETTLED || !PaymentSyncService::isAwaitingPaymentById($orderId)) {
             $payload['redirect'] = $this->confirmationUrl($order);
         }
 
