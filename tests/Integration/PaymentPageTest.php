@@ -294,6 +294,28 @@ final class PaymentPageTest extends IntegrationTestCase
         self::assertGreaterThan(time(), $this->intents->find($orderId)?->expiry, 'the quote is new');
     }
 
+    public function testARecordedPaymentStaysWhenTheMatchAfterARefreshFails(): void
+    {
+        $orderId = (int) $this->order->id;
+        $this->expireQuoteWithPartialPayment(self::PARTIAL_XRP);
+        $expired = $this->intents->find($orderId);
+        $this->seedExchangeRate();
+        $table = _DB_PREFIX_ . Installer::TABLE_TX;
+        \Db::getInstance()->execute("RENAME TABLE `{$table}` TO `{$table}_away`");
+
+        try {
+            [$status, $html] = $this->fetchRefresh();
+        } finally {
+            \Db::getInstance()->execute("RENAME TABLE `{$table}_away` TO `{$table}`");
+        }
+
+        $after = $this->intents->find($orderId);
+        self::assertSame(200, $status);
+        self::assertStringContainsString('data-ld-state="partial"', $html);
+        self::assertSame($expired->expiry, $after?->expiry, 'the record with the payment stays');
+        self::assertSame('PARTIALHASH', $after?->hash);
+    }
+
     private function expireQuoteWithPartialPayment(float $paid): void
     {
         $orderId = (int) $this->order->id;
