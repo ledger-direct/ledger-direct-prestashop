@@ -44,6 +44,7 @@ final class PaymentPageTest extends IntegrationTestCase
     private \Cart $cart;
     private OrderPaymentIntentRepository $intents;
     private string $previousDestination;
+    private string $previousNetwork;
     private ?string $seededRateKey = null;
 
     protected function setUp(): void
@@ -52,6 +53,10 @@ final class PaymentPageTest extends IntegrationTestCase
 
         $this->previousDestination = (string) \Configuration::get(PrestaShopConfigProvider::KEY_DESTINATION_ACCOUNT);
         \Configuration::updateValue(PrestaShopConfigProvider::KEY_DESTINATION_ACCOUNT, self::DESTINATION);
+
+        // The seeded rate and the planted payments are the testnet's.
+        $this->previousNetwork = (string) \Configuration::get(PrestaShopConfigProvider::KEY_NETWORK);
+        \Configuration::updateValue(PrestaShopConfigProvider::KEY_NETWORK, 'testnet');
 
         $this->createAwaitingOrder();
     }
@@ -75,6 +80,7 @@ final class PaymentPageTest extends IntegrationTestCase
         }
 
         \Configuration::updateValue(PrestaShopConfigProvider::KEY_DESTINATION_ACCOUNT, $this->previousDestination);
+        \Configuration::updateValue(PrestaShopConfigProvider::KEY_NETWORK, $this->previousNetwork);
     }
 
     public function testThePageRendersTheMarkupContractForAWaitingOrder(): void
@@ -258,7 +264,7 @@ final class PaymentPageTest extends IntegrationTestCase
         try {
             [$status, $html] = $this->fetchRefresh();
         } finally {
-            \Db::getInstance()->execute('DELETE FROM `' . _DB_PREFIX_ . 'ledger_direct_xrpl_tx` WHERE `hash` = "' . pSQL($hash) . '"');
+            \Db::getInstance()->execute('DELETE FROM `' . _DB_PREFIX_ . Installer::TABLE_TX . '` WHERE `hash` = "' . pSQL($hash) . '"');
         }
 
         $after = $this->intents->find($orderId);
@@ -266,6 +272,26 @@ final class PaymentPageTest extends IntegrationTestCase
         self::assertStringContainsString('data-ld-state="partial"', $html);
         self::assertGreaterThan(time(), $after->expiry, 'the quote is new');
         self::assertSame($hash, $after->hash);
+    }
+
+    public function testARefreshedQuoteIsShownWhenTheMatchAfterItFails(): void
+    {
+        $orderId = (int) $this->order->id;
+        $expired = PaymentIntent::fromArray(['expiry' => time() - 60] + $this->intents->find($orderId)->toArray());
+        $this->intents->save($orderId, $expired);
+        $this->seedExchangeRate();
+        $table = _DB_PREFIX_ . Installer::TABLE_TX;
+        \Db::getInstance()->execute("RENAME TABLE `{$table}` TO `{$table}_away`");
+
+        try {
+            [$status, $html] = $this->fetchRefresh();
+        } finally {
+            \Db::getInstance()->execute("RENAME TABLE `{$table}_away` TO `{$table}`");
+        }
+
+        self::assertSame(200, $status);
+        self::assertStringContainsString('data-ld-state="waiting"', $html);
+        self::assertGreaterThan(time(), $this->intents->find($orderId)?->expiry, 'the quote is new');
     }
 
     private function expireQuoteWithPartialPayment(float $paid): void

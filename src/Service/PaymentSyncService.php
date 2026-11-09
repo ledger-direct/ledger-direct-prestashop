@@ -167,7 +167,15 @@ final class PaymentSyncService
             // The run we waited for may have finished the order; its fulfillment stays on record.
             if (self::isAwaitingPaymentById($orderId)) {
                 $this->intents->save($orderId, $refreshed);
-                $this->matchOrderLocked($orderId);
+                try {
+                    $this->matchOrderLocked($orderId);
+                } catch (\Throwable $exception) {
+                    // The new quote is stored and the page can show it; the next poll or cron run repeats the match.
+                    $this->logFailure('error', 'Could not match a refreshed quote', [
+                        'id_order' => $orderId,
+                        'exception' => $exception->getMessage(),
+                    ]);
+                }
             }
 
             return true;
