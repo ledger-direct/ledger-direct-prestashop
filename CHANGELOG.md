@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.6.1
 
 - An order is booked as paid exactly once. Overlapping checks of the same order could record the payment
   twice

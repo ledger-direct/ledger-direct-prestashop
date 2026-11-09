@@ -38,7 +38,7 @@ class Ledgerdirect extends PaymentModule
     {
         $this->name = 'ledgerdirect';
         $this->tab = 'payments_gateways';
-        $this->version = '0.6.0';
+        $this->version = '0.6.1';
         $this->author = 'Hardcastle';
         $this->bootstrap = true;
         parent::__construct();
