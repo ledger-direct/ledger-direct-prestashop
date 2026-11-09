@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.2
+
+- Refreshing an expired quote keeps the payment on record. The new quote and the match of what already
+  arrived are now one step under the order's lock. If another run still holds the order after five
+  seconds, or the match fails, the page shows the payment on record instead of asking for the full amount
+
 ## 0.6.1
 
 - An order is booked as paid exactly once. Overlapping checks of the same order could record the payment
