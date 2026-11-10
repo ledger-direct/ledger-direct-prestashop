@@ -83,4 +83,46 @@ abstract class IntegrationTestCase extends TestCase
     {
         return 2;
     }
+
+    /**
+     * A shop currency the core cannot price: XTS, the ISO 4217 code reserved
+     * for testing. No oracle quotes it, so a quote fails with
+     * PriceUnavailableException whether the oracles answer or the network is
+     * down — the one way to make "no price" happen in a request served by the
+     * shop.
+     */
+    protected static function unpricedCurrency(): \Currency
+    {
+        $id = (int) \Db::getInstance()->getValue(
+            'SELECT `id_currency` FROM `' . _DB_PREFIX_ . 'currency` WHERE `iso_code` = "XTS"',
+            false
+        );
+        if ($id > 0) {
+            return new \Currency($id);
+        }
+
+        $langId = (int) \Configuration::get('PS_LANG_DEFAULT');
+        $currency = new \Currency();
+        $currency->iso_code = 'XTS';
+        $currency->numeric_iso_code = '963';
+        $currency->precision = 2;
+        $currency->conversion_rate = 1.0;
+        $currency->active = true;
+        $currency->name = [$langId => 'Testing currency'];
+        $currency->symbol = [$langId => 'XTS'];
+        $currency->add();
+
+        return $currency;
+    }
+
+    protected static function removeUnpricedCurrency(): void
+    {
+        $id = (int) \Db::getInstance()->getValue(
+            'SELECT `id_currency` FROM `' . _DB_PREFIX_ . 'currency` WHERE `iso_code` = "XTS"',
+            false
+        );
+        foreach (['currency', 'currency_lang', 'currency_shop'] as $table) {
+            \Db::getInstance()->execute('DELETE FROM `' . _DB_PREFIX_ . $table . '` WHERE `id_currency` = ' . $id);
+        }
+    }
 }

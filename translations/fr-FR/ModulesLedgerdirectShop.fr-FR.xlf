@@ -122,6 +122,30 @@
         <source>A payment of %paid% arrived, but not in the token this order is quoted in — the currency or the issuer does not match, so it cannot be credited. Please send %shortfall% %asset% from the issuer shown above, or contact us about the payment you already made.</source>
         <target state="translated">Un paiement de %paid% est arrivé, mais pas dans le jeton dans lequel cette commande est libellée — la devise ou l’émetteur ne correspond pas, il ne peut donc pas être crédité. Veuillez envoyer %shortfall% %asset% depuis l’émetteur indiqué ci-dessus, ou contactez-nous au sujet du paiement déjà effectué.</target>
       </trans-unit>
+      <trans-unit id="6a5d67fa5c54598a7aed1b33224f37f6">
+        <source>The payment details are temporarily unavailable.</source>
+        <target state="translated">Les informations de paiement sont temporairement indisponibles.</target>
+      </trans-unit>
+      <trans-unit id="b5c04f5b72644712606b7ec710b06a77">
+        <source>Your order was placed. We cannot get a current price right now – please try again in a moment.</source>
+        <target state="translated">Votre commande a été passée. Aucun cours actuel n’est disponible pour le moment – veuillez réessayer dans un instant.</target>
+      </trans-unit>
+      <trans-unit id="f915a95e609bbd517a8a1e7bdcceef37">
+        <source>Try again</source>
+        <target state="translated">Réessayer</target>
+      </trans-unit>
+      <trans-unit id="1f178770989c9e207085e8ba7cb92118">
+        <source>A new amount cannot be calculated right now, as the price is temporarily unavailable. Please try again in a moment.</source>
+        <target state="translated">Un nouveau montant ne peut pas être calculé pour le moment, car le cours est temporairement indisponible. Veuillez réessayer dans un instant.</target>
+      </trans-unit>
+      <trans-unit id="f68d6465d79b3d8dfaf419de3ef136ff">
+        <source>The price of %asset% is temporarily unavailable. Please try again in a moment.</source>
+        <target state="translated">Le cours de %asset% est temporairement indisponible. Veuillez réessayer dans un instant.</target>
+      </trans-unit>
+      <trans-unit id="49c53f4b2d0be0f5a8e66c06d71f3eb3">
+        <source>Paying with %asset% is not possible right now. Please choose another payment method.</source>
+        <target state="translated">Le paiement en %asset% n’est pas possible pour le moment. Veuillez choisir un autre moyen de paiement.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>
