@@ -14,6 +14,7 @@
 
 use Hardcastle\LedgerDirect\Core\Payment\PaymentIntent;
 use Hardcastle\LedgerDirect\Core\Presentation\AccentColor;
+use Hardcastle\LedgerDirect\Core\Price\PriceUnavailableException;
 use LedgerDirect\Chain\SupportedChains;
 use LedgerDirect\Presentation\PageLogo;
 use LedgerDirect\Presentation\PaymentIntentPresenter;
@@ -140,9 +141,22 @@ class LedgerdirectPaymentModuleFrontController extends ModuleFrontController
         }
 
         $repository = new OrderPaymentIntentRepository();
+        $storedIntent = null;
+        $priceUnavailable = false;
 
         try {
-            $paymentIntent = $this->resolvePaymentIntent($order, $repository);
+            $storedIntent = $repository->find((int) $order->id);
+            $paymentIntent = $this->resolvePaymentIntent($order, $repository, $storedIntent);
+        } catch (PriceUnavailableException $exception) {
+            // No price right now (the oracles failed or disagree) is temporary, and no older
+            // rate stands in for it. The quote on record stays as it was: an expired one keeps
+            // its refresh button, a missing one is not stored, and the customer tries again.
+            ServiceFactory::getInstance()->getLogger()->warning('No price for the payment page, the quote on record stays', [
+                'id_order' => (int) $order->id,
+                'exception' => $exception->getMessage(),
+            ]);
+            $paymentIntent = $storedIntent;
+            $priceUnavailable = true;
         } catch (Throwable $exception) {
             ServiceFactory::getInstance()->getLogger()->error('Could not present the payment page', [
                 'id_order' => (int) $order->id,
@@ -176,6 +190,7 @@ class LedgerdirectPaymentModuleFrontController extends ModuleFrontController
             'ld_confirmation_url' => $this->confirmationUrl($order),
             'ld_self_url' => $this->selfUrl($order),
             'ld_checked_no_payment' => $this->checkedWithoutResult,
+            'ld_price_unavailable' => $priceUnavailable,
             'ld_poll_url' => $this->context->link->getModuleLink(
                 $this->module->name,
                 'poll',
@@ -224,11 +239,13 @@ class LedgerdirectPaymentModuleFrontController extends ModuleFrontController
      * transactions are already synced — which records the fulfillment against
      * the new amount, or settles the order if the new rate turned the partial
      * payment into a full one.
+     *
+     * Without a price the core throws PriceUnavailableException before
+     * anything is stored or a destination tag is drawn; initContent() then
+     * keeps $paymentIntent, the quote on record.
      */
-    private function resolvePaymentIntent(Order $order, OrderPaymentIntentRepository $repository): ?PaymentIntent
+    private function resolvePaymentIntent(Order $order, OrderPaymentIntentRepository $repository, ?PaymentIntent $paymentIntent): ?PaymentIntent
     {
-        $paymentIntent = $repository->find((int) $order->id);
-
         $expired = $paymentIntent !== null && PaymentIntentPresenter::isExpired($paymentIntent);
         $refreshRequested = Tools::isSubmit('ld_refresh');
 

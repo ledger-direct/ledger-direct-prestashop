@@ -330,6 +330,30 @@
         <source>Scan with Xaman. Address, destination tag and amount are filled in, and Xaman offers to switch to the Xahau network if it is set to another one – please check them before sending.</source>
         <target state="translated">Mit Xaman scannen. Adresse, Destination Tag und Betrag sind vorausgefüllt, und Xaman bietet den Wechsel ins Xahau-Netzwerk an, falls ein anderes eingestellt ist – bitte vor dem Senden prüfen.</target>
       </trans-unit>
+      <trans-unit id="6a5d67fa5c54598a7aed1b33224f37f6">
+        <source>The payment details are temporarily unavailable.</source>
+        <target state="translated">Die Zahlungsdaten sind vorübergehend nicht verfügbar.</target>
+      </trans-unit>
+      <trans-unit id="b5c04f5b72644712606b7ec710b06a77">
+        <source>Your order was placed. We cannot get a current price right now – please try again in a moment.</source>
+        <target state="translated">Ihre Bestellung wurde aufgegeben. Gerade ist kein aktueller Kurs verfügbar – bitte versuchen Sie es in einem Moment erneut.</target>
+      </trans-unit>
+      <trans-unit id="f915a95e609bbd517a8a1e7bdcceef37">
+        <source>Try again</source>
+        <target state="translated">Erneut versuchen</target>
+      </trans-unit>
+      <trans-unit id="1f178770989c9e207085e8ba7cb92118">
+        <source>A new amount cannot be calculated right now, as the price is temporarily unavailable. Please try again in a moment.</source>
+        <target state="translated">Ein neuer Betrag lässt sich gerade nicht berechnen, weil der Kurs vorübergehend nicht verfügbar ist. Bitte versuchen Sie es in einem Moment erneut.</target>
+      </trans-unit>
+      <trans-unit id="f68d6465d79b3d8dfaf419de3ef136ff">
+        <source>The price of %asset% is temporarily unavailable. Please try again in a moment.</source>
+        <target state="translated">Der Kurs von %asset% ist vorübergehend nicht verfügbar. Bitte versuchen Sie es in einem Moment erneut.</target>
+      </trans-unit>
+      <trans-unit id="49c53f4b2d0be0f5a8e66c06d71f3eb3">
+        <source>Paying with %asset% is not possible right now. Please choose another payment method.</source>
+        <target state="translated">Die Zahlung mit %asset% ist gerade nicht möglich. Bitte wählen Sie eine andere Zahlungsart.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

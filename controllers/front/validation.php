@@ -12,6 +12,7 @@
  * @license   https://opensource.org/licenses/MIT MIT License
  */
 
+use Hardcastle\LedgerDirect\Core\Price\PriceUnavailableException;
 use LedgerDirect\Chain\SupportedChains;
 use LedgerDirect\Port\PrestaShopConfigProvider;
 use LedgerDirect\Service\ServiceFactory;
@@ -89,10 +90,24 @@ class LedgerdirectValidationModuleFrontController extends ModuleFrontController
 
         // Quote before creating the order: if no oracle can price the asset,
         // the customer goes back to the checkout instead of ending up with an
-        // order nobody can tell them how to pay.
+        // order nobody can tell them how to pay — and is told why.
         try {
             $paymentIntent = $services->getPaymentIntentService($chain)
                 ->quoteForOrder($total, $currency->iso_code, $asset);
+        } catch (PriceUnavailableException $exception) {
+            $services->getLogger()->warning('No price for the asset, checkout sent back to try again', [
+                'chain' => $chain,
+                'asset' => $asset,
+                'id_cart' => (int) $cart->id,
+                'exception' => $exception->getMessage(),
+            ]);
+            $this->redirectToCheckout($this->trans(
+                'The price of %asset% is temporarily unavailable. Please try again in a moment.',
+                ['%asset%' => $asset],
+                'Modules.Ledgerdirect.Shop'
+            ));
+
+            return;
         } catch (Throwable $exception) {
             $services->getLogger()->error('Could not build a payment intent, aborting checkout', [
                 'chain' => $chain,
@@ -100,7 +115,11 @@ class LedgerdirectValidationModuleFrontController extends ModuleFrontController
                 'id_cart' => (int) $cart->id,
                 'exception' => $exception->getMessage(),
             ]);
-            $this->redirectToCheckout();
+            $this->redirectToCheckout($this->trans(
+                'Paying with %asset% is not possible right now. Please choose another payment method.',
+                ['%asset%' => $asset],
+                'Modules.Ledgerdirect.Shop'
+            ));
 
             return;
         }
@@ -138,8 +157,19 @@ class LedgerdirectValidationModuleFrontController extends ModuleFrontController
         ));
     }
 
-    private function redirectToCheckout(): void
+    /**
+     * With a message, it goes along as a checkout error: PrestaShop keeps the
+     * notifications in the session and the checkout page shows them.
+     */
+    private function redirectToCheckout(?string $error = null): void
     {
-        Tools::redirect('index.php?controller=order&step=1');
+        if ($error === null) {
+            Tools::redirect('index.php?controller=order&step=1');
+
+            return;
+        }
+
+        $this->errors[] = $error;
+        $this->redirectWithNotifications('index.php?controller=order&step=1');
     }
 }
