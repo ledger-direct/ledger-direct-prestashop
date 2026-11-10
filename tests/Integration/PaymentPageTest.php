@@ -334,7 +334,9 @@ final class PaymentPageTest extends IntegrationTestCase
         self::assertStringContainsString('the price is temporarily unavailable. Please try again in a moment.', $html);
         self::assertStringNotContainsString('Please contact us', $html);
         self::assertSame($expired->expiry, $after?->expiry, 'the expired quote stays, no stale rate replaces it');
+        self::assertSame($expired->amountRequested, $after?->amountRequested);
         self::assertSame($expired->destinationTag, $after?->destinationTag);
+        self::assertStringContainsString('data-ld-amount-requested="15.06378"', $html, 'the page shows the expired amount');
     }
 
     public function testAFirstQuoteWithoutAPriceStoresNothingAndOffersToTryAgain(): void

@@ -30,6 +30,9 @@ use PHPUnit\Framework\TestCase;
  */
 abstract class IntegrationTestCase extends TestCase
 {
+    /** XTS when a test created it; null when the shop had it already or it is gone again. */
+    private static ?int $createdUnpricedCurrencyId = null;
+
     private const PS_ROOT = '/var/www/html';
 
     private static bool $booted = false;
@@ -111,16 +114,23 @@ abstract class IntegrationTestCase extends TestCase
         $currency->name = [$langId => 'Testing currency'];
         $currency->symbol = [$langId => 'XTS'];
         $currency->add();
+        self::$createdUnpricedCurrencyId = (int) $currency->id;
 
         return $currency;
     }
 
+    /**
+     * Removes XTS only if a test created it: a shop that already had it, such as a dev shop the
+     * suite runs in, keeps it with its shop and language rows.
+     */
     protected static function removeUnpricedCurrency(): void
     {
-        $id = (int) \Db::getInstance()->getValue(
-            'SELECT `id_currency` FROM `' . _DB_PREFIX_ . 'currency` WHERE `iso_code` = "XTS"',
-            false
-        );
+        $id = self::$createdUnpricedCurrencyId;
+        self::$createdUnpricedCurrencyId = null;
+        if ($id === null) {
+            return;
+        }
+
         foreach (['currency', 'currency_lang', 'currency_shop'] as $table) {
             \Db::getInstance()->execute('DELETE FROM `' . _DB_PREFIX_ . $table . '` WHERE `id_currency` = ' . $id);
         }
