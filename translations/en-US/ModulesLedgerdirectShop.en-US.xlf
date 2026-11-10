@@ -330,6 +330,30 @@
         <source>Scan with Xaman. Address, destination tag and amount are filled in, and Xaman offers to switch to the Xahau network if it is set to another one – please check them before sending.</source>
         <target state="translated">Scan with Xaman. Address, destination tag and amount are filled in, and Xaman offers to switch to the Xahau network if it is set to another one – please check them before sending.</target>
       </trans-unit>
+      <trans-unit id="6a5d67fa5c54598a7aed1b33224f37f6">
+        <source>The payment details are temporarily unavailable.</source>
+        <target state="translated">The payment details are temporarily unavailable.</target>
+      </trans-unit>
+      <trans-unit id="b5c04f5b72644712606b7ec710b06a77">
+        <source>Your order was placed. We cannot get a current price right now – please try again in a moment.</source>
+        <target state="translated">Your order was placed. We cannot get a current price right now – please try again in a moment.</target>
+      </trans-unit>
+      <trans-unit id="f915a95e609bbd517a8a1e7bdcceef37">
+        <source>Try again</source>
+        <target state="translated">Try again</target>
+      </trans-unit>
+      <trans-unit id="1f178770989c9e207085e8ba7cb92118">
+        <source>A new amount cannot be calculated right now, as the price is temporarily unavailable. Please try again in a moment.</source>
+        <target state="translated">A new amount cannot be calculated right now, as the price is temporarily unavailable. Please try again in a moment.</target>
+      </trans-unit>
+      <trans-unit id="f68d6465d79b3d8dfaf419de3ef136ff">
+        <source>The price of %asset% is temporarily unavailable. Please try again in a moment.</source>
+        <target state="translated">The price of %asset% is temporarily unavailable. Please try again in a moment.</target>
+      </trans-unit>
+      <trans-unit id="49c53f4b2d0be0f5a8e66c06d71f3eb3">
+        <source>Paying with %asset% is not possible right now. Please choose another payment method.</source>
+        <target state="translated">Paying with %asset% is not possible right now. Please choose another payment method.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

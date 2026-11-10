@@ -63,6 +63,8 @@ final class PaymentPageTest extends IntegrationTestCase
 
     protected function tearDown(): void
     {
+        self::removeUnpricedCurrency();
+
         if ($this->seededRateKey !== null) {
             ServiceFactory::getInstance()->getRateCache()->delete($this->seededRateKey);
         }
@@ -314,6 +316,85 @@ final class PaymentPageTest extends IntegrationTestCase
         self::assertStringContainsString('data-ld-state="partial"', $html);
         self::assertSame($expired->expiry, $after?->expiry, 'the record with the payment stays');
         self::assertSame('PARTIALHASH', $after?->hash);
+    }
+
+    public function testARefreshWithoutAPriceKeepsTheExpiredQuote(): void
+    {
+        $orderId = (int) $this->order->id;
+        $expired = PaymentIntent::fromArray(['expiry' => time() - 60] + $this->intents->find($orderId)->toArray());
+        $this->intents->save($orderId, $expired);
+        $this->withoutPrice();
+
+        [$status, $html] = $this->fetchRefresh();
+
+        $after = $this->intents->find($orderId);
+        self::assertSame(200, $status);
+        self::assertStringContainsString('data-ld-state="expired"', $html);
+        self::assertStringContainsString('name="ld_refresh"', $html, 'the refresh stays on offer');
+        self::assertStringContainsString('the price is temporarily unavailable. Please try again in a moment.', $html);
+        self::assertStringNotContainsString('Please contact us', $html);
+        self::assertSame($expired->expiry, $after?->expiry, 'the expired quote stays, no stale rate replaces it');
+        self::assertSame($expired->amountRequested, $after?->amountRequested);
+        self::assertSame($expired->destinationTag, $after?->destinationTag);
+        self::assertStringContainsString('data-ld-amount-requested="15.06378"', $html, 'the page shows the expired amount');
+    }
+
+    public function testAFirstQuoteWithoutAPriceStoresNothingAndOffersToTryAgain(): void
+    {
+        $this->deleteIntent();
+        $this->withoutPrice();
+        $tagsBefore = $this->tagCounter();
+
+        [$status, $html] = $this->fetchPage();
+
+        self::assertSame(200, $status);
+        self::assertStringContainsString('The payment details are temporarily unavailable.', $html);
+        self::assertMatchesRegularExpression('~<a [^>]*href="[^"]*module/ledgerdirect/payment[^"]*"[^>]*>Try again</a>~', $html, 'a reload asks again');
+        self::assertStringNotContainsString('Please contact us', $html);
+        self::assertStringNotContainsString('data-ld-state', $html);
+        self::assertStringNotContainsString('data-ld-page', $html, 'the script must not start on a page without a payment');
+        self::assertNull($this->intents->find((int) $this->order->id), 'nothing is stored');
+        self::assertSame($tagsBefore, $this->tagCounter(), 'no destination tag is drawn');
+    }
+
+    public function testAnOrderThatCannotBeQuotedAsksToContactUs(): void
+    {
+        $this->deleteIntent();
+        // A payment label that names no asset: there is nothing to quote, which is no price problem.
+        \Db::getInstance()->execute('UPDATE `' . _DB_PREFIX_ . 'orders` SET `payment` = "LedgerDirect" WHERE `id_order` = ' . (int) $this->order->id);
+
+        [$status, $html] = $this->fetchPage();
+
+        self::assertSame(200, $status);
+        self::assertStringContainsString('Please contact us so we can send you the payment details.', $html);
+        self::assertStringNotContainsString('Try again', $html);
+        self::assertStringNotContainsString('data-ld-page', $html, 'the script must not start on a page without a payment');
+    }
+
+    /**
+     * Moves the order to a currency no oracle prices; see unpricedCurrency().
+     */
+    private function withoutPrice(): void
+    {
+        \Db::getInstance()->execute(
+            'UPDATE `' . _DB_PREFIX_ . 'orders` SET `id_currency` = ' . (int) self::unpricedCurrency()->id
+            . ' WHERE `id_order` = ' . (int) $this->order->id
+        );
+    }
+
+    private function deleteIntent(): void
+    {
+        \Db::getInstance()->execute(
+            'DELETE FROM `' . _DB_PREFIX_ . Installer::TABLE_ORDER_PAYMENT_INTENT . '` WHERE `id_order` = ' . (int) $this->order->id
+        );
+    }
+
+    private function tagCounter(): string
+    {
+        return (string) \Db::getInstance()->getValue(
+            'SELECT GROUP_CONCAT(CONCAT(`destination_account`, ":", `sequence`) ORDER BY `destination_account`) FROM `' . _DB_PREFIX_ . Installer::TABLE_DESTINATION_TAG . '`',
+            false
+        );
     }
 
     private function expireQuoteWithPartialPayment(float $paid): void

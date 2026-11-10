@@ -30,6 +30,9 @@ use PHPUnit\Framework\TestCase;
  */
 abstract class IntegrationTestCase extends TestCase
 {
+    /** XTS when a test created it; null when the shop had it already or it is gone again. */
+    private static ?int $createdUnpricedCurrencyId = null;
+
     private const PS_ROOT = '/var/www/html';
 
     private static bool $booted = false;
@@ -82,5 +85,54 @@ abstract class IntegrationTestCase extends TestCase
     protected static function addressId(): int
     {
         return 2;
+    }
+
+    /**
+     * A shop currency the core cannot price: XTS, the ISO 4217 code reserved
+     * for testing. No oracle quotes it, so a quote fails with
+     * PriceUnavailableException whether the oracles answer or the network is
+     * down — the one way to make "no price" happen in a request served by the
+     * shop.
+     */
+    protected static function unpricedCurrency(): \Currency
+    {
+        $id = (int) \Db::getInstance()->getValue(
+            'SELECT `id_currency` FROM `' . _DB_PREFIX_ . 'currency` WHERE `iso_code` = "XTS"',
+            false
+        );
+        if ($id > 0) {
+            return new \Currency($id);
+        }
+
+        $langId = (int) \Configuration::get('PS_LANG_DEFAULT');
+        $currency = new \Currency();
+        $currency->iso_code = 'XTS';
+        $currency->numeric_iso_code = '963';
+        $currency->precision = 2;
+        $currency->conversion_rate = 1.0;
+        $currency->active = true;
+        $currency->name = [$langId => 'Testing currency'];
+        $currency->symbol = [$langId => 'XTS'];
+        $currency->add();
+        self::$createdUnpricedCurrencyId = (int) $currency->id;
+
+        return $currency;
+    }
+
+    /**
+     * Removes XTS only if a test created it: a shop that already had it, such as a dev shop the
+     * suite runs in, keeps it with its shop and language rows.
+     */
+    protected static function removeUnpricedCurrency(): void
+    {
+        $id = self::$createdUnpricedCurrencyId;
+        self::$createdUnpricedCurrencyId = null;
+        if ($id === null) {
+            return;
+        }
+
+        foreach (['currency', 'currency_lang', 'currency_shop'] as $table) {
+            \Db::getInstance()->execute('DELETE FROM `' . _DB_PREFIX_ . $table . '` WHERE `id_currency` = ' . $id);
+        }
     }
 }

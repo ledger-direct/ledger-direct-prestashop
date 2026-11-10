@@ -33,17 +33,26 @@
 
 {if $ld_intent === null}
 
-  <div class="ld-page" data-ld-page style="--ld-accent: {$ld_accent|escape:'html':'UTF-8'}">
+  {* No data-ld-page here: without a payment there is no state, and the script must not start on this page. *}
+  <div class="ld-page" style="--ld-accent: {$ld_accent|escape:'html':'UTF-8'}">
     <main class="ld-main">
       <div class="ld-card">
         <div class="ld-notice ld-notice--warn" role="status">
           {$infoIcon nofilter}
           <div>
-            <p><strong>{l s='We could not load the payment details for this order.' d='Modules.Ledgerdirect.Shop'}</strong></p>
-            <p>{l s='Your order was placed. Please contact us so we can send you the payment details.' d='Modules.Ledgerdirect.Shop'}</p>
+            {if $ld_price_unavailable}
+              <p><strong>{l s='The payment details are temporarily unavailable.' d='Modules.Ledgerdirect.Shop'}</strong></p>
+              <p>{l s='Your order was placed. We cannot get a current price right now – please try again in a moment.' d='Modules.Ledgerdirect.Shop'}</p>
+            {else}
+              <p><strong>{l s='We could not load the payment details for this order.' d='Modules.Ledgerdirect.Shop'}</strong></p>
+              <p>{l s='Your order was placed. Please contact us so we can send you the payment details.' d='Modules.Ledgerdirect.Shop'}</p>
+            {/if}
             <p>{l s='Order' d='Modules.Ledgerdirect.Shop'} <strong>{$ld_order_reference|escape:'html':'UTF-8'}</strong></p>
           </div>
         </div>
+        {if $ld_price_unavailable}
+          <a class="ld-btn ld-btn--primary" href="{$ld_self_url|escape:'html':'UTF-8'}">{l s='Try again' d='Modules.Ledgerdirect.Shop'}</a>
+        {/if}
         <a class="ld-btn ld-btn--secondary" href="{$ld_history_url|escape:'html':'UTF-8'}">{l s='Back to your orders' d='Modules.Ledgerdirect.Shop'}</a>
       </div>
     </main>
@@ -137,6 +146,9 @@
                 <div>
                   <p><strong>{l s='This amount is no longer valid.' d='Modules.Ledgerdirect.Shop'}</strong> {l s='The exchange rate may have moved since.' d='Modules.Ledgerdirect.Shop'}</p>
                   <p>{l s='Already sent? Then do not send again – we will still recognise the payment.' d='Modules.Ledgerdirect.Shop'}</p>
+                  {if $ld_price_unavailable}
+                    <p><strong>{l s='A new amount cannot be calculated right now, as the price is temporarily unavailable. Please try again in a moment.' d='Modules.Ledgerdirect.Shop'}</strong></p>
+                  {/if}
                   <form method="post" action="{$ld_self_url|escape:'html':'UTF-8'}">
                     <button type="submit" name="ld_refresh" value="1" class="ld-btn ld-btn--primary">{l s='Request a new amount' d='Modules.Ledgerdirect.Shop'}</button>
                   </form>
