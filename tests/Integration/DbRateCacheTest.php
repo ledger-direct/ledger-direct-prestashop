@@ -118,6 +118,25 @@ final class DbRateCacheTest extends IntegrationTestCase
         self::assertSame(2.0, $this->cache->get($this->key)['rate']);
     }
 
+    /**
+     * The core's sync keeps its note on a testnet reset here (core 0.11.1): an int and a
+     * nullable int under a key of chain, network and account digest. The core ignores a
+     * note whose types changed, so they have to come back exactly.
+     */
+    public function testTheSyncCursorNoteComesBackUnchanged(): void
+    {
+        $key = 'ledger_direct.cursor.v1.xrpl.testnet.' . bin2hex(random_bytes(8));
+
+        try {
+            foreach ([['stale' => 12_345_678, 'cursor' => 4_567], ['stale' => 12_345_678, 'cursor' => null]] as $note) {
+                self::assertTrue($this->cache->set($key, $note, 2_592_000));
+                self::assertSame($note, $this->cache->get($key));
+            }
+        } finally {
+            $this->cache->delete($key);
+        }
+    }
+
     public function testUnreadableStoredDataIsTreatedAsAMiss(): void
     {
         $this->cache->set($this->key, ['rate' => 1.0, 'fetched_at' => time()], 300);
