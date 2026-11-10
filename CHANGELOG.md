@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Needs `hardcastle/ledger-direct-core` 0.11.1. When the price oracles disagree, no price is given,
+  and no older cached rate stands in for it
+- After a testnet reset the stored sync position is ahead of the network. The module now gives the core
+  its cache for this, so only the first sync per receiving account sends a failing request; before,
+  every sync did
+
 ## 0.6.1
 
 - An order is booked as paid exactly once. Overlapping checks of the same order could record the payment

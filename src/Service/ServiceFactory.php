@@ -165,12 +165,19 @@ final class ServiceFactory
         return $this->syncThrottles[$chain] ??= new SyncThrottle($this->getRateCache(), $this->getLogger(), chain: $chain);
     }
 
+    /**
+     * The rate cache's store also keeps the sync's note on a testnet reset (core 0.11.1): after
+     * the reset only the first sync per account sends the stale ledger cursor and fails, later
+     * ones continue from where the resync got to. The chain is part of the note's key.
+     */
     public function getSyncService(string $chain = ChainCatalog::XRPL): SyncService
     {
         return $this->syncServices[$chain] ??= new SyncService(
             $this->getXrplClient($chain),
             $this->getTransactionRepository($chain),
-            $this->getLogger()
+            $this->getLogger(),
+            $this->getRateCache(),
+            $chain
         );
     }
 
