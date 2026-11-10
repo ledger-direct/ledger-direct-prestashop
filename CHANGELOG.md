@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Needs `hardcastle/ledger-direct-core` 0.11.1. When the price oracles disagree, no price is given,
+  and no older cached rate stands in for it
+- After a testnet reset the stored sync position is ahead of the network. The module now gives the core
+  its cache for this, so only the first sync per receiving account sends a failing request; before,
+  every sync did
 - When no price is available (the oracles failed or disagree), the customer can try again instead of
   reaching a dead end. Requesting a new amount for an expired quote keeps that quote and its button and
   says the price is temporarily unavailable; an order without payment details yet stores nothing and
