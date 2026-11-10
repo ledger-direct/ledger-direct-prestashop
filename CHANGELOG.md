@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.6.2
 
 - Needs `hardcastle/ledger-direct-core` 0.11.1. When the price oracles disagree, no price is given,
   and no older cached rate stands in for it
@@ -12,6 +12,9 @@
   says the price is temporarily unavailable; an order without payment details yet stores nothing and
   offers to try again; the checkout goes back with a message instead of without one. "Please contact
   us" stays for other failures. The page without payment details no longer starts the payment script
+- Refreshing an expired quote keeps the payment on record. The new quote and the match of what already
+  arrived are now one step under the order's lock. If another run still holds the order after five
+  seconds, or the match fails, the page shows the payment on record instead of asking for the full amount
 
 ## 0.6.1
 
