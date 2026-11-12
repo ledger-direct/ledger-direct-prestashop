@@ -26,6 +26,8 @@
  *       trust lines to the RLUSD and USDC issuers of the core's StablecoinRegistry, and created anew
  *       when the testnet was reset (see wallet.php)
  *     - XRP always; RLUSD and USDC when the account has the trust lines
+ *     - XAH to the shop's own Xahau testnet account (wallet.php xahau), made and funded on first
+ *       start; while the Xahau testnet does not answer, XAH stays as it was and the next start tries again
  *
  *   install.php catalog   when the image brings a new catalogue: the category "LedgerDirect demo" with
  *     the demo article for 1 EUR (the smoke test orders it), the category "Miniatures" with the
@@ -42,6 +44,7 @@ const STATE = '/var/lib/ledger-direct';
 const ACCOUNT_FILE = STATE . '/account';
 const CRON_FILE = STATE . '/cron-path';
 const WALLET_FILE = STATE . '/wallet.json';
+const XAHAU_WALLET_FILE = STATE . '/wallet-xahau.json';
 const WALLET = '/usr/local/share/ledger-direct/wallet.php';
 const CATALOG = '/usr/local/share/ledger-direct/catalog';
 const ADDRESS = '/^r[1-9A-HJ-NP-Za-km-z]{24,34}$/';
@@ -194,6 +197,20 @@ function shop(): void
     out('PrestaShop set up: English and German, free shipping, LedgerDirect as the only payment method');
 }
 
+/**
+ * The shop's own Xahau testnet account, separate from the XRP Ledger one: the same r-address is a
+ * different account on each chain (one account per chain, the core's INVARIANTS.md "Xahau"). null while
+ * it is not on the Xahau testnet; the next start tries again.
+ */
+function xahauAccount(): ?string
+{
+    if (wallet('xahau', XAHAU_WALLET_FILE) !== 0) {
+        return null;
+    }
+
+    return json_decode((string) file_get_contents(XAHAU_WALLET_FILE), true)['address'];
+}
+
 function configure(): void
 {
     $domain = (string) getenv('LD_DOMAIN');
@@ -219,17 +236,25 @@ function configure(): void
     }
     file_put_contents(ACCOUNT_FILE, $account);
 
-    foreach ([
+    // XAH out of the box, so a visitor pays with their wallet without configuring anything. While the
+    // Xahau testnet account is not ready, the XAH settings stay as they were.
+    $xahau = xahauAccount();
+    if ($xahau === null) {
+        out('the Xahau testnet account is not ready; XAH stays as it was, the next start tries again');
+    }
+    $xah = $xahau === null ? [] : [
+        PrestaShopConfigProvider::KEY_XAHAU_ACCOUNT_TESTNET => $xahau,
+        PrestaShopConfigProvider::KEY_XAHAU_ASSET_XAH => 1,
+    ];
+
+    foreach ($xah + [
         PrestaShopConfigProvider::KEY_NETWORK => PrestaShopConfigProvider::NETWORK_TESTNET,
         PrestaShopConfigProvider::KEY_DESTINATION_ACCOUNT => $account,
         PrestaShopConfigProvider::KEY_QUOTE_EXPIRY => 300,
         PrestaShopConfigProvider::KEY_ASSET_XRP => 1,
         PrestaShopConfigProvider::KEY_ASSET_RLUSD => $stablecoins ? 1 : 0,
         PrestaShopConfigProvider::KEY_ASSET_USDC => $stablecoins ? 1 : 0,
-        // Xahau stays off, on its testnet: whoever switches XAH on in the Back Office pays on the
-        // Xahau testnet, with an account they enter there.
         PrestaShopConfigProvider::KEY_XAHAU_NETWORK => PrestaShopConfigProvider::NETWORK_TESTNET,
-        PrestaShopConfigProvider::KEY_XAHAU_ASSET_XAH => 0,
     ] as $key => $value) {
         Configuration::updateValue($key, $value);
     }
@@ -238,7 +263,8 @@ function configure(): void
     file_put_contents(CRON_FILE, parse_url($cron, PHP_URL_PATH) . '?' . parse_url($cron, PHP_URL_QUERY));
 
     out("receiving account {$account} (" . ($own !== '' ? 'yours' : "the shop's own testnet wallet") . '); XRP'
-        . ($stablecoins ? ', RLUSD and USDC' : ' only'));
+        . ($stablecoins ? ', RLUSD and USDC' : ' only')
+        . ($xahau !== null ? "; XAH to the shop's Xahau testnet account {$xahau}" : ''));
 }
 
 function catalog(): void
