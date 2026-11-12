@@ -111,7 +111,7 @@ final class PaymentIntentPresenterTest extends TestCase
         self::assertNull($view['issuer']);
         self::assertSame('https://explorer.xahau-test.net/tx/', $view['explorer_base']);
         self::assertStringContainsString('network=XAHAUTESTNET', $view['payment_uri']);
-        self::assertStringNotContainsString('network=', $this->present(self::xrpIntent())['payment_uri'], 'XRPL requests are unchanged');
+        self::assertStringEndsWith('&network=TESTNET', $this->present(self::xrpIntent())['payment_uri'], 'an XRPL request names its own network');
     }
 
     public function testAnExpiredQuoteWithNothingPaidIsExpired(): void
@@ -209,15 +209,16 @@ final class PaymentIntentPresenterTest extends TestCase
 
     /**
      * The request behind the QR code: account, tag and the amount to send —
-     * for a token also currency and issuer — as PaymentUri specifies it.
+     * for a token also currency and issuer — and the network, so Xaman does
+     * not pay on whichever network the wallet has open, as PaymentUri specifies it.
      */
     public function testThePaymentRequestCarriesAccountTagAndAmount(): void
     {
         $xrp = $this->present(self::xrpIntent(amount: 15.06378));
         $usdc = $this->present(self::usdcIntent(value: '12.50'));
 
-        self::assertSame('https://xrplf.org//send?to=raXkRCAYkqaoFYCeVej93SzCTtiAbbRzAg&dt=123456&amount=15.06378', $xrp['payment_uri']);
-        self::assertSame('https://xrplf.org//send?to=raXkRCAYkqaoFYCeVej93SzCTtiAbbRzAg&dt=123456&amount=12.50&currency=USD&issuer=' . self::ISSUER, $usdc['payment_uri']);
+        self::assertSame('https://xrplf.org//send?to=raXkRCAYkqaoFYCeVej93SzCTtiAbbRzAg&dt=123456&amount=15.06378&network=TESTNET', $xrp['payment_uri']);
+        self::assertSame('https://xrplf.org//send?to=raXkRCAYkqaoFYCeVej93SzCTtiAbbRzAg&dt=123456&amount=12.50&currency=USD&issuer=' . self::ISSUER . '&network=TESTNET', $usdc['payment_uri']);
     }
 
     public function testTheQrCodeIsAnInlineSvgOfThePaymentRequest(): void
