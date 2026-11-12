@@ -111,14 +111,14 @@ jobs:
 
       # The storefront the way a prospect sees it, in a real browser: home page, cart, guest
       # checkout with each LedgerDirect method, payment page. GitHub's runners ship Chrome.
-      - name: Browser walk (XRP, RLUSD, USDC)
+      - name: Browser walk (XRP, RLUSD, USDC, XAH)
         working-directory: dev/try/browser
         env:
           CHROME: /usr/bin/google-chrome
         run: |
           npm install --no-audit --no-fund
           mkdir -p screenshots
-          for asset in XRP RLUSD USDC; do
+          for asset in XRP RLUSD USDC XAH; do
             echo "== $asset"
             node visitor.mjs http://localhost:8089 screenshots "$asset"
           done

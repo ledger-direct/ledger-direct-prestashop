@@ -85,7 +85,7 @@ await step('5-checkout-delivery', async () => {
   await clickVisible('button[name="confirmDeliveryOption"]');
 });
 await step('6-payment-option', async () => {
-  // The three LedgerDirect options share the module; the label names the asset.
+  // The LedgerDirect options share the module; the label names the asset.
   await page.waitForSelector('input[name="payment-option"]', { timeout: 60000 });
   await settled();
   const labels = await page.$$eval('.payment-option label, [id^="payment-option-"][id$="-container"] label', (els) => els.map((e) => e.textContent.trim().replace(/\s+/g, ' ')));
