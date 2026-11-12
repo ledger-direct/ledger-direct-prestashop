@@ -15,7 +15,7 @@
 
 # Base images by tag and digest, written out in the FROM lines: Dependabot (docker) keeps them
 # current only there.
-FROM mlocati/php-extension-installer:2.13.1@sha256:35821db0661308f64aa18483bb3af56bedc3b40090ff441ed961327d1ccbceb8 AS extension-installer
+FROM mlocati/php-extension-installer:2.13.2@sha256:4fd45396c16685266d32bf147a24ecd5e81029d3820295895bf4a90131190ac9 AS extension-installer
 
 FROM prestashop/prestashop-flashlight:9.1.5-8.3-nginx@sha256:94b2d8882a8b0e3382e75878a0120cc6e97b5566abb2640e1cd7272da58900a2 AS runtime
 # The version the module is labelled with. Release builds pass the git tag.
