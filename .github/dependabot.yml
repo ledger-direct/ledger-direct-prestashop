@@ -2,6 +2,10 @@
 # (dev/vendor/), the actions in the workflows and the base images of the try
 # image current. The two Composer projects are separate on purpose; see
 # dev/composer.json.
+#
+# New releases wait a week before Dependabot proposes them (cooldown), so a release that is pulled
+# again within days never reaches a pull request; security updates are not delayed. Updates within a
+# major come as one pull request a week, a new major on its own.
 version: 2
 updates:
   - package-ecosystem: composer
@@ -9,6 +13,12 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+    groups:
+      composer:
+        patterns: ['*']
+        update-types: [minor, patch]
     ignore:
       # Other modules (ps_checkout, psshipping) bundle their own Guzzle 7, and
       # whichever module autoloader registers last wins the namespace for the
@@ -21,6 +31,12 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+    groups:
+      composer-dev:
+        patterns: ['*']
+        update-types: [minor, patch]
 
   # The actions in the workflows, pinned to commit SHAs with the version in a comment. Dependabot
   # updates both; all action updates of a week come as one pull request.
@@ -28,6 +44,8 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     groups:
       actions:
         patterns: ['*']
@@ -37,3 +55,5 @@ updates:
     directory: /dev/try
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
