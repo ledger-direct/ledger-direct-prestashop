@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Needs `hardcastle/ledger-direct-core` 0.11.3. The payment request in the QR code and behind the
+  Xaman button now names its network on the XRP Ledger too, as it already did on Xahau. Before,
+  Xaman paid on whichever network the wallet had open, so an XRP payment scanned with a Xahau
+  account opened a XAH payment of the same amount
+
 ## 0.6.2
 
 - Needs `hardcastle/ledger-direct-core` 0.11.1. When the price oracles disagree, no price is given,
