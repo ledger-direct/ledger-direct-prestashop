@@ -17,7 +17,7 @@
 # current only there.
 FROM mlocati/php-extension-installer:2.13.2@sha256:4fd45396c16685266d32bf147a24ecd5e81029d3820295895bf4a90131190ac9 AS extension-installer
 
-FROM prestashop/prestashop-flashlight:9.1.5-8.3-nginx@sha256:94b2d8882a8b0e3382e75878a0120cc6e97b5566abb2640e1cd7272da58900a2 AS runtime
+FROM prestashop/prestashop-flashlight:9-8.1-nginx@sha256:647f542f21c5addfac2a17acd40cebebe48de725d128c973e8694b6467a9457b AS runtime
 # The version the module is labelled with. Release builds pass the git tag.
 ARG LD_VERSION=dev-try
 USER root
