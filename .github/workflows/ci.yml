@@ -22,8 +22,8 @@ on:
   push:
     branches: [main]
   pull_request:
-  # Weekly, Monday: the whole suite on main, and the check that the branch rules on GitHub
-  # are the ones in .github/rulesets/main.json.
+  # Weekly, Monday: the whole suite on main, and the check that the branch and tag rules on GitHub
+  # are the ones in .github/rulesets/main.json and tags.json.
   schedule:
     - cron: '37 4 * * 1'
   workflow_dispatch:
@@ -43,6 +43,30 @@ env:
   PHP_MIN: '8.2'
 
 jobs:
+  # Every external action is referenced by a full commit SHA, with its version as a comment: a tag
+  # can be moved to other code, a commit cannot. Dependabot keeps the SHAs current.
+  pinned:
+    name: Actions pinned to commit SHAs
+    needs: changes
+    # Fail-safe as for the other jobs: a failed `changes` job leaves docs_only empty, and the check
+    # runs. A documentation-only change cannot touch a workflow or an action.
+    if: ${{ !cancelled() && needs.changes.outputs.docs_only != 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Every external action is pinned to a full commit SHA
+        run: |
+          # The key is spelled apart, so this file does not match its own pattern.
+          key=uses
+          unpinned=$(grep -rnoE "${key}:\s*[^ #]+" .github/ | grep -v "${key}: \./" | grep -vE '@[0-9a-f]{40}$' || true)
+          if [ -n "$unpinned" ]; then
+            echo "::error::Actions not pinned to a full commit SHA (owner/action@<sha> # vX.Y.Z):"
+            echo "$unpinned"
+            exit 1
+          fi
+
   changes:
     name: What changed
     runs-on: ubuntu-latest
@@ -50,30 +74,34 @@ jobs:
       docs_only: ${{ steps.changes.outputs.docs_only }}
       runtime: ${{ steps.changes.outputs.runtime }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           # pull_request: the merge commit and both parents; push: the pushed range
           fetch-depth: ${{ github.event_name == 'pull_request' && 2 || 0 }}
       - id: changes
         uses: ./.github/actions/changes
 
   # Syntax check across every PHP version the module claims to support. The
-  # PHP version is part of the action path, and `uses:` cannot take an
-  # expression, so the steps are spelled out.
+  # PHP version is part of the action path, and an action reference cannot take
+  # an expression, so the steps are spelled out. The action is used from its
+  # master branch, pinned to the commit of 2025-11-25.
   lint:
     name: PHP syntax 8.2 => 8.4
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: PHP syntax checker 8.2
-        uses: prestashop/github-action-php-lint/8.2@master
+        uses: prestashop/github-action-php-lint/8.2@08f47878fdedbcecb581a8c93f507c7d60b2c956 # master
 
       - name: PHP syntax checker 8.3
-        uses: prestashop/github-action-php-lint/8.3@master
+        uses: prestashop/github-action-php-lint/8.3@08f47878fdedbcecb581a8c93f507c7d60b2c956 # master
 
       - name: PHP syntax checker 8.4
-        uses: prestashop/github-action-php-lint/8.4@master
+        uses: prestashop/github-action-php-lint/8.4@08f47878fdedbcecb581a8c93f507c7d60b2c956 # master
 
   # PrestaShop's coding standard (prestashop/php-dev-tools), checked, not fixed.
   coding-standard:
@@ -84,15 +112,17 @@ jobs:
     if: ${{ !cancelled() && needs.changes.outputs.docs_only != 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - uses: shivammathur/setup-php@v2
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: ${{ env.PHP_MIN }}
           coverage: none
 
       - name: Install development tooling
-        uses: ramsey/composer-install@v4
+        uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
         with:
           working-directory: dev
 
@@ -112,18 +142,20 @@ jobs:
       matrix:
         php: ['8.2', '8.4']
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - uses: shivammathur/setup-php@v2
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: ${{ matrix.php }}
           coverage: none
 
       - name: Install module dependencies
-        uses: ramsey/composer-install@v4
+        uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
 
       - name: Install development tooling
-        uses: ramsey/composer-install@v4
+        uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
         with:
           working-directory: dev
 
@@ -150,18 +182,20 @@ jobs:
         # <PrestaShop line>-<PHP version> tags of prestashop/prestashop.
         prestashop: ['9.0-8.2', '9.1-8.4']
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - uses: shivammathur/setup-php@v2
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: ${{ env.PHP_MIN }}
           coverage: none
 
       - name: Install module dependencies
-        uses: ramsey/composer-install@v4
+        uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
 
       - name: Install development tooling
-        uses: ramsey/composer-install@v4
+        uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
         with:
           working-directory: dev
 
@@ -173,7 +207,7 @@ jobs:
       # run that passes instead of one that fails on "Username and password required".
       - name: Log in to Docker Hub
         if: ${{ env.DOCKERHUB_USERNAME != '' && env.DOCKERHUB_TOKEN != '' }}
-        uses: docker/login-action@v4
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -201,18 +235,20 @@ jobs:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - uses: shivammathur/setup-php@v2
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: ${{ env.PHP_MIN }}
           coverage: none
 
       - name: Install module dependencies
-        uses: ramsey/composer-install@v4
+        uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
 
       - name: Install development tooling
-        uses: ramsey/composer-install@v4
+        uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
         with:
           working-directory: dev
 
@@ -224,7 +260,7 @@ jobs:
       # run that passes instead of one that fails on "Username and password required".
       - name: Log in to Docker Hub
         if: ${{ env.DOCKERHUB_USERNAME != '' && env.DOCKERHUB_TOKEN != '' }}
-        uses: docker/login-action@v4
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -261,9 +297,11 @@ jobs:
     if: ${{ !cancelled() && needs.changes.outputs.docs_only != 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - uses: shivammathur/setup-php@v2
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: ${{ env.PHP_MIN }}
           coverage: none
@@ -317,13 +355,14 @@ jobs:
         working-directory: build
         run: zip -qr ledgerdirect.zip ledgerdirect
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ledgerdirect
           path: build/ledgerdirect.zip
           if-no-files-found: error
 
-  # Weekly and on demand: the ruleset GitHub enforces on main is the one in .github/rulesets/main.json.
+  # Weekly and on demand: the rulesets GitHub enforces on main and on tags are the ones in
+  # .github/rulesets/main.json and tags.json.
   # Not part of "CI passed": a pull request that changes the file differs from GitHub until the
   # ruleset is applied after the merge.
   ruleset:
@@ -331,11 +370,18 @@ jobs:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Compare the ruleset on GitHub with the file
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Compare the rulesets on GitHub with the files
         env:
           GH_TOKEN: ${{ github.token }}
-        run: .github/rulesets/check.sh "${{ github.repository }}" .github/rulesets/main.json
+        # Both files are checked, also when the first differs.
+        run: |
+          rc=0
+          .github/rulesets/check.sh "$GITHUB_REPOSITORY" .github/rulesets/main.json || rc=1
+          .github/rulesets/check.sh "$GITHUB_REPOSITORY" .github/rulesets/tags.json || rc=1
+          exit $rc
 
   # The one check a merge into main requires. Its name is in .github/rulesets/main.json: renaming the
   # job blocks every merge until the ruleset on GitHub is changed too. A job's own name changes with
@@ -345,7 +391,7 @@ jobs:
   # to run and report in every case.
   passed:
     name: CI passed
-    needs: [changes, lint, coding-standard, unit, phpstan, integration, build]
+    needs: [changes, lint, coding-standard, unit, phpstan, integration, build, pinned]
     if: always()
     runs-on: ubuntu-latest
     # Reads this run's job list, nothing else.

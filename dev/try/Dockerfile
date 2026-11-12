@@ -13,12 +13,11 @@
 # Build from the repository root:
 #   docker build -f dev/try/Dockerfile -t try-prestashop .
 
-ARG FLASHLIGHT_IMAGE=prestashop/prestashop-flashlight:9.1.5-8.3-nginx@sha256:94b2d8882a8b0e3382e75878a0120cc6e97b5566abb2640e1cd7272da58900a2
-ARG EXTENSION_INSTALLER=mlocati/php-extension-installer@sha256:35821db0661308f64aa18483bb3af56bedc3b40090ff441ed961327d1ccbceb8
+# Base images by tag and digest, written out in the FROM lines: Dependabot (docker) keeps them
+# current only there.
+FROM mlocati/php-extension-installer:2.13.1@sha256:35821db0661308f64aa18483bb3af56bedc3b40090ff441ed961327d1ccbceb8 AS extension-installer
 
-FROM ${EXTENSION_INSTALLER} AS extension-installer
-
-FROM ${FLASHLIGHT_IMAGE} AS runtime
+FROM prestashop/prestashop-flashlight:9.1.5-8.3-nginx@sha256:94b2d8882a8b0e3382e75878a0120cc6e97b5566abb2640e1cd7272da58900a2 AS runtime
 # The version the module is labelled with. Release builds pass the git tag.
 ARG LD_VERSION=dev-try
 USER root
