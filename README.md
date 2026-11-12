@@ -53,8 +53,9 @@ LD_TESTNET_ACCOUNT=r... docker compose up -d --wait
 ```
 
 Setting `LD_TESTNET_ACCOUNT` later works too: the next `up` applies it to the existing shop.
-It sets the XRP Ledger account only; XAH keeps going to the shop's own Xahau account. If the Xahau
-testnet or its faucet does not answer, the shop starts without XAH and the next `up` tries again.
+It sets the XRP Ledger account only; XAH keeps going to the shop's own Xahau account, and every start
+sets it again. If the Xahau testnet or its faucet does not answer, the XAH settings stay as they were
+(on a fresh shop: XAH off) and the next `up` tries again.
 `LD_TRY_PORT` moves the shop off port 8089. `docker compose down` stops the stack and keeps the shop
 and its orders; `docker compose down -v` resets everything, and the next `up` sets up a fresh shop.
 The shop image is always built from your checkout; none is published, because the PrestaShop base
