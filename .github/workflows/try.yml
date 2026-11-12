@@ -44,6 +44,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           # pull_request: the merge commit and both parents; push: the pushed range
           fetch-depth: ${{ github.event_name == 'pull_request' && 2 || 0 }}
       - id: changes
@@ -62,6 +63,8 @@ jobs:
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       # Flashlight and MariaDB come from Docker Hub; logged in, the pulls count against the
       # organisation's account instead of the runner's shared IP (see ci.yml). Skipped where the
