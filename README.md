@@ -185,7 +185,8 @@ into `views/`.
 | `views/js/ledger-direct-payment-ui/payment-page.js` | `dist/payment-page.js` | with the page |
 | `views/js/ledger-direct-payment-ui/wallets.js` | `dist/wallets.js` | only when the customer opens the wallet list, by a native `import()` |
 
-`views/js/ledger-direct-payment-ui/VERSION` names the package tag the files were copied from. To
+`views/js/ledger-direct-payment-ui/VERSION` names the package tag the files were copied from; the URL
+of `wallets.js` carries it, so a browser does not keep a copy cached before an update. To
 update: copy the three files from the package's `dist/` at the new tag and write the tag into
 `VERSION`. The markup the template renders is the package's contract (`src/README.md` there);
 every sentence a customer reads is in `views/templates/front/payment.tpl` and the XLIFF catalogues,
