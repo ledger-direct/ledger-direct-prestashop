@@ -98,7 +98,7 @@ final class PaymentPageTest extends IntegrationTestCase
         self::assertStringContainsString('data-ld-tag data-value="' . $this->destinationTag() . '"', $html);
         self::assertStringContainsString('data-ld-payment-uri="https://xrplf.org//send?to=' . self::DESTINATION . '&amp;dt=' . $this->destinationTag() . '&amp;amount=15.06378&amp;network=TESTNET"', $html);
         self::assertMatchesRegularExpression('~data-ld-poll-url="[^"]*module/ledgerdirect/poll[^"]*"~', $html);
-        self::assertStringContainsString('data-ld-wallets-src="/modules/ledgerdirect/views/js/ledger-direct-payment-ui/wallets.js"', $html);
+        self::assertStringContainsString('data-ld-wallets-src="/modules/ledgerdirect/views/js/ledger-direct-payment-ui/wallets.js?v=0.4.0"', $html);
     }
 
     public function testThePageShowsTheAmountExactlyAsTheCoreStatesIt(): void

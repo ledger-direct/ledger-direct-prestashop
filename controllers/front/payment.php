@@ -18,6 +18,7 @@ use Hardcastle\LedgerDirect\Core\Price\PriceUnavailableException;
 use LedgerDirect\Chain\SupportedChains;
 use LedgerDirect\Presentation\PageLogo;
 use LedgerDirect\Presentation\PaymentIntentPresenter;
+use LedgerDirect\Presentation\WalletLibrary;
 use LedgerDirect\Service\PaymentSyncService;
 use LedgerDirect\Service\ServiceFactory;
 use LedgerDirect\Storage\OrderPaymentIntentRepository;
@@ -91,7 +92,7 @@ class LedgerdirectPaymentModuleFrontController extends ModuleFrontController
      * library is deliberately *not* registered: the page fetches it with a
      * native import() only when a customer opens the wallet list, from the
      * URL the template puts into data-ld-wallets-src. Registering it here
-     * would load 1.6 MB on every visit.
+     * would load 1.8 MB on every visit.
      */
     public function setMedia()
     {
@@ -212,7 +213,7 @@ class LedgerdirectPaymentModuleFrontController extends ModuleFrontController
             'ld_xaman_key' => $configProvider->getXamanApiKey(),
             'ld_wc_project' => $configProvider->getWalletConnectProjectId(),
             // The wallet library, fetched by the page on demand (see setMedia()).
-            'ld_wallets_src' => $this->module->getPathUri() . 'views/js/ledger-direct-payment-ui/wallets.js',
+            'ld_wallets_src' => WalletLibrary::url($this->module->getPathUri(), $this->module->getLocalPath()),
             'ld_intent' => $paymentIntent === null
                 ? null
                 : PaymentIntentPresenter::present($paymentIntent, ServiceFactory::getInstance()->getSettlementPolicy()),
