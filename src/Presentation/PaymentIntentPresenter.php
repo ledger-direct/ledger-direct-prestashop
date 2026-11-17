@@ -27,6 +27,10 @@ use Hardcastle\LedgerDirect\Core\Payment\PaymentUri;
 use Hardcastle\LedgerDirect\Core\Payment\SettlementPolicy;
 use Hardcastle\LedgerDirect\Core\Xrpl\XrplAmount;
 
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
+
 /**
  * Turns a PaymentIntent into the plain scalars the payment page needs.
  *

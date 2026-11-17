@@ -61,7 +61,7 @@
 {else}
 
   {assign var='state' value=$ld_intent.state}
-  {assign var='asset' value=$ld_intent.base_asset|escape:'html':'UTF-8'}
+  {assign var='asset' value=$ld_intent.base_asset}
   {assign var='hasWalletApp' value=($ld_xaman_key !== '' || $ld_wc_project !== '')}
 
   <div class="ld-page"
@@ -69,7 +69,7 @@
        data-ld-state="{$state|escape:'html':'UTF-8'}"
        data-ld-poll-url="{$ld_poll_url|escape:'html':'UTF-8'}"
        data-ld-chain="{$ld_intent.chain|escape:'html':'UTF-8'}"
-       data-ld-asset="{$asset}"
+       data-ld-asset="{$asset|escape:'html':'UTF-8'}"
        data-ld-network="{$ld_intent.network|escape:'html':'UTF-8'}"
        data-ld-explorer-base="{$ld_intent.explorer_base|escape:'html':'UTF-8'}"
        data-ld-quote-seconds="{$ld_quote_seconds|intval}"
@@ -117,8 +117,8 @@
                 <div>
                   <p>{l s='%paid% have arrived – thank you. %shortfall% are still missing.'
                         sprintf=[
-                          '%paid%' => "<strong><span data-ld-paid>{$ld_intent.amount_paid|escape:'html':'UTF-8'}</span> {$asset}</strong>",
-                          '%shortfall%' => "<strong><span data-ld-shortfall>{$ld_intent.shortfall|escape:'html':'UTF-8'}</span> {$asset}</strong>"
+                          '%paid%' => "<strong><span data-ld-paid>{$ld_intent.amount_paid|escape:'html':'UTF-8'}</span> {$asset|escape:'html':'UTF-8'}</strong>",
+                          '%shortfall%' => "<strong><span data-ld-shortfall>{$ld_intent.shortfall|escape:'html':'UTF-8'}</span> {$asset|escape:'html':'UTF-8'}</strong>"
                         ]
                         d='Modules.Ledgerdirect.Shop'}</p>
                   <div class="ld-progress" aria-hidden="true"><span data-ld-progress style="width: {$ld_intent.paid_share|intval}%"></span></div>
@@ -132,11 +132,11 @@
                   <p>{l s='A payment of %paid% has arrived, but this order expects %asset% from the issuer named below. It cannot be credited.'
                         sprintf=[
                           '%paid%' => "<strong data-ld-paid>{$ld_intent.amount_paid|escape:'html':'UTF-8'}</strong>",
-                          '%asset%' => "<strong>{$asset}</strong>"
+                          '%asset%' => "<strong>{$asset|escape:'html':'UTF-8'}</strong>"
                         ]
                         d='Modules.Ledgerdirect.Shop'}</p>
                   <p>{l s='Please send %shortfall% – or contact us about the payment you already made.'
-                        sprintf=['%shortfall%' => "<strong><span data-ld-shortfall>{$ld_intent.shortfall|escape:'html':'UTF-8'}</span> {$asset}</strong>"]
+                        sprintf=['%shortfall%' => "<strong><span data-ld-shortfall>{$ld_intent.shortfall|escape:'html':'UTF-8'}</span> {$asset|escape:'html':'UTF-8'}</strong>"]
                         d='Modules.Ledgerdirect.Shop'}</p>
                 </div>
               </div>
@@ -161,12 +161,12 @@
               </p>
               <div class="ld-amount">
                 <span class="ld-amount-value" data-ld-amount>{$ld_intent.amount_due|escape:'html':'UTF-8'}</span>
-                <span class="ld-amount-asset">{$asset}</span>
+                <span class="ld-amount-asset">{$asset|escape:'html':'UTF-8'}</span>
                 <button type="button" class="ld-copy" data-copy="amount" aria-label="{l s='Copy amount' d='Modules.Ledgerdirect.Shop'}">{$copyIcon nofilter}{$copyLabels nofilter}</button>
               </div>
               <p class="ld-fiat" data-ld-fiat>
                 <span data-ld-fiat-for="full"{if $state === 'partial'} hidden{/if}>{l s='equals %fiat%' sprintf=['%fiat%' => $ld_order_total|escape:'html':'UTF-8'] d='Modules.Ledgerdirect.Shop'}</span>
-                <span data-ld-fiat-for="partial"{if $state !== 'partial'} hidden{/if}>{l s='of %total% %asset% in total (%fiat%)' sprintf=['%total%' => $ld_intent.amount|escape:'html':'UTF-8', '%asset%' => $asset, '%fiat%' => $ld_order_total|escape:'html':'UTF-8'] d='Modules.Ledgerdirect.Shop'}</span>
+                <span data-ld-fiat-for="partial"{if $state !== 'partial'} hidden{/if}>{l s='of %total% %asset% in total (%fiat%)' sprintf=['%total%' => $ld_intent.amount|escape:'html':'UTF-8', '%asset%' => $asset|escape:'html':'UTF-8', '%fiat%' => $ld_order_total|escape:'html':'UTF-8'] d='Modules.Ledgerdirect.Shop'}</span>
               </p>
 
               {if $ld_intent.expiry}
@@ -196,10 +196,10 @@
                   <li>
                     <div class="ld-field-label"><span class="ld-step-no">3</span> {l s='Token and issuer' d='Modules.Ledgerdirect.Shop'}</div>
                     <div class="ld-field">
-                      <span class="ld-field-value">{$asset} · <span data-ld-issuer data-value="{$ld_intent.issuer|escape:'html':'UTF-8'}">{$ld_intent.issuer|escape:'html':'UTF-8'}</span></span>
+                      <span class="ld-field-value">{$asset|escape:'html':'UTF-8'} · <span data-ld-issuer data-value="{$ld_intent.issuer|escape:'html':'UTF-8'}">{$ld_intent.issuer|escape:'html':'UTF-8'}</span></span>
                       <button type="button" class="ld-copy" data-copy="issuer" aria-label="{l s='Copy issuer' d='Modules.Ledgerdirect.Shop'}">{$copyIcon nofilter}{$copyLabels nofilter}</button>
                     </div>
-                    <p class="ld-hint">{l s='Only %asset% from exactly this issuer is credited. Your wallet needs a trust line for it.' sprintf=['%asset%' => $asset] d='Modules.Ledgerdirect.Shop'}</p>
+                    <p class="ld-hint">{l s='Only %asset% from exactly this issuer is credited. Your wallet needs a trust line for it.' sprintf=['%asset%' => $asset|escape:'html':'UTF-8'] d='Modules.Ledgerdirect.Shop'}</p>
                   </li>
                 {/if}
               </ol>
@@ -253,7 +253,7 @@
 
               <dl class="ld-details">
                 <dt>{l s='Order total' d='Modules.Ledgerdirect.Shop'}</dt><dd>{$ld_order_total|escape:'html':'UTF-8'}</dd>
-                <dt>{l s='Rate' d='Modules.Ledgerdirect.Shop'}</dt><dd>{l s='1 %asset% = %rate% %currency%' sprintf=['%asset%' => $asset, '%rate%' => $ld_intent.exchange_rate|escape:'html':'UTF-8', '%currency%' => $ld_intent.quote_currency|escape:'html':'UTF-8'] d='Modules.Ledgerdirect.Shop'}</dd>
+                <dt>{l s='Rate' d='Modules.Ledgerdirect.Shop'}</dt><dd>{l s='1 %asset% = %rate% %currency%' sprintf=['%asset%' => $asset|escape:'html':'UTF-8', '%rate%' => $ld_intent.exchange_rate|escape:'html':'UTF-8', '%currency%' => $ld_intent.quote_currency|escape:'html':'UTF-8'] d='Modules.Ledgerdirect.Shop'}</dd>
                 <dt>{l s='Network' d='Modules.Ledgerdirect.Shop'}</dt><dd>{if $ld_intent.chain == 'XAHAU'}{if $ld_intent.is_testnet}{l s='Xahau Testnet' d='Modules.Ledgerdirect.Shop'}{else}{l s='Xahau Mainnet' d='Modules.Ledgerdirect.Shop'}{/if}{else}{if $ld_intent.is_testnet}{l s='XRPL Testnet' d='Modules.Ledgerdirect.Shop'}{else}{l s='XRPL Mainnet' d='Modules.Ledgerdirect.Shop'}{/if}{/if}</dd>
               </dl>
             </aside>
@@ -282,7 +282,7 @@
         <div class="ld-success" data-ld-success hidden>
           <div class="ld-success-icon" aria-hidden="true"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6 9 17l-5-5"/></svg></div>
           <h2>{l s='Payment received' d='Modules.Ledgerdirect.Shop'}</h2>
-          <p>{l s='%amount% have arrived.' sprintf=['%amount%' => "<strong><span data-ld-settled-amount></span> {$asset}</strong>"] d='Modules.Ledgerdirect.Shop'}</p>
+          <p>{l s='%amount% have arrived.' sprintf=['%amount%' => "<strong><span data-ld-settled-amount></span> {$asset|escape:'html':'UTF-8'}</strong>"] d='Modules.Ledgerdirect.Shop'}</p>
           <p data-ld-hash-row hidden>{l s='Transaction' d='Modules.Ledgerdirect.Shop'} <a data-ld-hash href="#" target="_blank" rel="noopener"><code></code></a></p>
           <p>{l s='Continuing to your order in %seconds% s' sprintf=['%seconds%' => '<span data-ld-redirect-count>5</span>'] d='Modules.Ledgerdirect.Shop'}</p>
           <a class="ld-btn ld-btn--primary" data-ld-redirect-link href="{$ld_confirmation_url|escape:'html':'UTF-8'}">{l s='Continue to your order' d='Modules.Ledgerdirect.Shop'}</a>

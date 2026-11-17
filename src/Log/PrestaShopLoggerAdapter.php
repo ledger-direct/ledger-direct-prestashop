@@ -19,6 +19,10 @@ namespace LedgerDirect\Log;
 use Psr\Log\AbstractLogger;
 use Psr\Log\LogLevel;
 
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
+
 /**
  * PSR-3 sink for the core, writing into PrestaShop's own log (Advanced
  * Parameters → Logs). The core logs every swallowed oracle/sync failure

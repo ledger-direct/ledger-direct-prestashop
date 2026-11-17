@@ -16,6 +16,10 @@ declare(strict_types=1);
 
 namespace LedgerDirect\Install;
 
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
+
 /**
  * Module files newer than the database they run against.
  *

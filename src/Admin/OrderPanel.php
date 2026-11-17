@@ -24,6 +24,10 @@ use LedgerDirect\Presentation\PaymentIntentPresenter;
 use LedgerDirect\Service\ServiceFactory;
 use LedgerDirect\Storage\OrderPaymentIntentRepository;
 
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
+
 /**
  * The LedgerDirect block on the Back Office order page.
  *

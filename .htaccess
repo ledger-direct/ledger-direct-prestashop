@@ -1,0 +1,17 @@
+# No PHP file of this module is meant to be requested directly: PrestaShop runs
+# the front controllers through its own index.php. Nginx ignores this file.
+
+# Apache 2.2
+<IfModule !mod_authz_core.c>
+    <Files *.php>
+        Order allow,deny
+        Deny from all
+    </Files>
+</IfModule>
+
+# Apache 2.4
+<IfModule mod_authz_core.c>
+    <Files *.php>
+        Require all denied
+    </Files>
+</IfModule>

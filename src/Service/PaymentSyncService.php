@@ -23,6 +23,10 @@ use LedgerDirect\Install\PendingUpgrade;
 use LedgerDirect\Storage\OrderPaymentIntentRepository;
 use Order;
 
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
+
 /**
  * Pulls the merchant's incoming XRPL transactions and settles the orders they
  * pay for.

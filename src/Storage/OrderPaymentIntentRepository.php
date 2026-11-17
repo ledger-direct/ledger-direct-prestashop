@@ -19,6 +19,10 @@ namespace LedgerDirect\Storage;
 use Hardcastle\LedgerDirect\Core\Payment\PaymentIntent;
 use LedgerDirect\Install\Installer;
 
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
+
 /**
  * Stores one serialized PaymentIntent per order.
  *

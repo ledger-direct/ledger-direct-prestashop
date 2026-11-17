@@ -18,6 +18,10 @@ namespace LedgerDirect\Install;
 
 use LedgerDirect\Port\PrestaShopConfigProvider;
 
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
+
 /**
  * Schema and order-state setup for install()/uninstall().
  *

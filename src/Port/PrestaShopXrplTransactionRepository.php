@@ -22,6 +22,10 @@ use Hardcastle\LedgerDirect\Core\Port\XrplTransactionRepositoryInterface;
 use Hardcastle\LedgerDirect\Core\Xrpl\Schema;
 use Hardcastle\LedgerDirect\Core\Xrpl\XrplTransaction;
 
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
+
 /**
  * Persistence for the two tables of one chain, on PrestaShop's `Db` layer.
  *

@@ -16,6 +16,10 @@ declare(strict_types=1);
 
 namespace LedgerDirect\Presentation;
 
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
+
 /**
  * Which logo the payment page shows in its header.
  *

@@ -333,6 +333,25 @@ jobs:
           done
           test -f ledgerdirect.php && test -f logo.png && test -f LICENSE.md && test -d vendor/hardcastle/ledger-direct-core
 
+      # The PrestaShop Addons technical standards reject a module automatically for any of these.
+      - name: Check the archive against the Addons technical standards
+        working-directory: build/ledgerdirect
+        run: |
+          failed=0
+          grep -q 'Require all denied' .htaccess 2>/dev/null \
+            || { echo "::error::.htaccess denying direct access to PHP files is missing"; failed=1; }
+          for file in $(find . -path ./vendor -prune -o -name '*.php' ! -name index.php -print); do
+            grep -q "defined('_PS_VERSION_')" "$file" \
+              || { echo "::error file=${file#./}::the _PS_VERSION_ guard is missing"; failed=1; }
+          done
+          grep -q "'max' => '9.99.99'" ledgerdirect.php \
+            || { echo "::error::ps_versions_compliancy must name a fixed max version, not _PS_VERSION_"; failed=1; }
+          # Every variable a template prints carries a modifier (escape, intval) or says nofilter.
+          if grep -n -E '\{\$[A-Za-z_][A-Za-z0-9_.]*\}|=> \$[A-Za-z_][A-Za-z0-9_.]*[],]' $(find views -name '*.tpl'); then
+            echo "::error::template output above is not escaped"; failed=1
+          fi
+          exit $failed
+
       # config.xml is PrestaShop's cached copy of the module class's properties.
       # Shipping it lets the upgrade scripts run right after the zip is uploaded
       # (devdocs, "config.xml file"), as ps_wirepayment and ps_checkpayment do.

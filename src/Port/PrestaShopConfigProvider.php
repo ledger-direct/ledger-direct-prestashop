@@ -23,6 +23,10 @@ use Hardcastle\LedgerDirect\Core\Presentation\AccentColor;
 use LedgerDirect\Chain\SupportedChains;
 use LedgerDirect\Presentation\PageLogo;
 
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
+
 /**
  * Reads the merchant's LedgerDirect settings out of PrestaShop's
  * `Configuration` store.
