@@ -162,6 +162,50 @@
         <source>The module's database is at version %s, its files at %s. Payments may not be confirmed until the upgrade has run: Modules → Module Manager → LedgerDirect → Upgrade.</source>
         <target state="translated">La base de datos del módulo está en la versión %s, sus archivos en la %s. Es posible que los pagos no se confirmen hasta que se haya ejecutado la actualización: Módulos → Gestor de módulos → LedgerDirect → Actualizar.</target>
       </trans-unit>
+      <trans-unit id="9dce5dd543d4d66c22fc4d120de59f78">
+        <source>Receiving account on %s</source>
+        <target state="translated">Cuenta receptora en %s</target>
+      </trans-unit>
+      <trans-unit id="604278e1ed518d94a598e2fef79367f0">
+        <source>Checked on the ledger: %s on the %s.</source>
+        <target state="translated">Comprobado en el ledger: %s en la %s.</target>
+      </trans-unit>
+      <trans-unit id="181f21f46941f4e20a1f87ba582bc18c">
+        <source>The receiving account can take every asset that is switched on.</source>
+        <target state="translated">La cuenta receptora puede recibir todos los activos activados.</target>
+      </trans-unit>
+      <trans-unit id="204a6e7cac563b137ab3fd40b58b3e89">
+        <source>The account is not activated yet. A first payment of at least %s %s activates it; until then the checkout offers %s only for orders of at least that amount, and no tokens.</source>
+        <target state="translated">La cuenta aún no está activada. Un primer pago de al menos %s %s la activa; hasta entonces el checkout ofrece %s solo para pedidos de al menos ese importe, y ningún token.</target>
+      </trans-unit>
+      <trans-unit id="ea32f581f8ff122e625e7fc554c522eb">
+        <source>Deposit authorization is set on the account: only senders you authorized can pay. The payment methods stay in the checkout.</source>
+        <target state="translated">La autorización de depósito está activada en la cuenta: solo pueden pagar los remitentes que usted autorizó. Los métodos de pago siguen en el checkout.</target>
+      </trans-unit>
+      <trans-unit id="b173929f449464c4dc4db719e1b0fc11">
+        <source>%s is not offered in the checkout: the account has no trustline to the issuer %s.</source>
+        <target state="translated">%s no se ofrece en el checkout: la cuenta no tiene trustline hacia el emisor %s.</target>
+      </trans-unit>
+      <trans-unit id="336460ff38a1835cd6f4a5582d3f8837">
+        <source>%s is not offered in the checkout: the issuer %s has not authorized the trustline.</source>
+        <target state="translated">%s no se ofrece en el checkout: el emisor %s no ha autorizado la trustline.</target>
+      </trans-unit>
+      <trans-unit id="e301b5bb11fc1f8b51054f61e7d1620e">
+        <source>%s is not offered in the checkout: the trustline is frozen.</source>
+        <target state="translated">%s no se ofrece en el checkout: la trustline está congelada.</target>
+      </trans-unit>
+      <trans-unit id="2bf3dd2a2956cf8be27fb6f881b73779">
+        <source>%s is not offered in the checkout: the trustline has reached its limit.</source>
+        <target state="translated">%s no se ofrece en el checkout: la trustline ha alcanzado su límite.</target>
+      </trans-unit>
+      <trans-unit id="f22c53a484ca75c08abee74fe32e960b">
+        <source>%s is not offered in the checkout: the issuer %s has frozen all its trustlines.</source>
+        <target state="translated">%s no se ofrece en el checkout: el emisor %s ha congelado todas sus trustlines.</target>
+      </trans-unit>
+      <trans-unit id="87f3670e2dd9e16dc110cd1af08c8147">
+        <source>The ledger could not be asked just now. Until it can, tokens are not offered; %s is.</source>
+        <target state="translated">No se pudo consultar el ledger en este momento. Hasta entonces no se ofrecen tokens; %s sí.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>

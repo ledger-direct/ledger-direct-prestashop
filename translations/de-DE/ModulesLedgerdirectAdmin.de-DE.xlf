@@ -250,6 +250,50 @@
         <source>The Xahau receiving address %s is also the XRP Ledger's. The two are different accounts on different chains; use one account per chain.</source>
         <target state="translated">Die Xahau-Empfangsadresse %s ist auch die des XRP Ledger. Die beiden sind verschiedene Konten auf verschiedenen Chains; verwenden Sie ein Konto je Chain.</target>
       </trans-unit>
+      <trans-unit id="9dce5dd543d4d66c22fc4d120de59f78">
+        <source>Receiving account on %s</source>
+        <target state="translated">Empfangskonto auf %s</target>
+      </trans-unit>
+      <trans-unit id="604278e1ed518d94a598e2fef79367f0">
+        <source>Checked on the ledger: %s on the %s.</source>
+        <target state="translated">Auf dem Ledger geprüft: %s im %s.</target>
+      </trans-unit>
+      <trans-unit id="181f21f46941f4e20a1f87ba582bc18c">
+        <source>The receiving account can take every asset that is switched on.</source>
+        <target state="translated">Das Empfangskonto kann alle eingeschalteten Assets empfangen.</target>
+      </trans-unit>
+      <trans-unit id="204a6e7cac563b137ab3fd40b58b3e89">
+        <source>The account is not activated yet. A first payment of at least %s %s activates it; until then the checkout offers %s only for orders of at least that amount, and no tokens.</source>
+        <target state="translated">Das Konto ist noch nicht aktiviert. Eine erste Zahlung von mindestens %s %s aktiviert es; bis dahin bietet der Checkout %s nur für Bestellungen ab diesem Betrag an und keine Tokens.</target>
+      </trans-unit>
+      <trans-unit id="ea32f581f8ff122e625e7fc554c522eb">
+        <source>Deposit authorization is set on the account: only senders you authorized can pay. The payment methods stay in the checkout.</source>
+        <target state="translated">Auf dem Konto ist Deposit Authorization gesetzt: Nur vorab freigegebene Absender können zahlen. Die Zahlarten bleiben im Checkout.</target>
+      </trans-unit>
+      <trans-unit id="b173929f449464c4dc4db719e1b0fc11">
+        <source>%s is not offered in the checkout: the account has no trustline to the issuer %s.</source>
+        <target state="translated">%s wird im Checkout nicht angeboten: Dem Konto fehlt die Trustline zum Issuer %s.</target>
+      </trans-unit>
+      <trans-unit id="336460ff38a1835cd6f4a5582d3f8837">
+        <source>%s is not offered in the checkout: the issuer %s has not authorized the trustline.</source>
+        <target state="translated">%s wird im Checkout nicht angeboten: Der Issuer %s hat die Trustline nicht autorisiert.</target>
+      </trans-unit>
+      <trans-unit id="e301b5bb11fc1f8b51054f61e7d1620e">
+        <source>%s is not offered in the checkout: the trustline is frozen.</source>
+        <target state="translated">%s wird im Checkout nicht angeboten: Die Trustline ist eingefroren.</target>
+      </trans-unit>
+      <trans-unit id="2bf3dd2a2956cf8be27fb6f881b73779">
+        <source>%s is not offered in the checkout: the trustline has reached its limit.</source>
+        <target state="translated">%s wird im Checkout nicht angeboten: Das Limit der Trustline ist erreicht.</target>
+      </trans-unit>
+      <trans-unit id="f22c53a484ca75c08abee74fe32e960b">
+        <source>%s is not offered in the checkout: the issuer %s has frozen all its trustlines.</source>
+        <target state="translated">%s wird im Checkout nicht angeboten: Der Issuer %s hat alle Trustlines eingefroren.</target>
+      </trans-unit>
+      <trans-unit id="87f3670e2dd9e16dc110cd1af08c8147">
+        <source>The ledger could not be asked just now. Until it can, tokens are not offered; %s is.</source>
+        <target state="translated">Der Ledger war gerade nicht erreichbar. Bis dahin werden keine Tokens angeboten, %s schon.</target>
+      </trans-unit>
     </body>
   </file>
 </xliff>
