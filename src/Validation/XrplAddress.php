@@ -16,6 +16,10 @@ declare(strict_types=1);
 
 namespace LedgerDirect\Validation;
 
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
+
 /**
  * Format check for an XRPL classic address.
  *

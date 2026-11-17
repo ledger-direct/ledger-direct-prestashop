@@ -20,6 +20,10 @@ use Hardcastle\LedgerDirect\Core\AssetDescriptor;
 use Hardcastle\LedgerDirect\Core\ChainCatalog;
 use Hardcastle\LedgerDirect\Core\ChainDescriptor;
 
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
+
 /**
  * The chains this module offers payment options on, out of the core's catalogue.
  *

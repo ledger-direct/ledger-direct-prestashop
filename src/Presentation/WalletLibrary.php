@@ -16,6 +16,10 @@ declare(strict_types=1);
 
 namespace LedgerDirect\Presentation;
 
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
+
 /**
  * The URL of the wallet library of @ledger-direct/payment-ui
  * (views/js/ledger-direct-payment-ui/wallets.js).

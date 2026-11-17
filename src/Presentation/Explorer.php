@@ -16,6 +16,10 @@ declare(strict_types=1);
 
 namespace LedgerDirect\Presentation;
 
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
+
 /**
  * Where a transaction hash can be looked up, per chain and network.
  *

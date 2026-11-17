@@ -30,3 +30,29 @@ declare(strict_types=1);
  */
 require_once __DIR__ . '/vendor/autoload.php';
 require_once dirname(__DIR__) . '/vendor/autoload.php';
+
+// Every module file exits unless PrestaShop is loaded, which would end a test
+// run silently with exit code 0. The unit suite runs without a shop and
+// defines _PS_VERSION_ itself. The integration suite runs inside the shop and
+// loads it here, before PHPUnit reads the test classes: some of them name
+// module classes in constants. PrestaShop defines the constant without
+// checking, so the unit suite's definition must not come first. A test that
+// runs in a separate process gets no command line, only the environment, so
+// the suite is passed on there.
+$arguments = $_SERVER['argv'] ?? [];
+foreach ($arguments as $i => $argument) {
+    $suites = $argument === '--testsuite' ? ($arguments[$i + 1] ?? '') : (str_starts_with($argument, '--testsuite=') ? substr($argument, 12) : '');
+    if (in_array('integration', explode(',', $suites), true)) {
+        putenv('LEDGERDIRECT_TEST_SUITE=integration');
+    }
+}
+if (getenv('LEDGERDIRECT_TEST_SUITE') === 'integration') {
+    $config = '/var/www/html/config/config.inc.php';
+    if (!is_file($config)) {
+        fwrite(STDERR, "The integration suite needs a PrestaShop installation at /var/www/html. Run it inside the container.\n");
+        exit(1);
+    }
+    require_once $config;
+} else {
+    define('_PS_VERSION_', '9.0.0');
+}

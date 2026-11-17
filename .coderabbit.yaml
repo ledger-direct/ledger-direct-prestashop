@@ -40,8 +40,9 @@ reviews:
         private keys in code, fixtures, logs or docs.
   - path: '{ledgerdirect.php,src/**,controllers/**,views/**,upgrade/**,config.xml}'
     instructions: |-
-      PrestaShop module (PrestaShop 8.0 and later, 9.x; PHP 8.2+), aimed at PrestaShop
-      Addons: MIT licence header in every PHP file, index.php in every directory,
+      PrestaShop module (PrestaShop 9.x; PHP 8.2+), aimed at PrestaShop Addons. PrestaShop 8
+      installs only on PHP up to 8.1, so it cannot run the module. MIT licence header and the
+      _PS_VERSION_ guard in every PHP file, .htaccess in the root, index.php in every directory,
       translations through the module's translation domain, front controllers in
       controllers/front. Upgrade scripts in upgrade/ must be idempotent.
   - path: tests/**

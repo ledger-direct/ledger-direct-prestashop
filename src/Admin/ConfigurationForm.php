@@ -27,6 +27,10 @@ use LedgerDirect\Validation\XrplAddress;
 use Module;
 use PrestaShopBundle\Translation\TranslatorInterface;
 
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
+
 /**
  * The module's settings screen.
  *

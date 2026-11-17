@@ -41,6 +41,7 @@ class Ledgerdirect extends PaymentModule
         $this->version = '0.6.3';
         $this->author = 'Hardcastle';
         $this->bootstrap = true;
+        $this->ps_versions_compliancy = ['min' => '9.0.0', 'max' => '9.99.99'];
         parent::__construct();
 
         $this->displayName = $this->trans('LedgerDirect', [], 'Modules.Ledgerdirect.Admin');
@@ -49,7 +50,6 @@ class Ledgerdirect extends PaymentModule
             [],
             'Modules.Ledgerdirect.Admin'
         );
-        $this->ps_versions_compliancy = ['min' => '8.0.0', 'max' => _PS_VERSION_];
     }
 
     public function install(): bool

@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- Meets the PrestaShop Addons technical standards:
+  - The module declares PrestaShop 9.0.0 up to 9.99.99. Before, it named 8.0.0 as the lowest
+    version, which it cannot run on, and the running shop's own version as the highest
+  - Every PHP file exits when it is loaded outside PrestaShop
+  - An `.htaccess` in the module directory denies direct requests to its PHP files
+  - The payment page escapes the asset code where it prints it, not only where it assigns it
+- The release archive job checks these rules, so a change that breaks one fails in CI
+
 ## 0.6.3
 
 - Needs `hardcastle/ledger-direct-core` 0.11.3. The payment request in the QR code and behind the

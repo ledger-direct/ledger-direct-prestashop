@@ -18,6 +18,10 @@ namespace LedgerDirect\Cache;
 
 use Psr\SimpleCache\InvalidArgumentException as PsrInvalidArgumentException;
 
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
+
 /**
  * PSR-16 requires that an illegal key raises an exception implementing its own
  * marker interface, so callers can catch it without knowing the driver.

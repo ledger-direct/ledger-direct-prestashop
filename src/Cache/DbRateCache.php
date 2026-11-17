@@ -19,6 +19,10 @@ namespace LedgerDirect\Cache;
 use LedgerDirect\Install\Installer;
 use Psr\SimpleCache\CacheInterface;
 
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
+
 /**
  * PSR-16 cache backed by a table of this module's own.
  *
