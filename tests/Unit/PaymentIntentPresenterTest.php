@@ -114,6 +114,33 @@ final class PaymentIntentPresenterTest extends TestCase
         self::assertStringEndsWith('&network=TESTNET', $this->present(self::xrpIntent())['payment_uri'], 'an XRPL request names its own network');
     }
 
+    /**
+     * A mainnet order's page names the mainnet: no testnet badge, the mainnet explorer, the
+     * issuer and network=MAINNET in the payment request (Documentation/Mainnet-Testing.md, K1).
+     */
+    public function testAMainnetOrderNamesTheMainnetEverywhere(): void
+    {
+        $view = $this->present(PaymentIntent::quote(
+            type: 'rlusd-payment',
+            chain: 'XRPL',
+            network: 'mainnet',
+            baseAsset: 'RLUSD',
+            quoteCurrency: 'USD',
+            pairing: 'RLUSD/USD',
+            exchangeRate: 1.0,
+            amountRequested: ['currency' => '524C555344000000000000000000000000000000', 'value' => '12.50', 'issuer' => 'rMxCKbEDwqr76QuheSUMdEGf4B9xJ8m5De'],
+            destinationAccount: 'raXkRCAYkqaoFYCeVej93SzCTtiAbbRzAg',
+            destinationTag: 123456,
+            expiry: self::NOW + 300,
+        ));
+
+        self::assertSame('mainnet', $view['network']);
+        self::assertFalse($view['is_testnet']);
+        self::assertSame('https://livenet.xrpl.org/transactions/', $view['explorer_base']);
+        self::assertStringContainsString('issuer=rMxCKbEDwqr76QuheSUMdEGf4B9xJ8m5De', $view['payment_uri']);
+        self::assertStringEndsWith('&network=MAINNET', $view['payment_uri']);
+    }
+
     public function testAnExpiredQuoteWithNothingPaidIsExpired(): void
     {
         $view = $this->present(self::xrpIntent(expiry: self::NOW - 1));
