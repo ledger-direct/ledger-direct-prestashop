@@ -9,6 +9,14 @@
   - An `.htaccess` in the module directory denies direct requests to its PHP files
   - The payment page escapes the asset code where it prints it, not only where it assigns it
 - The release archive job checks these rules, so a change that breaks one fails in CI
+- Every text a customer or merchant reads is in six languages: English, German, French, Dutch,
+  Spanish and European Portuguese. Dutch and Portuguese are new; French and Spanish had only part of
+  the payment page and none of the order panel, and English and German lacked the order panel's
+  labels and the receiving-account checks. The terms follow the LedgerDirect glossary (German:
+  "Herausgeber" for issuer, "Destination Tag", "Testnet-Modus", "Kasse" for checkout)
+- The two order states get their names in all six languages on install, not only in German
+- A unit test checks every text in the code against every catalogue: present, not empty, the same
+  placeholders and tags, and not left in English
 
 ## 0.6.3
 

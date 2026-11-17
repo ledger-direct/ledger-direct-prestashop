@@ -70,6 +70,32 @@ final class Installer
     public const KEY_ORDER_STATE_INCOMPLETE = 'LEDGERDIRECT_OS_PAYMENT_INCOMPLETE';
 
     /**
+     * The order states' names, per PrestaShop language iso code (pt is pt-PT, Brazilian
+     * Portuguese is "br"). Order states are database rows with a name per language, not
+     * catalogue entries, so they are named here at install time; a language without an
+     * entry gets the English name. Every language the module's catalogues cover is here
+     * (tests/Unit/TranslationCatalogueTest.php).
+     */
+    public const ORDER_STATE_NAMES = [
+        self::KEY_ORDER_STATE => [
+            'en' => 'Awaiting XRPL payment',
+            'de' => 'Warten auf XRPL-Zahlung',
+            'fr' => 'En attente de paiement XRPL',
+            'nl' => 'In afwachting van XRPL-betaling',
+            'es' => 'En espera de pago XRPL',
+            'pt' => 'A aguardar pagamento XRPL',
+        ],
+        self::KEY_ORDER_STATE_INCOMPLETE => [
+            'en' => 'XRPL payment incomplete',
+            'de' => 'XRPL-Zahlung unvollständig',
+            'fr' => 'Paiement XRPL incomplet',
+            'nl' => 'XRPL-betaling onvolledig',
+            'es' => 'Pago XRPL incompleto',
+            'pt' => 'Pagamento XRPL incompleto',
+        ],
+    ];
+
+    /**
      * The "awaiting XRPL payment" state id.
      *
      * Lives here rather than on the module class because the module class is
@@ -305,23 +331,22 @@ final class Installer
         return self::ensureOrderState(
             self::KEY_ORDER_STATE,
             $moduleName,
-            ['de' => 'Warten auf XRPL-Zahlung'],
-            'Awaiting XRPL payment',
+            self::ORDER_STATE_NAMES[self::KEY_ORDER_STATE],
             '#4169E1'
         ) && self::ensureOrderState(
             self::KEY_ORDER_STATE_INCOMPLETE,
             $moduleName,
-            ['de' => 'XRPL-Zahlung unvollständig'],
-            'XRPL payment incomplete',
+            self::ORDER_STATE_NAMES[self::KEY_ORDER_STATE_INCOMPLETE],
             '#E67E22'
         );
     }
 
     /**
-     * @param array<string, string> $names per language iso code; $fallback for every other language
+     * @param array<string, string> $names per language iso code; the English name for every other language
      */
-    private static function ensureOrderState(string $key, string $moduleName, array $names, string $fallback, string $color): bool
+    private static function ensureOrderState(string $key, string $moduleName, array $names, string $color): bool
     {
+        $fallback = $names['en'];
         $existingId = (int) \Configuration::getGlobalValue($key);
         if ($existingId > 0) {
             $existing = new \OrderState($existingId);

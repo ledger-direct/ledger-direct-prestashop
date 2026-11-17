@@ -2,6 +2,294 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
   <file original="modules/ledgerdirect" source-language="en" target-language="es" datatype="plaintext">
     <body>
+      <trans-unit id="5fb63579fc981698f97d55bfecb213ea">
+        <source>Copy</source>
+        <target state="translated">Copiar</target>
+      </trans-unit>
+      <trans-unit id="a588b1abc58b8b758c4b34b69b9e10bb">
+        <source>Copied</source>
+        <target state="translated">Copiado</target>
+      </trans-unit>
+      <trans-unit id="f65de8a4c6429ca5c67dfbea9381f2b7">
+        <source>We could not load the payment details for this order.</source>
+        <target state="translated">No hemos podido cargar los datos de pago de este pedido.</target>
+      </trans-unit>
+      <trans-unit id="7eabd2ab7947b830cd5c34bb4e9296da">
+        <source>Your order was placed. Please contact us so we can send you the payment details.</source>
+        <target state="translated">Su pedido se ha realizado. Póngase en contacto con nosotros para que podamos enviarle los datos de pago.</target>
+      </trans-unit>
+      <trans-unit id="a240fa27925a635b08dc28c9e4f9216d">
+        <source>Order</source>
+        <target state="translated">Pedido</target>
+      </trans-unit>
+      <trans-unit id="3d8b21672103787ae25aa248fb95bf09">
+        <source>Back to your orders</source>
+        <target state="translated">Volver a sus pedidos</target>
+      </trans-unit>
+      <trans-unit id="1bc42974aee9519c01550493d2cab2fa">
+        <source>Testnet – no real money</source>
+        <target state="translated">Testnet – sin dinero real</target>
+      </trans-unit>
+      <trans-unit id="d63107b6b868d106e355f6ef7ec46bef">
+        <source>Complete your payment</source>
+        <target state="translated">Complete su pago</target>
+      </trans-unit>
+      <trans-unit id="a6d62041b001b70b7b607905a2c71f9a">
+        <source>%paid% have arrived – thank you. %shortfall% are still missing.</source>
+        <target state="translated">Han llegado %paid% – gracias. Aún faltan %shortfall%.</target>
+      </trans-unit>
+      <trans-unit id="802c5d86c7ab4900541d589c11bb8d89">
+        <source>Please send the rest to the same address with the same destination tag.</source>
+        <target state="translated">Envíe el resto a la misma dirección con el mismo destination tag.</target>
+      </trans-unit>
+      <trans-unit id="ad2ad7c4ee819106bbf78da71c1aeffc">
+        <source>A payment of %paid% has arrived, but this order expects %asset% from the issuer named below. It cannot be credited.</source>
+        <target state="translated">Ha llegado un pago de %paid%, pero este pedido espera %asset% del emisor indicado abajo. No se puede abonar.</target>
+      </trans-unit>
+      <trans-unit id="8eb4dd660f118b1992bea016bb2d258d">
+        <source>Please send %shortfall% – or contact us about the payment you already made.</source>
+        <target state="translated">Envíe %shortfall% – o póngase en contacto con nosotros por el pago que ya realizó.</target>
+      </trans-unit>
+      <trans-unit id="13417f4d26d99f8696e10448f2f9d53f">
+        <source>This amount is no longer valid.</source>
+        <target state="translated">Este importe ya no es válido.</target>
+      </trans-unit>
+      <trans-unit id="5ebe27f72d38f79360ea705cac14dc6c">
+        <source>The exchange rate may have moved since.</source>
+        <target state="translated">El tipo de cambio puede haber variado desde entonces.</target>
+      </trans-unit>
+      <trans-unit id="50d971ecfa813447d15177328a7cea94">
+        <source>Already sent? Then do not send again – we will still recognise the payment.</source>
+        <target state="translated">¿Ya lo ha enviado? Entonces no lo envíe de nuevo – reconoceremos el pago igualmente.</target>
+      </trans-unit>
+      <trans-unit id="3d1236aa6f3b6651ef4600daefd387da">
+        <source>Request a new amount</source>
+        <target state="translated">Solicitar un nuevo importe</target>
+      </trans-unit>
+      <trans-unit id="34be39172517d94ba0e114740c608b5a">
+        <source>Amount to send</source>
+        <target state="translated">Importe a enviar</target>
+      </trans-unit>
+      <trans-unit id="0159d77b2dedd888d2a143dc2e644299">
+        <source>Still to send</source>
+        <target state="translated">Importe pendiente</target>
+      </trans-unit>
+      <trans-unit id="c211d925929adc18f5d2c6a69bf5a438">
+        <source>Copy amount</source>
+        <target state="translated">Copiar el importe</target>
+      </trans-unit>
+      <trans-unit id="8297697cf26d7b82fc0bf900ff13351a">
+        <source>equals %fiat%</source>
+        <target state="translated">equivale a %fiat%</target>
+      </trans-unit>
+      <trans-unit id="338b51cf09f81a70bf723c009e7a3cf3">
+        <source>of %total% %asset% in total (%fiat%)</source>
+        <target state="translated">de %total% %asset% en total (%fiat%)</target>
+      </trans-unit>
+      <trans-unit id="f371cde8e87c3291afa210422158ed61">
+        <source>Amount guaranteed for %countdown% minutes</source>
+        <target state="translated">Importe garantizado durante %countdown% minutos</target>
+      </trans-unit>
+      <trans-unit id="63950aa871999109e98ab72e4b2f7f1f">
+        <source>Receiving address</source>
+        <target state="translated">Dirección de recepción</target>
+      </trans-unit>
+      <trans-unit id="7eb63ff7711e143c1e22ca5990be4bf6">
+        <source>Copy address</source>
+        <target state="translated">Copiar la dirección</target>
+      </trans-unit>
+      <trans-unit id="fac82bcd0e45d6bf7cf224ab3819fcd2">
+        <source>Destination tag</source>
+        <target state="translated">Destination tag</target>
+      </trans-unit>
+      <trans-unit id="b651efdb98a5d6bd2b3935d0c3f4a5e2">
+        <source>Required</source>
+        <target state="translated">Obligatorio</target>
+      </trans-unit>
+      <trans-unit id="12141acaedc273c325b5a76d68bcbb52">
+        <source>Copy destination tag</source>
+        <target state="translated">Copiar el destination tag</target>
+      </trans-unit>
+      <trans-unit id="c6d3053174382ec3c2a806edae1d8610">
+        <source>Without this tag we cannot match the payment to your order.</source>
+        <target state="translated">Sin este destination tag no podemos asignar el pago a su pedido.</target>
+      </trans-unit>
+      <trans-unit id="5d39bb486d2f2db8059f5bc4bab24019">
+        <source>Token and issuer</source>
+        <target state="translated">Token y emisor</target>
+      </trans-unit>
+      <trans-unit id="6b2276f93b0448feb8cc56d73da01202">
+        <source>Copy issuer</source>
+        <target state="translated">Copiar el emisor</target>
+      </trans-unit>
+      <trans-unit id="ee00a94ab9a213284c319e38193b3c15">
+        <source>Only %asset% from exactly this issuer is credited. Your wallet needs a trust line for it.</source>
+        <target state="translated">Solo se abonan %asset% de exactamente este emisor. Su cartera necesita una trustline para ello.</target>
+      </trans-unit>
+      <trans-unit id="8beadf1c6bb477fa3fff2b74a30c6336">
+        <source>Paying from an exchange?</source>
+        <target state="translated">¿Paga desde una plataforma de intercambio?</target>
+      </trans-unit>
+      <trans-unit id="4f0f3296b162ec5270ee4b462ab1e078">
+        <source>The destination tag is required, and the amount must still arrive in full after the exchange's fee.</source>
+        <target state="translated">El destination tag es obligatorio y el importe debe llegar completo después de la comisión de la plataforma.</target>
+      </trans-unit>
+      <trans-unit id="c7ae495fa6e7698a2ecd76a88333526b">
+        <source>Pay with a wallet</source>
+        <target state="translated">Pagar con una cartera</target>
+      </trans-unit>
+      <trans-unit id="ab2e1df622b9d2f14c3c5893813323e5">
+        <source>Scan with a wallet app</source>
+        <target state="translated">Escanear con una aplicación de cartera</target>
+      </trans-unit>
+      <trans-unit id="fc461c0e75a9b655475ee2a42abf816a">
+        <source>Show QR code ▾</source>
+        <target state="translated">Mostrar código QR ▾</target>
+      </trans-unit>
+      <trans-unit id="548451720d896d63542b068a8598720d">
+        <source>QR code with address, destination tag and amount</source>
+        <target state="translated">Código QR con dirección, destination tag e importe</target>
+      </trans-unit>
+      <trans-unit id="0175be5629a1f39c1ce5ecf3b14e4afd">
+        <source>Expired – please request a new amount</source>
+        <target state="translated">Caducado – solicite un nuevo importe</target>
+      </trans-unit>
+      <trans-unit id="2574e52d9f85c3c848a16be33cf64e65">
+        <source>Scan with Xaman or another XRPL wallet. Address, destination tag and amount are filled in – please check them before sending.</source>
+        <target state="translated">Escanee con Xaman u otra cartera XRPL. La dirección, el destination tag y el importe se rellenan solos – compruébelos antes de enviar.</target>
+      </trans-unit>
+      <trans-unit id="e81c4e4f2b7b93b481e13a8553c2ae1b">
+        <source>or</source>
+        <target state="translated">o</target>
+      </trans-unit>
+      <trans-unit id="4a51b1b468bae15d2a7c231c3fbbdb01">
+        <source>Pay with a browser wallet</source>
+        <target state="translated">Pagar con una cartera de navegador</target>
+      </trans-unit>
+      <trans-unit id="54512d899fd02c3a7c4746c186b2e41f">
+        <source>Looking for wallets …</source>
+        <target state="translated">Buscando carteras …</target>
+      </trans-unit>
+      <trans-unit id="d1c695cee4a57569b08adebca98ec36e">
+        <source>No browser wallet found. Use the QR code or copy the details.</source>
+        <target state="translated">No se ha encontrado ninguna cartera de navegador. Use el código QR o copie los datos.</target>
+      </trans-unit>
+      <trans-unit id="d7e2881e3f1f56600da628930fd8d3d6">
+        <source>The wallet fills in the payment. You confirm it there.</source>
+        <target state="translated">La cartera rellena el pago. Usted lo confirma allí.</target>
+      </trans-unit>
+      <trans-unit id="ea608a62d3f7477f06095059f74f4faf">
+        <source>Open in wallet app</source>
+        <target state="translated">Abrir en la aplicación de cartera</target>
+      </trans-unit>
+      <trans-unit id="6cfe61694ee1bb13ae719d47c2f80b7a">
+        <source>found</source>
+        <target state="translated">encontrada</target>
+      </trans-unit>
+      <trans-unit id="517eb8987704a73fb5edd10921682e02">
+        <source>Confirm in your wallet …</source>
+        <target state="translated">Confirme en su cartera …</target>
+      </trans-unit>
+      <trans-unit id="4e2ec7cd6d377d7bca00bc584e83d0d1">
+        <source>Sent – we are checking for it.</source>
+        <target state="translated">Enviado – estamos comprobando la recepción.</target>
+      </trans-unit>
+      <trans-unit id="50e993a5c87b13833ec99b530eb11874">
+        <source>The wallet does not respond. Is the extension installed and unlocked?</source>
+        <target state="translated">La cartera no responde. ¿Está la extensión instalada y desbloqueada?</target>
+      </trans-unit>
+      <trans-unit id="673c9a59a2f6f70934e607cca3df9ac6">
+        <source>The connection to the wallet failed – please try again.</source>
+        <target state="translated">La conexión con la cartera ha fallado – vuelva a intentarlo.</target>
+      </trans-unit>
+      <trans-unit id="ad4a3dbb7b2aed65f0fcc6f4f46b14f2">
+        <source>Your wallet is set to another network. Please switch to %network%.</source>
+        <target state="translated">Su cartera está configurada en otra red. Cambie a %network%.</target>
+      </trans-unit>
+      <trans-unit id="75bd1e6bcb3a495a8f81c41e2f935a6f">
+        <source>The payment through the wallet failed. Please use the QR code or copy the details.</source>
+        <target state="translated">El pago a través de la cartera ha fallado. Use el código QR o copie los datos.</target>
+      </trans-unit>
+      <trans-unit id="2153186e351cff7f6d6746887e57413c">
+        <source>XRPL Mainnet</source>
+        <target state="translated">XRPL Mainnet</target>
+      </trans-unit>
+      <trans-unit id="a9cee2d2caf893ad57c67892160cbeb2">
+        <source>XRPL Testnet</source>
+        <target state="translated">XRPL Testnet</target>
+      </trans-unit>
+      <trans-unit id="ac2e397ffc0808f909e9712ca575c121">
+        <source>Order total</source>
+        <target state="translated">Total del pedido</target>
+      </trans-unit>
+      <trans-unit id="dcb66ff6e4a2517ade22183779939c9d">
+        <source>Rate</source>
+        <target state="translated">Tipo de cambio</target>
+      </trans-unit>
+      <trans-unit id="378eca7b6f6ef33ae318e261876815fb">
+        <source>1 %asset% = %rate% %currency%</source>
+        <target state="translated">1 %asset% = %rate% %currency%</target>
+      </trans-unit>
+      <trans-unit id="eec89088ee408b80387155272b113256">
+        <source>Network</source>
+        <target state="translated">Red</target>
+      </trans-unit>
+      <trans-unit id="0995c03d7cffa6c0b99a7c266426f091">
+        <source>Waiting for your payment. This page updates by itself.</source>
+        <target state="translated">Esperando su pago. Esta página se actualiza sola.</target>
+      </trans-unit>
+      <trans-unit id="b943a997dceb1afbcad7ef14727f2232">
+        <source>Partial payment received. Waiting for the rest.</source>
+        <target state="translated">Pago parcial recibido. Esperando el resto.</target>
+      </trans-unit>
+      <trans-unit id="9a7866b2146c8e0e4c78b67bb40a9ddc">
+        <source>Payment in the wrong token received. Waiting for the right amount.</source>
+        <target state="translated">Pago recibido en el token equivocado. Esperando el importe correcto.</target>
+      </trans-unit>
+      <trans-unit id="7e2c1ad0c72f94c6fef98b42c682b39a">
+        <source>A late payment of the old amount is still recognised.</source>
+        <target state="translated">Un pago tardío del importe anterior se sigue reconociendo.</target>
+      </trans-unit>
+      <trans-unit id="a88659606a09a4f85beac9cb92c6ed5b">
+        <source>Check payment now</source>
+        <target state="translated">Comprobar el pago ahora</target>
+      </trans-unit>
+      <trans-unit id="6e3fd1e734bd8ac52e0b4ead8ee3aa5e">
+        <source>Checking …</source>
+        <target state="translated">Comprobando …</target>
+      </trans-unit>
+      <trans-unit id="2dcdddd180ef7c6786aa21311931034d">
+        <source>No payment found yet. A transaction usually takes only a few seconds – please check again in a moment.</source>
+        <target state="translated">Todavía no se ha encontrado ningún pago. Una transacción suele tardar solo unos segundos – vuelva a comprobarlo en un momento.</target>
+      </trans-unit>
+      <trans-unit id="d6aee350296898ef86335d1ef6402741">
+        <source>Payment received</source>
+        <target state="translated">Pago recibido</target>
+      </trans-unit>
+      <trans-unit id="9fcb339e0d721af1bafc5be61c64a61a">
+        <source>%amount% have arrived.</source>
+        <target state="translated">Han llegado %amount%.</target>
+      </trans-unit>
+      <trans-unit id="1b0ffaae3973401f71cd000ab9f7856e">
+        <source>Transaction</source>
+        <target state="translated">Transacción</target>
+      </trans-unit>
+      <trans-unit id="6e64f197e8f5ce784d122e2442bfc75e">
+        <source>Continuing to your order in %seconds% s</source>
+        <target state="translated">Continuando a su pedido en %seconds% s</target>
+      </trans-unit>
+      <trans-unit id="ce39d4849de40cfaaedbb08a3f3c980e">
+        <source>Continue to your order</source>
+        <target state="translated">Continuar a su pedido</target>
+      </trans-unit>
+      <trans-unit id="4e37eee382169d81a8613302503e7bc2">
+        <source>Back to cart</source>
+        <target state="translated">Volver al carrito</target>
+      </trans-unit>
+      <trans-unit id="cf9f0a1e5f9ae7f01b3c6f30b59b5947">
+        <source>Paid directly on the XRP Ledger, with no intermediary.</source>
+        <target state="translated">Pagado directamente en el XRP Ledger, sin intermediarios.</target>
+      </trans-unit>
       <trans-unit id="205f617855d3e208ff92151d9943a859">
         <source>Pay approximately</source>
         <target state="translated">Pague aproximadamente</target>
@@ -12,115 +300,35 @@
       </trans-unit>
       <trans-unit id="f151ed0ecf4d8fe2eb77980a85b0adcb">
         <source>Testnet mode: this shop is not accepting real funds.</source>
-        <target state="translated">Modo testnet: esta tienda no acepta fondos reales.</target>
+        <target state="translated">Modo Testnet: esta tienda no acepta fondos reales.</target>
       </trans-unit>
       <trans-unit id="3c5af70bb823c983e69d325e8f4bfe1c">
         <source>The exact amount and a destination tag are shown on the next page.</source>
-        <target state="translated">El importe exacto y una destination tag se muestran en la página siguiente.</target>
-      </trans-unit>
-      <trans-unit id="d63107b6b868d106e355f6ef7ec46bef">
-        <source>Complete your payment</source>
-        <target state="translated">Complete su pago</target>
-      </trans-unit>
-      <trans-unit id="a240fa27925a635b08dc28c9e4f9216d">
-        <source>Order</source>
-        <target state="translated">Pedido</target>
-      </trans-unit>
-      <trans-unit id="f65de8a4c6429ca5c67dfbea9381f2b7">
-        <source>We could not load the payment details for this order.</source>
-        <target state="translated">No hemos podido cargar los datos de pago de este pedido.</target>
-      </trans-unit>
-      <trans-unit id="7eabd2ab7947b830cd5c34bb4e9296da">
-        <source>Your order was placed. Please contact us so we can send you the payment details.</source>
-        <target state="translated">Su pedido se ha realizado. Póngase en contacto con nosotros para que podamos enviarle los datos de pago.</target>
-      </trans-unit>
-      <trans-unit id="03bf06ff5af2214c5b5baa1158195927">
-        <source>The destination tag is required.</source>
-        <target state="translated">La destination tag es obligatoria.</target>
-      </trans-unit>
-      <trans-unit id="142f8d291ae26f86f5f3b894462457a3">
-        <source>A payment sent without it cannot be matched to your order.</source>
-        <target state="translated">Un pago enviado sin ella no se puede asociar a su pedido.</target>
-      </trans-unit>
-      <trans-unit id="58a5e0b457fb3401ba1d5db24015ab57">
-        <source>QR code of the destination account</source>
-        <target state="translated">Código QR de la cuenta de destino</target>
-      </trans-unit>
-      <trans-unit id="3296db3595184770deba702c3c485d67">
-        <source>Scanning fills in the destination account only. Enter the amount and destination tag manually.</source>
-        <target state="translated">El escaneo solo rellena la cuenta de destino. Introduzca el importe y la destination tag manualmente.</target>
-      </trans-unit>
-      <trans-unit id="b2f40690858b404ed10e62bdf422c704">
-        <source>Amount</source>
-        <target state="translated">Importe</target>
-      </trans-unit>
-      <trans-unit id="7c381443ee1a0abfe7de332b8baa1ef8">
-        <source>Destination account</source>
-        <target state="translated">Cuenta de destino</target>
-      </trans-unit>
-      <trans-unit id="fac82bcd0e45d6bf7cf224ab3819fcd2">
-        <source>Destination tag</source>
-        <target state="translated">Destination tag</target>
-      </trans-unit>
-      <trans-unit id="51360304ea03557e79bdf5ff9cd2e234">
-        <source>Issuer</source>
-        <target state="translated">Emisor</target>
-      </trans-unit>
-      <trans-unit id="eec89088ee408b80387155272b113256">
-        <source>Network</source>
-        <target state="translated">Red</target>
-      </trans-unit>
-      <trans-unit id="e75e316ab3a0a8c0c5fc4b48d1a7033f">
-        <source>Exchange rate</source>
-        <target state="translated">Tipo de cambio</target>
-      </trans-unit>
-      <trans-unit id="fc11724939bb3296b12bf82ce759ff87">
-        <source>This amount is guaranteed for</source>
-        <target state="translated">Este importe se garantiza durante</target>
-      </trans-unit>
-      <trans-unit id="cb44603ea8999a726bb1a0170dde7990">
-        <source>This quote has expired. The exchange rate may have moved since.</source>
-        <target state="translated">Esta cotización ha caducado. El tipo de cambio puede haber variado desde entonces.</target>
-      </trans-unit>
-      <trans-unit id="8294367a5684ea3ec1f2e876379257f3">
-        <source>Already sent the old amount? Do not send it again — use the check button below instead.</source>
-        <target state="translated">¿Ya ha enviado el importe anterior? No lo envíe de nuevo: use el botón de abajo.</target>
-      </trans-unit>
-      <trans-unit id="f996e08614f9979cbc192487408b90aa">
-        <source>Get an updated amount</source>
-        <target state="translated">Obtener un importe actualizado</target>
-      </trans-unit>
-      <trans-unit id="f293da28c92255f13eb5af6024a3e77e">
-        <source>We could not find your payment on the ledger yet.</source>
-        <target state="translated">Todavía no hemos encontrado su pago en el ledger.</target>
-      </trans-unit>
-      <trans-unit id="e39af7571df1184da6692a34c0e22bd2">
-        <source>A transaction usually takes a few seconds to confirm. If you have just sent it, wait a moment and check again.</source>
-        <target state="translated">Una transacción suele confirmarse en unos segundos. Si acaba de enviarla, espere un momento y vuelva a comprobarlo.</target>
-      </trans-unit>
-      <trans-unit id="c589b287fbf19deb92877849497607aa">
-        <source>I have sent the payment — check now</source>
-        <target state="translated">He enviado el pago: comprobar ahora</target>
-      </trans-unit>
-      <trans-unit id="44d2326ff0b9daac5c4ca1622bf1c5aa">
-        <source>You do not have to wait here: once your transaction is confirmed on the ledger, your order is updated automatically.</source>
-        <target state="translated">No hace falta que espere aquí: en cuanto su transacción se confirme en el ledger, su pedido se actualizará automáticamente.</target>
-      </trans-unit>
-      <trans-unit id="3d8b21672103787ae25aa248fb95bf09">
-        <source>Back to your orders</source>
-        <target state="translated">Volver a sus pedidos</target>
+        <target state="translated">El importe exacto y un destination tag se muestran en la página siguiente.</target>
       </trans-unit>
       <trans-unit id="35895cff7df70dab18783453e2bd241f">
         <source>Pay with %s</source>
         <target state="translated">Pagar con %s</target>
       </trans-unit>
-      <trans-unit id="fd961ebe805aaff84c2ab4ead30eccea">
-        <source>%paid% received so far. %shortfall% is still outstanding — please send the remaining amount to the same address, with the same destination tag.</source>
-        <target state="translated">Hasta ahora se han recibido %paid%. Faltan todavía %shortfall% — envíe el importe restante a la misma dirección, con el mismo destination tag.</target>
+      <trans-unit id="1c9d9385942b8e8264da9454389966ee">
+        <source>on Xahau.</source>
+        <target state="translated">en Xahau.</target>
       </trans-unit>
-      <trans-unit id="16ca81e98f5ba9fd4a1e4f2d9b961783">
-        <source>A payment of %paid% arrived, but not in the token this order is quoted in — the currency or the issuer does not match, so it cannot be credited. Please send %shortfall% %asset% from the issuer shown above, or contact us about the payment you already made.</source>
-        <target state="translated">Ha llegado un pago de %paid%, pero no en el token en el que está expresado este pedido — la moneda o el emisor no coinciden, por lo que no puede acreditarse. Envíe %shortfall% %asset% desde el emisor indicado arriba, o póngase en contacto con nosotros por el pago ya realizado.</target>
+      <trans-unit id="eb9b6074ae4cda36ce18cde153fd7ddb">
+        <source>Xahau Mainnet</source>
+        <target state="translated">Xahau Mainnet</target>
+      </trans-unit>
+      <trans-unit id="9ff2cc77b25f70cc6003274be4c9725f">
+        <source>Xahau Testnet</source>
+        <target state="translated">Xahau Testnet</target>
+      </trans-unit>
+      <trans-unit id="7d4125b24ffd8aee2ec64aa1372da5fe">
+        <source>Paid directly on the Xahau network, with no intermediary.</source>
+        <target state="translated">Pagado directamente en la red Xahau, sin intermediarios.</target>
+      </trans-unit>
+      <trans-unit id="5d5ab272cad27dca5d50e249c3a12e24">
+        <source>Scan with Xaman. Address, destination tag and amount are filled in, and Xaman offers to switch to the Xahau network if it is set to another one – please check them before sending.</source>
+        <target state="translated">Escanee con Xaman. La dirección, el destination tag y el importe se rellenan solos, y Xaman ofrece cambiar a la red Xahau si está configurado en otra – compruébelos antes de enviar.</target>
       </trans-unit>
       <trans-unit id="6a5d67fa5c54598a7aed1b33224f37f6">
         <source>The payment details are temporarily unavailable.</source>
@@ -128,7 +336,7 @@
       </trans-unit>
       <trans-unit id="b5c04f5b72644712606b7ec710b06a77">
         <source>Your order was placed. We cannot get a current price right now – please try again in a moment.</source>
-        <target state="translated">Su pedido se ha realizado. Ahora mismo no hay un precio actual disponible: vuelva a intentarlo en un momento.</target>
+        <target state="translated">Su pedido se ha realizado. Ahora mismo no podemos obtener un precio actual – vuelva a intentarlo en un momento.</target>
       </trans-unit>
       <trans-unit id="f915a95e609bbd517a8a1e7bdcceef37">
         <source>Try again</source>

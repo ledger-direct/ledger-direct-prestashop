@@ -178,10 +178,6 @@
         <source>LedgerDirect</source>
         <target state="translated">LedgerDirect</target>
       </trans-unit>
-      <trans-unit id="8ba44f563b2829ab670db530d325903c">
-        <source>Accept XRP, RLUSD and USDC directly on the XRP Ledger.</source>
-        <target state="translated">Accept XRP, RLUSD and USDC directly on the XRP Ledger.</target>
-      </trans-unit>
       <trans-unit id="e0010a0a1a3259ab5c06a19bad532851">
         <source>Paid</source>
         <target state="translated">Paid</target>
@@ -249,6 +245,90 @@
       <trans-unit id="960e7a19e3c24fd227f36ffb2c0c5152">
         <source>The Xahau receiving address %s is also the XRP Ledger's. The two are different accounts on different chains; use one account per chain.</source>
         <target state="translated">The Xahau receiving address %s is also the XRP Ledger's. The two are different accounts on different chains; use one account per chain.</target>
+      </trans-unit>
+      <trans-unit id="9dce5dd543d4d66c22fc4d120de59f78">
+        <source>Receiving account on %s</source>
+        <target state="translated">Receiving account on %s</target>
+      </trans-unit>
+      <trans-unit id="604278e1ed518d94a598e2fef79367f0">
+        <source>Checked on the ledger: %s on the %s.</source>
+        <target state="translated">Checked on the ledger: %s on the %s.</target>
+      </trans-unit>
+      <trans-unit id="181f21f46941f4e20a1f87ba582bc18c">
+        <source>The receiving account can take every asset that is switched on.</source>
+        <target state="translated">The receiving account can take every asset that is switched on.</target>
+      </trans-unit>
+      <trans-unit id="204a6e7cac563b137ab3fd40b58b3e89">
+        <source>The account is not activated yet. A first payment of at least %s %s activates it; until then the checkout offers %s only for orders of at least that amount, and no tokens.</source>
+        <target state="translated">The account is not activated yet. A first payment of at least %s %s activates it; until then the checkout offers %s only for orders of at least that amount, and no tokens.</target>
+      </trans-unit>
+      <trans-unit id="ea32f581f8ff122e625e7fc554c522eb">
+        <source>Deposit authorization is set on the account: only senders you authorized can pay. The payment methods stay in the checkout.</source>
+        <target state="translated">Deposit authorization is set on the account: only senders you authorized can pay. The payment methods stay in the checkout.</target>
+      </trans-unit>
+      <trans-unit id="b173929f449464c4dc4db719e1b0fc11">
+        <source>%s is not offered in the checkout: the account has no trustline to the issuer %s.</source>
+        <target state="translated">%s is not offered in the checkout: the account has no trustline to the issuer %s.</target>
+      </trans-unit>
+      <trans-unit id="336460ff38a1835cd6f4a5582d3f8837">
+        <source>%s is not offered in the checkout: the issuer %s has not authorized the trustline.</source>
+        <target state="translated">%s is not offered in the checkout: the issuer %s has not authorized the trustline.</target>
+      </trans-unit>
+      <trans-unit id="e301b5bb11fc1f8b51054f61e7d1620e">
+        <source>%s is not offered in the checkout: the trustline is frozen.</source>
+        <target state="translated">%s is not offered in the checkout: the trustline is frozen.</target>
+      </trans-unit>
+      <trans-unit id="2bf3dd2a2956cf8be27fb6f881b73779">
+        <source>%s is not offered in the checkout: the trustline has reached its limit.</source>
+        <target state="translated">%s is not offered in the checkout: the trustline has reached its limit.</target>
+      </trans-unit>
+      <trans-unit id="f22c53a484ca75c08abee74fe32e960b">
+        <source>%s is not offered in the checkout: the issuer %s has frozen all its trustlines.</source>
+        <target state="translated">%s is not offered in the checkout: the issuer %s has frozen all its trustlines.</target>
+      </trans-unit>
+      <trans-unit id="87f3670e2dd9e16dc110cd1af08c8147">
+        <source>The ledger could not be asked just now. Until it can, tokens are not offered; %s is.</source>
+        <target state="translated">The ledger could not be asked just now. Until it can, tokens are not offered; %s is.</target>
+      </trans-unit>
+      <trans-unit id="68ebbb61167073564b61ca77dc280a60">
+        <source>XRPL payment</source>
+        <target state="translated">XRPL payment</target>
+      </trans-unit>
+      <trans-unit id="46a2a41cc6e552044816a2d04634545d">
+        <source>State</source>
+        <target state="translated">State</target>
+      </trans-unit>
+      <trans-unit id="fcdf8a82eba24e303b63b2e49a507ecb">
+        <source>Requested</source>
+        <target state="translated">Requested</target>
+      </trans-unit>
+      <trans-unit id="ac5bb077c33753116b5e91ff1766e7bc">
+        <source>Received</source>
+        <target state="translated">Received</target>
+      </trans-unit>
+      <trans-unit id="94325723d5b29917a78736901daf7ca7">
+        <source>another currency or issuer</source>
+        <target state="translated">another currency or issuer</target>
+      </trans-unit>
+      <trans-unit id="a860ed9926b241b7d4dca2d00610ab2c">
+        <source>Outstanding</source>
+        <target state="translated">Outstanding</target>
+      </trans-unit>
+      <trans-unit id="fac82bcd0e45d6bf7cf224ab3819fcd2">
+        <source>Destination tag</source>
+        <target state="translated">Destination tag</target>
+      </trans-unit>
+      <trans-unit id="44b9f225ed451d483a93110fad204a5c">
+        <source>Transactions on this destination tag</source>
+        <target state="translated">Transactions on this destination tag</target>
+      </trans-unit>
+      <trans-unit id="63bd34f1308e37824df5b8129ba1397e">
+        <source>None yet.</source>
+        <target state="translated">None yet.</target>
+      </trans-unit>
+      <trans-unit id="14a94a99755c5fcd7c23335bacb4c7b8">
+        <source>no delivered amount</source>
+        <target state="translated">no delivered amount</target>
       </trans-unit>
     </body>
   </file>
