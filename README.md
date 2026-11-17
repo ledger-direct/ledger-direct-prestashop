@@ -269,8 +269,15 @@ the same way.
 
 ## Translations
 
-English, German, French and Spanish, as XLIFF catalogues under
-`translations/<locale>/`.
+English, German, French, Dutch, Spanish and European Portuguese (pt-PT), as XLIFF catalogues under
+`translations/<locale>/`, in two domains: `Modules.Ledgerdirect.Shop` for what a customer reads and
+`Modules.Ledgerdirect.Admin` for the Back Office. PrestaShop loads a catalogue only for a language
+installed in the shop. The two order states are named at install time from
+`Installer::ORDER_STATE_NAMES`; a language installed later gets the names of the shop's default
+language, which PrestaShop copies (`Language::loadUpdateSQL()`). Rename them under Orders → Statuses.
+
+`tests/Unit/TranslationCatalogueTest.php` checks every text the code passes to `trans()` or `{l}`
+against every catalogue: present, not empty, the same placeholders and tags, and not left in English.
 
 ## License
 

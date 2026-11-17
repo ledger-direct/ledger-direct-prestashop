@@ -56,7 +56,7 @@
       </trans-unit>
       <trans-unit id="5ebe27f72d38f79360ea705cac14dc6c">
         <source>The exchange rate may have moved since.</source>
-        <target state="translated">Der Kurs kann sich seitdem bewegt haben.</target>
+        <target state="translated">Der Kurs kann sich seitdem verändert haben.</target>
       </trans-unit>
       <trans-unit id="50d971ecfa813447d15177328a7cea94">
         <source>Already sent? Then do not send again – we will still recognise the payment.</source>
@@ -72,7 +72,7 @@
       </trans-unit>
       <trans-unit id="0159d77b2dedd888d2a143dc2e644299">
         <source>Still to send</source>
-        <target state="translated">Noch zu zahlen</target>
+        <target state="translated">Offener Betrag</target>
       </trans-unit>
       <trans-unit id="c211d925929adc18f5d2c6a69bf5a438">
         <source>Copy amount</source>
@@ -92,7 +92,7 @@
       </trans-unit>
       <trans-unit id="63950aa871999109e98ab72e4b2f7f1f">
         <source>Receiving address</source>
-        <target state="translated">Empfängeradresse</target>
+        <target state="translated">Empfangsadresse</target>
       </trans-unit>
       <trans-unit id="7eb63ff7711e143c1e22ca5990be4bf6">
         <source>Copy address</source>
@@ -100,7 +100,7 @@
       </trans-unit>
       <trans-unit id="fac82bcd0e45d6bf7cf224ab3819fcd2">
         <source>Destination tag</source>
-        <target state="translated">Destination-Tag</target>
+        <target state="translated">Destination Tag</target>
       </trans-unit>
       <trans-unit id="b651efdb98a5d6bd2b3935d0c3f4a5e2">
         <source>Required</source>
@@ -112,7 +112,7 @@
       </trans-unit>
       <trans-unit id="c6d3053174382ec3c2a806edae1d8610">
         <source>Without this tag we cannot match the payment to your order.</source>
-        <target state="translated">Ohne diesen Tag können wir die Zahlung nicht Ihrer Bestellung zuordnen.</target>
+        <target state="translated">Ohne diesen Destination Tag können wir die Zahlung Ihrer Bestellung nicht zuordnen.</target>
       </trans-unit>
       <trans-unit id="5d39bb486d2f2db8059f5bc4bab24019">
         <source>Token and issuer</source>
@@ -124,7 +124,7 @@
       </trans-unit>
       <trans-unit id="ee00a94ab9a213284c319e38193b3c15">
         <source>Only %asset% from exactly this issuer is credited. Your wallet needs a trust line for it.</source>
-        <target state="translated">Nur %asset% genau dieses Herausgebers wird angerechnet. Ihre Wallet braucht eine Trustline dafür.</target>
+        <target state="translated">Nur %asset% genau dieses Herausgebers wird angerechnet. Ihre Wallet braucht dafür eine Trustline.</target>
       </trans-unit>
       <trans-unit id="8beadf1c6bb477fa3fff2b74a30c6336">
         <source>Paying from an exchange?</source>
@@ -188,7 +188,7 @@
       </trans-unit>
       <trans-unit id="517eb8987704a73fb5edd10921682e02">
         <source>Confirm in your wallet …</source>
-        <target state="translated">Bestätigung in der Wallet …</target>
+        <target state="translated">Bestätigen Sie in Ihrer Wallet …</target>
       </trans-unit>
       <trans-unit id="4e2ec7cd6d377d7bca00bc584e83d0d1">
         <source>Sent – we are checking for it.</source>
@@ -200,11 +200,11 @@
       </trans-unit>
       <trans-unit id="673c9a59a2f6f70934e607cca3df9ac6">
         <source>The connection to the wallet failed – please try again.</source>
-        <target state="translated">Die Verbindung zur Wallet ist fehlgeschlagen – bitte noch einmal versuchen.</target>
+        <target state="translated">Die Verbindung zur Wallet ist fehlgeschlagen – bitte versuchen Sie es erneut.</target>
       </trans-unit>
       <trans-unit id="ad4a3dbb7b2aed65f0fcc6f4f46b14f2">
         <source>Your wallet is set to another network. Please switch to %network%.</source>
-        <target state="translated">Ihre Wallet ist auf ein anderes Netz eingestellt. Bitte wechseln Sie zu %network%.</target>
+        <target state="translated">Ihre Wallet ist auf ein anderes Netzwerk eingestellt. Bitte wechseln Sie zu %network%.</target>
       </trans-unit>
       <trans-unit id="75bd1e6bcb3a495a8f81c41e2f935a6f">
         <source>The payment through the wallet failed. Please use the QR code or copy the details.</source>
@@ -300,11 +300,11 @@
       </trans-unit>
       <trans-unit id="f151ed0ecf4d8fe2eb77980a85b0adcb">
         <source>Testnet mode: this shop is not accepting real funds.</source>
-        <target state="translated">Testnetz-Modus: Dieser Shop nimmt kein echtes Geld an.</target>
+        <target state="translated">Testnet-Modus: Dieser Shop nimmt kein echtes Geld an.</target>
       </trans-unit>
       <trans-unit id="3c5af70bb823c983e69d325e8f4bfe1c">
         <source>The exact amount and a destination tag are shown on the next page.</source>
-        <target state="translated">Den genauen Betrag und ein Destination-Tag sehen Sie auf der nächsten Seite.</target>
+        <target state="translated">Den genauen Betrag und einen Destination Tag sehen Sie auf der nächsten Seite.</target>
       </trans-unit>
       <trans-unit id="35895cff7df70dab18783453e2bd241f">
         <source>Pay with %s</source>

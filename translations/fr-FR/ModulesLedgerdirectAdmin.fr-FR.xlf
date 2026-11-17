@@ -16,11 +16,99 @@
       </trans-unit>
       <trans-unit id="2ac42d4009bbe404a17e0ec8dc4b1c24">
         <source>Choose either mainnet or testnet.</source>
-        <target state="translated">Choisissez mainnet ou testnet.</target>
+        <target state="translated">Choisissez Mainnet ou Testnet.</target>
       </trans-unit>
       <trans-unit id="5baeee2ff8f055dfc686538c7288e769">
         <source>The quote validity must be between %d and %d seconds.</source>
         <target state="translated">La validité de la cotation doit être comprise entre %d et %d secondes.</target>
+      </trans-unit>
+      <trans-unit id="387746579e07efa6f15ccc30b422ec49">
+        <source>Choose which logo the payment page shows.</source>
+        <target state="translated">Choisissez le logo affiché sur la page de paiement.</target>
+      </trans-unit>
+      <trans-unit id="eb80e2e5c8e2a88493f2fc0302c60acc">
+        <source>The logo must be a PNG, JPG, SVG or WebP file inside the shop's img/ directory, given as a path relative to it, e.g. "brand/logo.png".</source>
+        <target state="translated">Le logo doit être un fichier PNG, JPG, SVG ou WebP situé dans le répertoire img/ de la boutique, indiqué par un chemin relatif à celui-ci, par ex. « brand/logo.png ».</target>
+      </trans-unit>
+      <trans-unit id="3bc63221b2855ecdf9d239fb48e45cf9">
+        <source>Enter the path of the logo file, or choose the shop logo or the monogram.</source>
+        <target state="translated">Saisissez le chemin du fichier du logo, ou choisissez le logo de la boutique ou le monogramme.</target>
+      </trans-unit>
+      <trans-unit id="152118e87fb6db99199de318def1f9ad">
+        <source>The accent colour must be a hex colour such as #1f5eff.</source>
+        <target state="translated">La couleur d'accent doit être une couleur hexadécimale, par ex. #1f5eff.</target>
+      </trans-unit>
+      <trans-unit id="ac49a725da2388488309f0091aaee5d7">
+        <source>The accent colour is too light to carry white text (contrast below 4.5:1). Choose a darker colour.</source>
+        <target state="translated">La couleur d'accent est trop claire pour un texte blanc (contraste inférieur à 4,5:1). Choisissez une couleur plus foncée.</target>
+      </trans-unit>
+      <trans-unit id="953e0e7bb7e344b837b9146275a67ea1">
+        <source>The Xaman API key contains characters it cannot contain.</source>
+        <target state="translated">La clé API Xaman contient des caractères non autorisés.</target>
+      </trans-unit>
+      <trans-unit id="d3ed9d57fbeec8ab515a2a89f28e38d8">
+        <source>The WalletConnect project id contains characters it cannot contain.</source>
+        <target state="translated">L'ID de projet WalletConnect contient des caractères non autorisés.</target>
+      </trans-unit>
+      <trans-unit id="d35acbb07d2841712a937d5748e9bdc2">
+        <source>Payment page</source>
+        <target state="translated">Page de paiement</target>
+      </trans-unit>
+      <trans-unit id="8c2857a9ad1d8f31659e35e904e20fa6">
+        <source>Logo</source>
+        <target state="translated">Logo</target>
+      </trans-unit>
+      <trans-unit id="21ccae98e684eb58f808ff0ef87b18cf">
+        <source>The shop logo</source>
+        <target state="translated">Le logo de la boutique</target>
+      </trans-unit>
+      <trans-unit id="09e5b83ac0e8f08cc517b67ce7c16a33">
+        <source>A picture from the img/ directory</source>
+        <target state="translated">Une image du répertoire img/</target>
+      </trans-unit>
+      <trans-unit id="c7ddc82fc3cdf42ad07c0791e804e423">
+        <source>No logo, the first letter of the shop name</source>
+        <target state="translated">Pas de logo, la première lettre du nom de la boutique</target>
+      </trans-unit>
+      <trans-unit id="e99ebd5a30c1f06d433e006921e2e298">
+        <source>Shown in the header of the payment page, at most 160 by 32 pixels.</source>
+        <target state="translated">Affiché dans l'en-tête de la page de paiement, 160 × 32 pixels au maximum.</target>
+      </trans-unit>
+      <trans-unit id="4848e737d173f8ea7b7d72eb47c11777">
+        <source>Logo file</source>
+        <target state="translated">Fichier du logo</target>
+      </trans-unit>
+      <trans-unit id="d6b977ec73a55705b3dbc02137e61c69">
+        <source>Path of a PNG, JPG, SVG or WebP file relative to the shop's img/ directory, e.g. "brand/logo.png". Only used with "A picture from the img/ directory".</source>
+        <target state="translated">Chemin d'un fichier PNG, JPG, SVG ou WebP relatif au répertoire img/ de la boutique, par ex. « brand/logo.png ». Utilisé uniquement avec « Une image du répertoire img/ ».</target>
+      </trans-unit>
+      <trans-unit id="b9486aa41cd280296a43874b793b71f4">
+        <source>Accent colour</source>
+        <target state="translated">Couleur d'accent</target>
+      </trans-unit>
+      <trans-unit id="38345876b0b2b8fd8e30e28fbe9503c8">
+        <source>Buttons, the countdown bar and the destination tag are drawn in this colour with white text on it, so it has to be dark enough (contrast 4.5:1). Default #1f5eff.</source>
+        <target state="translated">Les boutons, la barre de compte à rebours et le destination tag sont affichés dans cette couleur avec un texte blanc ; elle doit donc être assez foncée (contraste 4,5:1). Par défaut #1f5eff.</target>
+      </trans-unit>
+      <trans-unit id="37fa52d03e8511d035468175e84bd7db">
+        <source>Xaman API key</source>
+        <target state="translated">Clé API Xaman</target>
+      </trans-unit>
+      <trans-unit id="559670b098cc865ccc2be055efe3f4c8">
+        <source>The public API key of your Xaman developer app (apps.xaman.dev). With it, customers on a phone get an "Open in wallet app" button. Never the API secret.</source>
+        <target state="translated">La clé API publique de votre application développeur Xaman (apps.xaman.dev). Avec elle, les clients sur téléphone voient un bouton « Ouvrir dans l'application de portefeuille ». Jamais le secret API.</target>
+      </trans-unit>
+      <trans-unit id="c3ac78ad77a47f719760986c958654e9">
+        <source>WalletConnect project id</source>
+        <target state="translated">ID de projet WalletConnect</target>
+      </trans-unit>
+      <trans-unit id="dba723f42d523bedc31c1ee466bd9f16">
+        <source>The project id from cloud.walletconnect.com, if you want to offer WalletConnect wallets. Public, like the Xaman key.</source>
+        <target state="translated">L'ID de projet de cloud.walletconnect.com, si vous souhaitez proposer des portefeuilles WalletConnect. Public, comme la clé Xaman.</target>
+      </trans-unit>
+      <trans-unit id="c9cc8cce247e49bae79f15173ce97354">
+        <source>Save</source>
+        <target state="translated">Enregistrer</target>
       </trans-unit>
       <trans-unit id="63950aa871999109e98ab72e4b2f7f1f">
         <source>Receiving address</source>
@@ -44,7 +132,7 @@
       </trans-unit>
       <trans-unit id="24e2c74689dc9c7ce41e8f4e15dfd81a">
         <source>The receiving address must belong to the selected network. A mainnet address holds no funds on testnet and the other way round.</source>
-        <target state="translated">L'adresse de réception doit appartenir au réseau sélectionné. Une adresse mainnet ne détient aucun fonds sur testnet, et inversement.</target>
+        <target state="translated">L'adresse de réception doit appartenir au réseau sélectionné. Une adresse Mainnet ne détient aucun fonds sur le Testnet, et inversement.</target>
       </trans-unit>
       <trans-unit id="623a9a4ce99b5852ef3c1e09b8ac4dd1">
         <source>Accept %s</source>
@@ -70,17 +158,13 @@
         <source>XRP Ledger settings</source>
         <target state="translated">Paramètres XRP Ledger</target>
       </trans-unit>
-      <trans-unit id="c9cc8cce247e49bae79f15173ce97354">
-        <source>Save</source>
-        <target state="translated">Enregistrer</target>
-      </trans-unit>
       <trans-unit id="b70a36683e27a793f8d76faf3e9f957e">
         <source>The native asset of the XRP Ledger. Needs no trustline.</source>
         <target state="translated">L'actif natif du XRP Ledger. Ne nécessite aucune trustline.</target>
       </trans-unit>
       <trans-unit id="c870979c352522e626446da53760f035">
         <source>Your account needs a %s trustline to the issuer below before it can receive payments — without one they will fail on the ledger. The issuer is fixed and cannot be changed here. %s</source>
-        <target state="translated">Votre compte doit disposer d'une trustline %s vers l'émetteur ci-dessous avant de pouvoir recevoir des paiements — sans elle, ils échoueront sur le ledger. L'émetteur est fixe et ne peut pas être modifié ici. %s</target>
+        <target state="translated">Votre compte doit disposer d'une trustline %s vers l'émetteur ci-dessous avant de pouvoir recevoir des paiements — sans elle, ils échoueront sur le registre. L'émetteur est fixe et ne peut pas être modifié ici. %s</target>
       </trans-unit>
       <trans-unit id="bf5914f1d90be1298863aa286b6bab1b">
         <source>Payment confirmation</source>
@@ -88,55 +172,11 @@
       </trans-unit>
       <trans-unit id="b356f4f21ec4cf7684f00b2b3d24dfbc">
         <source>Call this URL from a cron job every few minutes. It confirms payments for customers who closed the payment page. Keep the token secret.</source>
-        <target state="translated">Appelez cette URL depuis une tâche cron toutes les quelques minutes. Elle confirme les paiements des clients ayant fermé la page de paiement. Gardez le token secret.</target>
+        <target state="translated">Appelez cette URL depuis une tâche cron toutes les quelques minutes. Elle confirme les paiements des clients qui ont fermé la page de paiement. Gardez le jeton secret.</target>
       </trans-unit>
       <trans-unit id="e26be2f47d89a72f288f1ebfd22cdcbe">
         <source>LedgerDirect</source>
         <target state="translated">LedgerDirect</target>
-      </trans-unit>
-      <trans-unit id="8ba44f563b2829ab670db530d325903c">
-        <source>Accept XRP, RLUSD and USDC directly on the XRP Ledger.</source>
-        <target state="translated">Acceptez XRP, RLUSD et USDC directement sur le XRP Ledger.</target>
-      </trans-unit>
-      <trans-unit id="68ebbb61167073564b61ca77dc280a60">
-        <source>XRPL payment</source>
-        <target state="translated">Paiement XRPL</target>
-      </trans-unit>
-      <trans-unit id="46a2a41cc6e552044816a2d04634545d">
-        <source>State</source>
-        <target state="translated">État</target>
-      </trans-unit>
-      <trans-unit id="fcdf8a82eba24e303b63b2e49a507ecb">
-        <source>Requested</source>
-        <target state="translated">Demandé</target>
-      </trans-unit>
-      <trans-unit id="ac5bb077c33753116b5e91ff1766e7bc">
-        <source>Received</source>
-        <target state="translated">Reçu</target>
-      </trans-unit>
-      <trans-unit id="94325723d5b29917a78736901daf7ca7">
-        <source>another currency or issuer</source>
-        <target state="translated">autre devise ou autre émetteur</target>
-      </trans-unit>
-      <trans-unit id="a860ed9926b241b7d4dca2d00610ab2c">
-        <source>Outstanding</source>
-        <target state="translated">Restant dû</target>
-      </trans-unit>
-      <trans-unit id="fac82bcd0e45d6bf7cf224ab3819fcd2">
-        <source>Destination tag</source>
-        <target state="translated">Destination tag</target>
-      </trans-unit>
-      <trans-unit id="44b9f225ed451d483a93110fad204a5c">
-        <source>Transactions on this destination tag</source>
-        <target state="translated">Transactions sur ce destination tag</target>
-      </trans-unit>
-      <trans-unit id="63bd34f1308e37824df5b8129ba1397e">
-        <source>None yet.</source>
-        <target state="translated">Aucune pour l’instant.</target>
-      </trans-unit>
-      <trans-unit id="14a94a99755c5fcd7c23335bacb4c7b8">
-        <source>no delivered amount</source>
-        <target state="translated">aucun montant livré</target>
       </trans-unit>
       <trans-unit id="e0010a0a1a3259ab5c06a19bad532851">
         <source>Paid</source>
@@ -152,7 +192,7 @@
       </trans-unit>
       <trans-unit id="be031a11e9b69da4e60ca1352c1cfeff">
         <source>Quote expired, nothing received</source>
-        <target state="translated">Devis expiré, rien reçu</target>
+        <target state="translated">Cotation expirée, rien reçu</target>
       </trans-unit>
       <trans-unit id="8b36249c00d04fa8cf0ee475d1e21078">
         <source>Waiting for payment</source>
@@ -162,13 +202,57 @@
         <source>The module's database is at version %s, its files at %s. Payments may not be confirmed until the upgrade has run: Modules → Module Manager → LedgerDirect → Upgrade.</source>
         <target state="translated">La base de données du module est en version %s, ses fichiers en %s. Les paiements risquent de ne pas être confirmés tant que la mise à jour n'a pas été effectuée : Modules → Gestionnaire de modules → LedgerDirect → Mettre à jour.</target>
       </trans-unit>
+      <trans-unit id="eaa9ab847684a20e51790dd71afa14d6">
+        <source>Choose either mainnet or testnet for Xahau.</source>
+        <target state="translated">Choisissez Mainnet ou Testnet pour Xahau.</target>
+      </trans-unit>
+      <trans-unit id="dacfdf8f6cc84822fcf0ab0bb478ecb0">
+        <source>The Xahau receiving address is not a valid account address. It starts with "r", like an XRP Ledger address.</source>
+        <target state="translated">L'adresse de réception Xahau n'est pas une adresse de compte valide. Elle commence par « r », comme une adresse XRP Ledger.</target>
+      </trans-unit>
+      <trans-unit id="bac55c3e6e628eb28e673ff698eec7a2">
+        <source>Enter a Xahau receiving address for the selected network, or do not accept XAH.</source>
+        <target state="translated">Saisissez une adresse de réception Xahau pour le réseau sélectionné, ou n'acceptez pas XAH.</target>
+      </trans-unit>
+      <trans-unit id="98189805c3abfc60b53ad19fdef4b286">
+        <source>Xahau settings</source>
+        <target state="translated">Paramètres Xahau</target>
+      </trans-unit>
+      <trans-unit id="3adea09ab8ca16476231995d7b769023">
+        <source>Xahau is a network of its own that speaks the XRP Ledger's protocol: payments in XAH, by destination tag, to an account of the same form. Use an account that receives on Xahau alone, not one that also receives on the XRP Ledger.</source>
+        <target state="translated">Xahau est un réseau à part entière qui utilise le protocole du XRP Ledger : paiements en XAH, par destination tag, vers un compte de même format. Utilisez un compte qui reçoit uniquement sur Xahau, et non un compte qui reçoit aussi sur le XRP Ledger.</target>
+      </trans-unit>
+      <trans-unit id="6cd2967fb4264de13c2ee470fd3f64d4">
+        <source>Receiving address (testnet)</source>
+        <target state="translated">Adresse de réception (Testnet)</target>
+      </trans-unit>
+      <trans-unit id="9074a258f7804ffcdd69010c042eb45e">
+        <source>Receiving address (mainnet)</source>
+        <target state="translated">Adresse de réception (Mainnet)</target>
+      </trans-unit>
+      <trans-unit id="e6bbeb2d0fb51ce32a8c78f8db9a5033">
+        <source>The native asset of Xahau. Needs no trustline. Priced from Coingecko and Bitrue.</source>
+        <target state="translated">L'actif natif de Xahau. Ne nécessite aucune trustline. Prix issu de Coingecko et Bitrue.</target>
+      </trans-unit>
+      <trans-unit id="71656044189175604d1e50a70bf80247">
+        <source>Xahau payment</source>
+        <target state="translated">Paiement Xahau</target>
+      </trans-unit>
+      <trans-unit id="9827c095c753bb349a61863b92571025">
+        <source>Accept XRP, RLUSD and USDC directly on the XRP Ledger, and XAH on Xahau.</source>
+        <target state="translated">Acceptez XRP, RLUSD et USDC directement sur le XRP Ledger, et XAH sur Xahau.</target>
+      </trans-unit>
+      <trans-unit id="960e7a19e3c24fd227f36ffb2c0c5152">
+        <source>The Xahau receiving address %s is also the XRP Ledger's. The two are different accounts on different chains; use one account per chain.</source>
+        <target state="translated">L'adresse de réception Xahau %s est aussi celle du XRP Ledger. Ce sont deux comptes différents sur des blockchains différentes ; utilisez un compte par blockchain.</target>
+      </trans-unit>
       <trans-unit id="9dce5dd543d4d66c22fc4d120de59f78">
         <source>Receiving account on %s</source>
         <target state="translated">Compte de réception sur %s</target>
       </trans-unit>
       <trans-unit id="604278e1ed518d94a598e2fef79367f0">
         <source>Checked on the ledger: %s on the %s.</source>
-        <target state="translated">Vérifié sur le ledger : %s sur le %s.</target>
+        <target state="translated">Vérifié sur le registre : %s sur le %s.</target>
       </trans-unit>
       <trans-unit id="181f21f46941f4e20a1f87ba582bc18c">
         <source>The receiving account can take every asset that is switched on.</source>
@@ -176,11 +260,11 @@
       </trans-unit>
       <trans-unit id="204a6e7cac563b137ab3fd40b58b3e89">
         <source>The account is not activated yet. A first payment of at least %s %s activates it; until then the checkout offers %s only for orders of at least that amount, and no tokens.</source>
-        <target state="translated">Le compte n'est pas encore activé. Un premier paiement d'au moins %s %s l'active ; d'ici là, le paiement propose %s uniquement pour les commandes d'au moins ce montant, et aucun jeton.</target>
+        <target state="translated">Le compte n'est pas encore activé. Un premier paiement d'au moins %s %s l'active ; d'ici là, %s n'est proposé au paiement que pour les commandes d'au moins ce montant, et aucun jeton.</target>
       </trans-unit>
       <trans-unit id="ea32f581f8ff122e625e7fc554c522eb">
         <source>Deposit authorization is set on the account: only senders you authorized can pay. The payment methods stay in the checkout.</source>
-        <target state="translated">L'autorisation de dépôt est activée sur le compte : seuls les expéditeurs que vous avez autorisés peuvent payer. Les moyens de paiement restent proposés.</target>
+        <target state="translated">Deposit Authorization est activé sur le compte : seuls les expéditeurs que vous avez autorisés peuvent payer. Les moyens de paiement restent proposés au paiement.</target>
       </trans-unit>
       <trans-unit id="b173929f449464c4dc4db719e1b0fc11">
         <source>%s is not offered in the checkout: the account has no trustline to the issuer %s.</source>
@@ -204,7 +288,47 @@
       </trans-unit>
       <trans-unit id="87f3670e2dd9e16dc110cd1af08c8147">
         <source>The ledger could not be asked just now. Until it can, tokens are not offered; %s is.</source>
-        <target state="translated">Le ledger n'a pas pu être interrogé pour le moment. D'ici là, aucun jeton n'est proposé ; %s l'est.</target>
+        <target state="translated">Le registre n'a pas pu être interrogé pour le moment. D'ici là, aucun jeton n'est proposé ; %s l'est.</target>
+      </trans-unit>
+      <trans-unit id="68ebbb61167073564b61ca77dc280a60">
+        <source>XRPL payment</source>
+        <target state="translated">Paiement XRPL</target>
+      </trans-unit>
+      <trans-unit id="46a2a41cc6e552044816a2d04634545d">
+        <source>State</source>
+        <target state="translated">État</target>
+      </trans-unit>
+      <trans-unit id="fcdf8a82eba24e303b63b2e49a507ecb">
+        <source>Requested</source>
+        <target state="translated">Demandé</target>
+      </trans-unit>
+      <trans-unit id="ac5bb077c33753116b5e91ff1766e7bc">
+        <source>Received</source>
+        <target state="translated">Reçu</target>
+      </trans-unit>
+      <trans-unit id="94325723d5b29917a78736901daf7ca7">
+        <source>another currency or issuer</source>
+        <target state="translated">autre devise ou autre émetteur</target>
+      </trans-unit>
+      <trans-unit id="a860ed9926b241b7d4dca2d00610ab2c">
+        <source>Outstanding</source>
+        <target state="translated">Montant restant dû</target>
+      </trans-unit>
+      <trans-unit id="fac82bcd0e45d6bf7cf224ab3819fcd2">
+        <source>Destination tag</source>
+        <target state="translated">Destination tag</target>
+      </trans-unit>
+      <trans-unit id="44b9f225ed451d483a93110fad204a5c">
+        <source>Transactions on this destination tag</source>
+        <target state="translated">Transactions sur ce destination tag</target>
+      </trans-unit>
+      <trans-unit id="63bd34f1308e37824df5b8129ba1397e">
+        <source>None yet.</source>
+        <target state="translated">Aucune pour l'instant.</target>
+      </trans-unit>
+      <trans-unit id="14a94a99755c5fcd7c23335bacb4c7b8">
+        <source>no delivered amount</source>
+        <target state="translated">aucun montant livré</target>
       </trans-unit>
     </body>
   </file>
