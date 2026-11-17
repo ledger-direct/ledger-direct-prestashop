@@ -17,12 +17,16 @@ declare(strict_types=1);
 namespace LedgerDirect\Admin;
 
 use Configuration;
+use Hardcastle\LedgerDirect\Core\Account\Assessment;
+use Hardcastle\LedgerDirect\Core\Account\Finding;
 use Hardcastle\LedgerDirect\Core\ChainCatalog;
 use Hardcastle\LedgerDirect\Core\Presentation\AccentColor;
 use Hardcastle\LedgerDirect\Core\Xrpl\StablecoinRegistry;
+use LedgerDirect\Chain\SupportedChains;
 use LedgerDirect\Install\PendingUpgrade;
 use LedgerDirect\Port\PrestaShopConfigProvider;
 use LedgerDirect\Presentation\PageLogo;
+use LedgerDirect\Service\ServiceFactory;
 use LedgerDirect\Validation\XrplAddress;
 use Module;
 use PrestaShopBundle\Translation\TranslatorInterface;
@@ -83,7 +87,78 @@ final class ConfigurationForm
             }
         }
 
-        return $output . $this->renderCronPanel() . $this->renderForm();
+        return $output . $this->renderAccountChecks() . $this->renderCronPanel() . $this->renderForm();
+    }
+
+    /**
+     * One panel per chain with a saved receiving account: what stands in a customer's way
+     * (core 0.12, INVARIANTS.md "Receiving account"). The settings stay as they are — an asset
+     * without a trustline remains switchable; the checkout leaves it out until the account can
+     * take it, and this panel says why. Read afresh from the ledger on every visit, so the
+     * result of a save shows at once.
+     */
+    private function renderAccountChecks(): string
+    {
+        $services = ServiceFactory::getInstance();
+        $config = $services->getConfigProvider();
+        $html = '';
+
+        foreach (SupportedChains::chains() as $chain) {
+            $account = $config->getDestinationAccount($chain);
+            if ($account === '') {
+                continue;
+            }
+
+            $network = $config->getNetwork($chain);
+            $assets = [];
+            foreach (SupportedChains::descriptor($chain)->assets as $asset) {
+                if ($config->isAssetEnabled($chain, $asset->code)) {
+                    $assets[] = $asset->code;
+                }
+            }
+
+            $assessment = $services->getAccountInspector($chain)->assess($account, $network, $assets);
+            $html .= $this->renderAssessment(SupportedChains::descriptor($chain)->label, SupportedChains::descriptor($chain)->nativeAsset, $assessment);
+        }
+
+        return $html;
+    }
+
+    private function renderAssessment(string $chainLabel, string $native, Assessment $assessment): string
+    {
+        $esc = static fn (string $text): string => htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+        $html = '<div class="panel ledgerdirect-account-check">'
+            . '<div class="panel-heading">' . $esc($this->translator()->trans('Receiving account on %s', [$chainLabel], self::DOMAIN)) . '</div>'
+            . '<p>' . $esc($this->translator()->trans('Checked on the ledger: %s on the %s.', [$assessment->account, $assessment->network], self::DOMAIN)) . '</p>';
+
+        if ($assessment->isClean()) {
+            return $html . '<div class="alert alert-success">' . $esc($this->translator()->trans('The receiving account can take every asset that is switched on.', [], self::DOMAIN)) . '</div></div>';
+        }
+
+        foreach ($assessment->findings as $finding) {
+            $class = $finding->blocksOffer || $finding->code === Finding::ACCOUNT_MISSING ? 'alert-warning' : 'alert-info';
+            $html .= '<div class="alert ' . $class . '">' . $esc($this->findingText($finding, $native)) . '</div>';
+        }
+
+        return $html . '</div>';
+    }
+
+    private function findingText(Finding $finding, string $native): string
+    {
+        $asset = (string) $finding->asset;
+        $issuer = $finding->context['issuer'] ?? '';
+
+        return match ($finding->code) {
+            Finding::ACCOUNT_MISSING => $this->translator()->trans('The account is not activated yet. A first payment of at least %s %s activates it; until then the checkout offers %s only for orders of at least that amount, and no tokens.', [$finding->context['reserve'] ?? '', $native, $native], self::DOMAIN),
+            Finding::DEPOSIT_AUTH => $this->translator()->trans('Deposit authorization is set on the account: only senders you authorized can pay. The payment methods stay in the checkout.', [], self::DOMAIN),
+            Finding::TRUSTLINE_MISSING => $this->translator()->trans('%s is not offered in the checkout: the account has no trustline to the issuer %s.', [$asset, $issuer], self::DOMAIN),
+            Finding::TRUSTLINE_NOT_AUTHORIZED => $this->translator()->trans('%s is not offered in the checkout: the issuer %s has not authorized the trustline.', [$asset, $issuer], self::DOMAIN),
+            Finding::TRUSTLINE_FROZEN => $this->translator()->trans('%s is not offered in the checkout: the trustline is frozen.', [$asset], self::DOMAIN),
+            Finding::TRUSTLINE_FULL => $this->translator()->trans('%s is not offered in the checkout: the trustline has reached its limit.', [$asset], self::DOMAIN),
+            Finding::ISSUER_FROZEN => $this->translator()->trans('%s is not offered in the checkout: the issuer %s has frozen all its trustlines.', [$asset, $issuer], self::DOMAIN),
+            Finding::NOT_CHECKED => $this->translator()->trans('The ledger could not be asked just now. Until it can, tokens are not offered; %s is.', [$native], self::DOMAIN),
+            default => $finding->code,
+        };
     }
 
     /**

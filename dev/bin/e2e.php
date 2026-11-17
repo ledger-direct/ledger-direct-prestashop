@@ -107,6 +107,46 @@ function ensureTestProduct(): int
     return (int) $product->id;
 }
 
+/**
+ * A cart as a customer has it at checkout: the demo customer's address, the test article
+ * (or --product) times --quantity, the default language and currency. Sets the context's
+ * customer, language, currency and cart, as the checkout does.
+ *
+ * @param array<string, string> $args
+ */
+function checkoutCart(array $args): Cart
+{
+    $customerId = (int) ($args['customer'] ?? 2);
+    $productId = (int) ($args['product'] ?? ensureTestProduct());
+    $quantity = (int) ($args['quantity'] ?? 1);
+
+    $context = Context::getContext();
+    $customer = new Customer($customerId);
+    if (!Validate::isLoadedObject($customer)) {
+        fail("customer {$customerId} not found");
+    }
+    $addressId = (int) db()->getValue('SELECT id_address FROM ' . _DB_PREFIX_ . 'address WHERE id_customer = ' . $customerId . ' AND deleted = 0');
+    $context->customer = $customer;
+    $context->language = new Language((int) Configuration::get('PS_LANG_DEFAULT'));
+    $context->currency = new Currency((int) Configuration::get('PS_CURRENCY_DEFAULT'));
+
+    $cart = new Cart();
+    $cart->id_customer = $customerId;
+    $cart->id_address_delivery = $addressId;
+    $cart->id_address_invoice = $addressId;
+    $cart->id_lang = (int) $context->language->id;
+    $cart->id_currency = (int) $context->currency->id;
+    $cart->id_carrier = (int) ($args['carrier'] ?? 2);
+    $cart->secure_key = $customer->secure_key;
+    $cart->add();
+    $context->cart = $cart;
+    $cart->updateQty($quantity, $productId);
+    $cart = new Cart((int) $cart->id);
+    $context->cart = $cart;
+
+    return $cart;
+}
+
 switch ($command) {
     case 'configure':
         // The shop's receiving account for this run, plus network and assets, on the chain
@@ -141,33 +181,9 @@ switch ($command) {
         // validation controller takes, minus the browser.
         $asset = $args['asset'] ?? 'XRP';
         $chain = strtoupper((string) ($args['chain'] ?? PrestaShopConfigProvider::CHAIN_XRPL));
-        $customerId = (int) ($args['customer'] ?? 2);
-        $productId = (int) ($args['product'] ?? ensureTestProduct());
-        $quantity = (int) ($args['quantity'] ?? 1);
-
+        $cart = checkoutCart($args);
         $context = Context::getContext();
-        $customer = new Customer($customerId);
-        if (!Validate::isLoadedObject($customer)) {
-            fail("customer {$customerId} not found");
-        }
-        $addressId = (int) db()->getValue('SELECT id_address FROM ' . _DB_PREFIX_ . 'address WHERE id_customer = ' . $customerId . ' AND deleted = 0');
-        $context->customer = $customer;
-        $context->language = new Language((int) Configuration::get('PS_LANG_DEFAULT'));
-        $context->currency = new Currency((int) Configuration::get('PS_CURRENCY_DEFAULT'));
-
-        $cart = new Cart();
-        $cart->id_customer = $customerId;
-        $cart->id_address_delivery = $addressId;
-        $cart->id_address_invoice = $addressId;
-        $cart->id_lang = (int) $context->language->id;
-        $cart->id_currency = (int) $context->currency->id;
-        $cart->id_carrier = (int) ($args['carrier'] ?? 2);
-        $cart->secure_key = $customer->secure_key;
-        $cart->add();
-        $context->cart = $cart;
-        $cart->updateQty($quantity, $productId);
-        $cart = new Cart((int) $cart->id);
-        $context->cart = $cart;
+        $customer = $context->customer;
 
         $total = (float) $cart->getOrderTotal(true, Cart::BOTH);
         $services = ServiceFactory::getInstance();
@@ -292,6 +308,46 @@ switch ($command) {
         emit(['hashes' => array_map(static fn ($transaction): string => $transaction->hash, $transactions)]);
 
         // no break
+    case 'payment-options':
+        // PS-13…15: what the checkout offers for a cart of the test article — the module's own
+        // hookPaymentOptions(), as the checkout calls it, read back from each option's action
+        // URL. The cart is deleted afterwards; no order, no destination tag.
+        $cart = checkoutCart($args);
+        $options = Module::getInstanceByName('ledgerdirect')->hookPaymentOptions(['cart' => $cart]);
+        $offered = [];
+        foreach ($options as $option) {
+            parse_str((string) parse_url((string) $option->getAction(), PHP_URL_QUERY), $query);
+            $offered[] = ['chain' => (string) ($query['ld_chain'] ?? ''), 'asset' => (string) ($query['ld_asset'] ?? '')];
+        }
+        $total = (float) $cart->getOrderTotal(true, Cart::BOTH);
+        $cart->delete();
+        emit(['total' => $total, 'currency' => Context::getContext()->currency->iso_code, 'offered' => $offered]);
+
+        // no break
+    case 'account-check':
+        // PS-13…15: what the settings screen says about the chain's saved receiving account
+        // (ConfigurationForm::renderAccountChecks()), as data.
+        $chain = strtoupper((string) ($args['chain'] ?? PrestaShopConfigProvider::CHAIN_XRPL));
+        $services = ServiceFactory::getInstance();
+        $config = $services->getConfigProvider();
+        $account = $config->getDestinationAccount($chain);
+        $network = $config->getNetwork($chain);
+        if ($account === '') {
+            emit(['chain' => $chain, 'network' => $network, 'account' => null, 'findings' => []]);
+        }
+        $assets = [];
+        foreach (SupportedChains::descriptor($chain)->assets as $asset) {
+            if ($config->isAssetEnabled($chain, $asset->code)) {
+                $assets[] = $asset->code;
+            }
+        }
+        $assessment = $services->getAccountInspector($chain)->assess($account, $network, $assets);
+        emit(['chain' => $chain, 'network' => $network, 'account' => $account, 'findings' => array_map(
+            static fn ($finding): array => ['code' => $finding->code, 'asset' => $finding->asset, 'blocksOffer' => $finding->blocksOffer, 'context' => $finding->context],
+            $assessment->findings
+        )]);
+
+        // no break
     default:
-        emit(['commands' => ['configure', 'create-order', 'find-products', 'order-state', 'sync-marker', 'close-order', 'transactions']]);
+        emit(['commands' => ['configure', 'create-order', 'find-products', 'order-state', 'sync-marker', 'close-order', 'transactions', 'payment-options', 'account-check']]);
 }

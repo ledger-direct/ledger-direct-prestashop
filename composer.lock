@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3deb5bd1dbf643b9aeb83ae60860e819",
+    "content-hash": "3b8c106d267876c8b9f2efa57ac03e8f",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -63,25 +63,25 @@
         },
         {
             "name": "brick/math",
-            "version": "0.12.3",
+            "version": "1.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/brick/math.git",
-                "reference": "866551da34e9a618e64a819ee1e01c20d8a588ba"
+                "reference": "2effe05d2177c451b86c6a073196a4034c02f211"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/brick/math/zipball/866551da34e9a618e64a819ee1e01c20d8a588ba",
-                "reference": "866551da34e9a618e64a819ee1e01c20d8a588ba",
+                "url": "https://api.github.com/repos/brick/math/zipball/2effe05d2177c451b86c6a073196a4034c02f211",
+                "reference": "2effe05d2177c451b86c6a073196a4034c02f211",
                 "shasum": ""
             },
             "require": {
-                "php": "^8.1"
+                "php": "^8.2"
             },
             "require-dev": {
-                "php-coveralls/php-coveralls": "^2.2",
-                "phpunit/phpunit": "^10.1",
-                "vimeo/psalm": "6.8.8"
+                "phpstan/phpstan": "2.2.13",
+                "phpstan/phpstan-phpunit": "2.0.18",
+                "phpunit/phpunit": "^11.5"
             },
             "type": "library",
             "autoload": {
@@ -111,7 +111,7 @@
             ],
             "support": {
                 "issues": "https://github.com/brick/math/issues",
-                "source": "https://github.com/brick/math/tree/0.12.3"
+                "source": "https://github.com/brick/math/tree/1.0.0"
             },
             "funding": [
                 {
@@ -119,7 +119,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-02-28T13:11:00+00:00"
+            "time": "2026-09-12T10:28:18+00:00"
         },
         {
             "name": "dasprid/enum",
@@ -504,16 +504,16 @@
         },
         {
             "name": "hardcastle/ledger-direct-core",
-            "version": "0.11.3",
+            "version": "0.12.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ledger-direct/ledger-direct-core-php.git",
-                "reference": "ed13a11c173507d7fa2216f99204aa586aa734b2"
+                "reference": "cdd0110e69b26c7aaba0c8736d4992fe906f7774"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ledger-direct/ledger-direct-core-php/zipball/ed13a11c173507d7fa2216f99204aa586aa734b2",
-                "reference": "ed13a11c173507d7fa2216f99204aa586aa734b2",
+                "url": "https://api.github.com/repos/ledger-direct/ledger-direct-core-php/zipball/cdd0110e69b26c7aaba0c8736d4992fe906f7774",
+                "reference": "cdd0110e69b26c7aaba0c8736d4992fe906f7774",
                 "shasum": ""
             },
             "require": {
@@ -552,9 +552,9 @@
             "description": "LedgerDirect Core - platform-agnostic XRPL/commerce logic shared across all LedgerDirect plugins",
             "support": {
                 "issues": "https://github.com/ledger-direct/ledger-direct-core-php/issues",
-                "source": "https://github.com/ledger-direct/ledger-direct-core-php/tree/0.11.3"
+                "source": "https://github.com/ledger-direct/ledger-direct-core-php/tree/0.12.0"
             },
-            "time": "2026-11-12T18:49:47+00:00"
+            "time": "2026-11-17T13:29:59+00:00"
         },
         {
             "name": "psr/clock",

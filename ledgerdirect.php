@@ -129,10 +129,20 @@ class Ledgerdirect extends PaymentModule
 
                 // The amount as the core states it — a plain decimal, not rounded a
                 // second time here; the payment page shows the same number.
+                $amount = PaymentIntentPresenter::plainAmount($quote->amountRequested);
+
+                // An asset the receiving account cannot take is not offered: no trustline,
+                // a full or frozen one, or an unactivated account and an amount below the
+                // base reserve (INVARIANTS.md, "Receiving account"). The amount is known
+                // here, so both are checked exactly. The settings screen says what is missing.
+                if (!$services->getAccountInspector($chain)->offers($configProvider->getDestinationAccount($chain), $asset->code, $network, $amount)) {
+                    continue;
+                }
+
                 $this->smarty->assign([
                     'ld_chain' => $chain,
                     'ld_asset' => $asset->code,
-                    'ld_amount' => PaymentIntentPresenter::plainAmount($quote->amountRequested),
+                    'ld_amount' => $amount,
                     'ld_network' => $network,
                     'ld_is_testnet' => $network === PrestaShopConfigProvider::NETWORK_TESTNET,
                 ]);
