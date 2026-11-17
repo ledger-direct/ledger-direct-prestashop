@@ -39,8 +39,12 @@ require_once dirname(__DIR__) . '/vendor/autoload.php';
 // checking, so the unit suite's definition must not come first. A test that
 // runs in a separate process gets no command line, only the environment, so
 // the suite is passed on there.
-if (preg_grep('/integration/', $_SERVER['argv'] ?? []) !== []) {
-    putenv('LEDGERDIRECT_TEST_SUITE=integration');
+$arguments = $_SERVER['argv'] ?? [];
+foreach ($arguments as $i => $argument) {
+    $suites = $argument === '--testsuite' ? ($arguments[$i + 1] ?? '') : (str_starts_with($argument, '--testsuite=') ? substr($argument, 12) : '');
+    if (in_array('integration', explode(',', $suites), true)) {
+        putenv('LEDGERDIRECT_TEST_SUITE=integration');
+    }
 }
 if (getenv('LEDGERDIRECT_TEST_SUITE') === 'integration') {
     $config = '/var/www/html/config/config.inc.php';
