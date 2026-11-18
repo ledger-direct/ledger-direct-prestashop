@@ -1,7 +1,14 @@
 # Changelog
 
-## Unreleased
+## 0.7.0
 
+- Needs `hardcastle/ledger-direct-core` 0.12.0. The checkout offers only what the receiving account
+  can take, checked with the quoted amount. A token the account cannot receive (no trust line,
+  frozen, full) is not offered, and neither is XRP or XAH for an account that is not activated when
+  the order is below the base reserve. So no order exists that nobody can pay
+- The settings screen shows, per chain with a saved receiving account, what stands in a customer's
+  way: a missing trust line per token, an account that is not activated, deposit authorization, an
+  unreachable ledger. The settings stay as they are
 - Meets the PrestaShop Addons technical standards:
   - The module declares PrestaShop 9.0.0 up to 9.99.99. Before, it named 8.0.0 as the lowest
     version, which it cannot run on, and the running shop's own version as the highest
@@ -19,6 +26,7 @@
   placeholders and tags, and not left in English
 - The order panel names a native amount with the order's chain: XAH for a Xahau order. It printed
   XRP for every chain
+- `config.xml` names Xahau in the module description, as the module itself has since 0.6.0
 
 ## 0.6.3
 

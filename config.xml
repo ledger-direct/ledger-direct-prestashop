@@ -2,8 +2,8 @@
 <module>
     <name>ledgerdirect</name>
     <displayName><![CDATA[LedgerDirect]]></displayName>
-    <version><![CDATA[0.6.3]]></version>
-    <description><![CDATA[Accept XRP, RLUSD and USDC directly on the XRP Ledger.]]></description>
+    <version><![CDATA[0.7.0]]></version>
+    <description><![CDATA[Accept XRP, RLUSD and USDC directly on the XRP Ledger, and XAH on Xahau.]]></description>
     <author><![CDATA[Hardcastle]]></author>
     <tab><![CDATA[payments_gateways]]></tab>
     <is_configurable>1</is_configurable>
