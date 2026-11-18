@@ -16,6 +16,7 @@ declare(strict_types=1);
 
 namespace LedgerDirect\Admin;
 
+use Hardcastle\LedgerDirect\Core\ChainCatalog;
 use Hardcastle\LedgerDirect\Core\Payment\PaymentStatus;
 use Hardcastle\LedgerDirect\Core\Xrpl\XrplTransaction;
 use LedgerDirect\Install\PendingUpgrade;
@@ -88,7 +89,7 @@ final class OrderPanel
         $transactions = [];
         try {
             foreach ($services->getSyncService($paymentIntent->chain)->findTransactions($paymentIntent->destinationAccount, $paymentIntent->destinationTag) as $transaction) {
-                $transactions[] = $this->presentTransaction($transaction);
+                $transactions[] = self::presentTransaction($transaction, $paymentIntent->chain);
             }
         } catch (\Throwable $exception) {
             // The panel still shows the intent; the list is a bonus.
@@ -110,9 +111,17 @@ final class OrderPanel
     }
 
     /**
-     * @return array{hash: string, delivered: string|null, is_issued: bool, date: string}
+     * One transaction on the order's destination tag, as the panel lists it.
+     *
+     * A native amount is a bare number on the ledger; the panel names it with
+     * the chain's own asset — XAH on Xahau, XRP on the XRP Ledger. Issued
+     * currencies carry their code as a 40-hex string on the ledger (e.g.
+     * RLUSD); the merchant reads the asset from the state label and the
+     * request, not from that, so they stay unnamed.
+     *
+     * @return array{hash: string, delivered: string|null, native_asset: string|null, date: string}
      */
-    private function presentTransaction(XrplTransaction $transaction): array
+    public static function presentTransaction(XrplTransaction $transaction, string $chain): array
     {
         try {
             $delivered = $transaction->getDeliveredAmount();
@@ -123,10 +132,7 @@ final class OrderPanel
         return [
             'hash' => $transaction->hash,
             'delivered' => $delivered === null ? null : PaymentIntentPresenter::plainAmount($delivered),
-            // Issued currencies carry their code as a 40-hex string on the
-            // ledger (e.g. RLUSD); the merchant reads the asset from the state
-            // label and the request, not from that.
-            'is_issued' => is_array($delivered),
+            'native_asset' => $delivered === null || is_array($delivered) ? null : ChainCatalog::chain($chain)->nativeAsset,
             'date' => date('Y-m-d H:i:s', self::RIPPLE_EPOCH_OFFSET + $transaction->date),
         ];
     }

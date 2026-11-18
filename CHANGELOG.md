@@ -17,6 +17,8 @@
 - The two order states get their names in all six languages on install, not only in German
 - A unit test checks every text in the code against every catalogue: present, not empty, the same
   placeholders and tags, and not left in English
+- The order panel names a native amount with the order's chain: XAH for a Xahau order. It printed
+  XRP for every chain
 
 ## 0.6.3
 

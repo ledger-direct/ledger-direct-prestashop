@@ -59,7 +59,7 @@
             {if $tx.delivered === null}
               <span class="text-muted">{l s='no delivered amount' d='Modules.Ledgerdirect.Admin'}</span>
             {else}
-              {$tx.delivered|escape:'html':'UTF-8'}{if !$tx.is_issued} XRP{/if}
+              {$tx.delivered|escape:'html':'UTF-8'}{if $tx.native_asset} {$tx.native_asset|escape:'html':'UTF-8'}{/if}
             {/if}
             <span class="text-muted">{$tx.date|escape:'html':'UTF-8'}</span>
           </li>
