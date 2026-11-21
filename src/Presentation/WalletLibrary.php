@@ -45,9 +45,24 @@ final class WalletLibrary
     public static function url(string $moduleUri, string $moduleDir): string
     {
         $url = $moduleUri . self::DIRECTORY . 'wallets.js';
+        $version = self::version($moduleDir);
+
+        return $version === null ? $url : $url . '?v=' . rawurlencode($version);
+    }
+
+    /**
+     * The package tag from VERSION, or null without a readable one. The page
+     * script and the stylesheet carry it too, through the asset manager's
+     * `version` option: their URLs would otherwise stay the same across an
+     * update, and a browser could keep running the cached script.
+     *
+     * @param string $moduleDir the module's directory, with a trailing slash (Module::getLocalPath())
+     */
+    public static function version(string $moduleDir): ?string
+    {
         $versionFile = $moduleDir . self::DIRECTORY . 'VERSION';
         $version = is_file($versionFile) ? trim((string) file_get_contents($versionFile)) : '';
 
-        return $version === '' ? $url : $url . '?v=' . rawurlencode($version);
+        return $version === '' ? null : $version;
     }
 }
