@@ -97,16 +97,23 @@ class LedgerdirectPaymentModuleFrontController extends ModuleFrontController
     public function setMedia()
     {
         $result = parent::setMedia();
+        // The package tag versions both URLs, so an update reaches a browser that cached the old files.
+        $version = WalletLibrary::version($this->module->getLocalPath());
 
+        // Both stay out of the theme's "combine, compress and cache" bundles (CccReducer takes only
+        // media "all" and scripts without an attribute). A bundle is named after its files' paths,
+        // not their content or this version, and a module upgrade does not clear it (only
+        // Media::clearCache() does): combined, the page would keep running the old package after an
+        // update until the merchant clears the cache by hand.
         $this->registerStylesheet(
             'ledgerdirect-payment-ui',
             'modules/' . $this->module->name . '/views/css/payment-page.css',
-            ['media' => 'all', 'priority' => 200]
+            ['media' => 'screen', 'priority' => 200, 'version' => $version]
         );
         $this->registerJavascript(
             'ledgerdirect-payment-ui',
             'modules/' . $this->module->name . '/views/js/ledger-direct-payment-ui/payment-page.js',
-            ['position' => 'bottom', 'priority' => 200]
+            ['position' => 'bottom', 'priority' => 200, 'attributes' => 'defer', 'version' => $version]
         );
 
         return $result;

@@ -98,7 +98,48 @@ final class PaymentPageTest extends IntegrationTestCase
         self::assertStringContainsString('data-ld-tag data-value="' . $this->destinationTag() . '"', $html);
         self::assertStringContainsString('data-ld-payment-uri="https://xrplf.org//send?to=' . self::DESTINATION . '&amp;dt=' . $this->destinationTag() . '&amp;amount=15.06378&amp;network=TESTNET"', $html);
         self::assertMatchesRegularExpression('~data-ld-poll-url="[^"]*module/ledgerdirect/poll[^"]*"~', $html);
-        self::assertStringContainsString('data-ld-wallets-src="/modules/ledgerdirect/views/js/ledger-direct-payment-ui/wallets.js?v=0.4.0"', $html);
+        $version = trim((string) file_get_contents(_PS_MODULE_DIR_ . 'ledgerdirect/views/js/ledger-direct-payment-ui/VERSION'));
+        self::assertStringContainsString('data-ld-wallets-src="/modules/ledgerdirect/views/js/ledger-direct-payment-ui/wallets.js?v=' . $version . '"', $html);
+    }
+
+    /**
+     * The page script and the stylesheet carry the package tag, so a browser
+     * that cached them before an update fetches the new files - with the
+     * theme's "combine, compress and cache" on as well as off. Combined into a
+     * theme bundle, whose name does not change with their content, an update
+     * would not reach the page until the cache was cleared by hand.
+     */
+    public function testThePageScriptAndStylesheetCarryThePackageVersionWithOrWithoutCcc(): void
+    {
+        $version = trim((string) file_get_contents(_PS_MODULE_DIR_ . 'ledgerdirect/views/js/ledger-direct-payment-ui/VERSION'));
+        $previous = [
+            'PS_JS_THEME_CACHE' => \Configuration::get('PS_JS_THEME_CACHE'),
+            'PS_CSS_THEME_CACHE' => \Configuration::get('PS_CSS_THEME_CACHE'),
+        ];
+
+        try {
+            foreach (['1', '0'] as $ccc) {
+                \Configuration::updateValue('PS_JS_THEME_CACHE', $ccc);
+                \Configuration::updateValue('PS_CSS_THEME_CACHE', $ccc);
+
+                [, $html] = $this->fetchPage();
+
+                self::assertMatchesRegularExpression(
+                    '~<script[^>]+src="[^"]*views/js/ledger-direct-payment-ui/payment-page\.js\?' . preg_quote($version, '~') . '"~',
+                    $html,
+                    'the page script, CCC ' . $ccc
+                );
+                self::assertMatchesRegularExpression(
+                    '~<link[^>]+href="[^"]*views/css/payment-page\.css\?' . preg_quote($version, '~') . '"~',
+                    $html,
+                    'the stylesheet, CCC ' . $ccc
+                );
+            }
+        } finally {
+            foreach ($previous as $key => $value) {
+                \Configuration::updateValue($key, $value);
+            }
+        }
     }
 
     public function testThePageShowsTheAmountExactlyAsTheCoreStatesIt(): void

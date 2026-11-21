@@ -37,6 +37,15 @@ final class WalletLibraryTest extends TestCase
         );
     }
 
+    public function testTheVersionIsTheTagFromTheVersionFile(): void
+    {
+        $moduleDir = dirname(__DIR__, 2) . '/';
+        $version = trim((string) file_get_contents($moduleDir . 'views/js/ledger-direct-payment-ui/VERSION'));
+
+        self::assertSame($version, WalletLibrary::version($moduleDir));
+        self::assertNull(WalletLibrary::version(sys_get_temp_dir() . '/ledgerdirect-no-such-module/'));
+    }
+
     public function testWithoutAVersionFileTheUrlStaysPlain(): void
     {
         self::assertSame(
