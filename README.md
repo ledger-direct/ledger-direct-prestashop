@@ -175,7 +175,7 @@ page, so the theme's `<head>` and stylesheets stay and its header, footer and co
 Behaviour and design come from [`@ledger-direct/payment-ui`](https://github.com/ledger-direct/ledger-direct-payment-ui),
 the package every LedgerDirect plugin shares: the five payment states, the countdown, polling,
 copy buttons, the QR code with address, destination tag and amount, and browser wallets over
-XRPL Connect (Crossmark, GemWallet, MetaMask Snap, Ledger, Otsu, Xyra; Xaman and WalletConnect
+XRPL Connect (Crossmark, GemWallet, MetaMask Snap, Ledger, Otsu, Xyra, and Joey through the package's own adapter; Xaman and WalletConnect
 with the identifiers above). The module has no build step: it copies the package's built files
 into `views/`.
 
