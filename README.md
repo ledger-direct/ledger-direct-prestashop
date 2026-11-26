@@ -143,7 +143,7 @@ Modules → LedgerDirect → Configure:
 | Quote validity | How long a quoted amount stays fixed, 60–3600 seconds. |
 | Logo | What the payment page shows in its header: the shop logo, a picture from the shop's `img/` directory (a path relative to it, e.g. `brand/logo.png`), or the first letter of the shop name. |
 | Accent colour | The one colour of the payment page — buttons, countdown bar, destination tag — with white text on it, so it must be dark enough (contrast 4.5:1). Default `#1f5eff`. |
-| Xaman API key, WalletConnect project id | Public identifiers, optional. With the Xaman key, customers on a phone get an "Open in wallet app" button. With the WalletConnect project id, every customer gets a "Pay with a wallet app (WalletConnect)" button: it shows a code to scan with a wallet app such as Joey Wallet, and the app is told the shop's name and favicon. |
+| Xaman API key, WalletConnect project id | Public identifiers, optional. With the Xaman key, customers on a phone get an "Open in wallet app" button. With the WalletConnect project id, every customer paying on the XRP Ledger gets a "Pay with a wallet app (WalletConnect)" button (the wallet section is the XRP Ledger's: none on Xahau, and none once the amount has expired): it shows a code to scan with a wallet app such as Joey Wallet, and the app is told the shop's name and favicon. |
 
 Issuer addresses are shown on that screen but cannot be edited. They are fixed in the core: a wrong
 issuer would send customer funds to a dead trustline.
