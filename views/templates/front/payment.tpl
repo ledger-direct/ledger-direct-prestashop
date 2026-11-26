@@ -29,6 +29,7 @@
 {block name='content'}
 {capture assign='copyIcon'}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>{/capture}
 {capture assign='infoIcon'}<svg class="ld-notice-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>{/capture}
+{capture assign='qrIcon'}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/></svg>{/capture}
 {capture assign='copyLabels'}<span data-ld-copy-label="idle">{l s='Copy' d='Modules.Ledgerdirect.Shop'}</span><span data-ld-copy-label="done" hidden>{l s='Copied' d='Modules.Ledgerdirect.Shop'}</span>{/capture}
 
 {if $ld_intent === null}
@@ -80,7 +81,7 @@
        {if $ld_intent.amount_drops !== null}data-ld-amount-drops="{$ld_intent.amount_drops|escape:'html':'UTF-8'}"{/if}
        {if $ld_intent.currency !== null}data-ld-currency="{$ld_intent.currency|escape:'html':'UTF-8'}" data-ld-issuer="{$ld_intent.issuer|escape:'html':'UTF-8'}"{/if}
        {if $ld_xaman_key !== ''}data-ld-xaman-key="{$ld_xaman_key|escape:'html':'UTF-8'}"{/if}
-       {if $ld_wc_project !== ''}data-ld-wc-project="{$ld_wc_project|escape:'html':'UTF-8'}"{/if}
+       {if $ld_wc_project !== ''}data-ld-wc-project="{$ld_wc_project|escape:'html':'UTF-8'}" data-ld-shop-name="{$ld_shop_name|escape:'html':'UTF-8'}"{if $shop.favicon} data-ld-shop-icon="{$shop.favicon|escape:'html':'UTF-8'}"{/if}{/if}
        style="--ld-accent: {$ld_accent|escape:'html':'UTF-8'}">
 
     <header class="ld-top">
@@ -181,6 +182,7 @@
                   <div class="ld-field-label"><span class="ld-step-no">1</span> {l s='Receiving address' d='Modules.Ledgerdirect.Shop'}</div>
                   <div class="ld-field">
                     <span class="ld-field-value" data-ld-account data-value="{$ld_intent.destination_account|escape:'html':'UTF-8'}">{$ld_intent.destination_account|escape:'html':'UTF-8'}</span>
+                    <button type="button" class="ld-copy ld-copy--qr" data-ld-qr-show="account" aria-label="{l s='Show the address as a QR code' d='Modules.Ledgerdirect.Shop'}">{$qrIcon nofilter}</button>
                     <button type="button" class="ld-copy" data-copy="account" aria-label="{l s='Copy address' d='Modules.Ledgerdirect.Shop'}">{$copyIcon nofilter}{$copyLabels nofilter}</button>
                   </div>
                 </li>
@@ -188,6 +190,7 @@
                   <div class="ld-field-label"><span class="ld-step-no">2</span> {l s='Destination tag' d='Modules.Ledgerdirect.Shop'} <span class="ld-badge ld-badge--required">{l s='Required' d='Modules.Ledgerdirect.Shop'}</span></div>
                   <div class="ld-field ld-field--key">
                     <span class="ld-field-value" data-ld-tag data-value="{$ld_intent.destination_tag|intval}">{$ld_intent.destination_tag|intval}</span>
+                    <button type="button" class="ld-copy ld-copy--qr" data-ld-qr-show="tag" aria-label="{l s='Show the destination tag as a QR code' d='Modules.Ledgerdirect.Shop'}">{$qrIcon nofilter}</button>
                     <button type="button" class="ld-copy" data-copy="tag" aria-label="{l s='Copy destination tag' d='Modules.Ledgerdirect.Shop'}">{$copyIcon nofilter}{$copyLabels nofilter}</button>
                   </div>
                   <p class="ld-hint">{l s='Without this tag we cannot match the payment to your order.' d='Modules.Ledgerdirect.Shop'}</p>
@@ -204,6 +207,15 @@
                 {/if}
               </ol>
 
+              {* One field as a QR code, opened by the buttons next to the copy buttons. *}
+              <dialog class="ld-qr-dialog" data-ld-qr-dialog>
+                <p class="ld-qr-dialog-title" data-ld-qr-dialog-title="account">{l s='Receiving address' d='Modules.Ledgerdirect.Shop'}</p>
+                <p class="ld-qr-dialog-title" data-ld-qr-dialog-title="tag" hidden>{l s='Destination tag' d='Modules.Ledgerdirect.Shop'}</p>
+                <div class="ld-qr-box"><div data-ld-qr-dialog-code></div></div>
+                <code class="ld-qr-dialog-value" data-ld-qr-dialog-value></code>
+                <button type="button" class="ld-btn ld-btn--secondary ld-btn--block" data-ld-qr-dialog-close>{l s='Close' d='Modules.Ledgerdirect.Shop'}</button>
+              </dialog>
+
               <details class="ld-exchange">
                 <summary>{l s='Paying from an exchange?' d='Modules.Ledgerdirect.Shop'}</summary>
                 <p>{l s="The destination tag is required, and the amount must still arrive in full after the exchange's fee." d='Modules.Ledgerdirect.Shop'}</p>
@@ -212,18 +224,22 @@
 
             <aside class="ld-col ld-col--side" aria-label="{l s='Pay with a wallet' d='Modules.Ledgerdirect.Shop'}">
               <details class="ld-qr" data-ld-qr-details open>
-                <summary><span class="ld-qr-sum-open">{l s='Scan with a wallet app' d='Modules.Ledgerdirect.Shop'}</span><span class="ld-qr-sum-closed">{l s='Show QR code ▾' d='Modules.Ledgerdirect.Shop'}</span></summary>
+                <summary><span class="ld-qr-sum-open">{l s='Scan with Xaman' d='Modules.Ledgerdirect.Shop'}</span><span class="ld-qr-sum-closed">{l s='Show QR code ▾' d='Modules.Ledgerdirect.Shop'}</span></summary>
                 <div class="ld-qr-box{if $state === 'expired'} is-void{/if}" data-ld-qr-box>
                   {* Server-rendered code of the same payment request, for a browser without scripts; the script redraws it. *}
                   <div data-ld-qr data-ld-qr-label="{l s='QR code with address, destination tag and amount' d='Modules.Ledgerdirect.Shop'}"><img src="{$ld_intent.qr_data_uri|escape:'html':'UTF-8'}" alt="{l s='QR code with address, destination tag and amount' d='Modules.Ledgerdirect.Shop'}" width="220" height="220"></div>
                   <div class="ld-qr-void" data-ld-qr-void{if $state !== 'expired'} hidden{/if}>{l s='Expired – please request a new amount' d='Modules.Ledgerdirect.Shop'}</div>
                 </div>
-                <p class="ld-qr-caption">{if $ld_intent.chain == 'XAHAU'}{l s='Scan with Xaman. Address, destination tag and amount are filled in, and Xaman offers to switch to the Xahau network if it is set to another one – please check them before sending.' d='Modules.Ledgerdirect.Shop'}{else}{l s='Scan with Xaman or another XRPL wallet. Address, destination tag and amount are filled in – please check them before sending.' d='Modules.Ledgerdirect.Shop'}{/if}</p>
+                <p class="ld-qr-caption">{if $ld_intent.chain == 'XAHAU'}{l s='Scan with Xaman. Address, destination tag and amount are filled in, and Xaman offers to switch to the Xahau network if it is set to another one – please check them before sending.' d='Modules.Ledgerdirect.Shop'}{else}{l s='Scan with Xaman. Address, destination tag and amount are filled in – please check them before sending.' d='Modules.Ledgerdirect.Shop'}{/if}</p>
               </details>
 
               {* Browser wallets, loaded only on click. Every sentence the module can show is rendered here. *}
               <div data-ld-wallet-section{if $hasWalletApp} data-ld-wallet-mobile{/if}{if $state === 'expired'} hidden{/if}>
                 <div class="ld-or">{l s='or' d='Modules.Ledgerdirect.Shop'}</div>
+                {if $ld_wc_project !== ''}
+                  {* WalletConnect connects a wallet app, usually on a phone: its own button, on every width. *}
+                  <button type="button" class="ld-btn ld-btn--secondary ld-btn--block" data-ld-wallet-connect>{l s='Pay with a wallet app (WalletConnect)' d='Modules.Ledgerdirect.Shop'}</button>
+                {/if}
                 <div data-ld-wallet-desktop>
                   <button type="button" class="ld-btn ld-btn--secondary ld-btn--block" data-ld-wallet-toggle aria-expanded="false" aria-controls="ld-wallets">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M16 13h2M2 10h20"/></svg>
@@ -236,8 +252,8 @@
                     <p class="ld-hint" data-ld-wallet-status="hint" hidden>{l s='The wallet fills in the payment. You confirm it there.' d='Modules.Ledgerdirect.Shop'}</p>
                   </div>
                 </div>
-                {if $hasWalletApp}
-                  <button type="button" class="ld-btn ld-btn--secondary ld-btn--block" data-ld-wallet-app data-ld-wallet-id="{if $ld_xaman_key !== ''}xaman{else}walletconnect{/if}">{l s='Open in wallet app' d='Modules.Ledgerdirect.Shop'}</button>
+                {if $ld_xaman_key !== ''}
+                  <button type="button" class="ld-btn ld-btn--secondary ld-btn--block" data-ld-wallet-app data-ld-wallet-id="xaman">{l s='Open in wallet app' d='Modules.Ledgerdirect.Shop'}</button>
                 {/if}
                 <p class="ld-hint" data-ld-wallet-message aria-live="polite" hidden></p>
                 <span hidden data-ld-wallet-text="found">{l s='found' d='Modules.Ledgerdirect.Shop'}</span>
