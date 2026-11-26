@@ -138,10 +138,6 @@
         <source>Pay with a wallet</source>
         <target state="translated">Payer avec un portefeuille</target>
       </trans-unit>
-      <trans-unit id="ab2e1df622b9d2f14c3c5893813323e5">
-        <source>Scan with a wallet app</source>
-        <target state="translated">Scanner avec une application de portefeuille</target>
-      </trans-unit>
       <trans-unit id="fc461c0e75a9b655475ee2a42abf816a">
         <source>Show QR code ▾</source>
         <target state="translated">Afficher le code QR ▾</target>
@@ -153,10 +149,6 @@
       <trans-unit id="0175be5629a1f39c1ce5ecf3b14e4afd">
         <source>Expired – please request a new amount</source>
         <target state="translated">Expiré – veuillez demander un nouveau montant</target>
-      </trans-unit>
-      <trans-unit id="2574e52d9f85c3c848a16be33cf64e65">
-        <source>Scan with Xaman or another XRPL wallet. Address, destination tag and amount are filled in – please check them before sending.</source>
-        <target state="translated">Scannez avec Xaman ou un autre portefeuille XRPL. L'adresse, le destination tag et le montant sont préremplis – veuillez les vérifier avant l'envoi.</target>
       </trans-unit>
       <trans-unit id="e81c4e4f2b7b93b481e13a8553c2ae1b">
         <source>or</source>
@@ -353,6 +345,30 @@
       <trans-unit id="49c53f4b2d0be0f5a8e66c06d71f3eb3">
         <source>Paying with %asset% is not possible right now. Please choose another payment method.</source>
         <target state="translated">Le paiement en %asset% n'est pas possible pour le moment. Veuillez choisir un autre moyen de paiement.</target>
+      </trans-unit>
+      <trans-unit id="972117c2a3c36a0ac14a446f27583b90">
+        <source>Scan with Xaman</source>
+        <target state="translated">Scanner avec Xaman</target>
+      </trans-unit>
+      <trans-unit id="dbc846ce95d2ec4f84c8885159f90f6b">
+        <source>Scan with Xaman. Address, destination tag and amount are filled in – please check them before sending.</source>
+        <target state="translated">Scannez avec Xaman. L'adresse, le destination tag et le montant sont préremplis – veuillez les vérifier avant l'envoi.</target>
+      </trans-unit>
+      <trans-unit id="38489c199d0762b39bc0d5716d1a2c73">
+        <source>Pay with a wallet app (WalletConnect)</source>
+        <target state="translated">Payer avec une application de portefeuille (WalletConnect)</target>
+      </trans-unit>
+      <trans-unit id="16658b7c59553e729b5f53aeb3748911">
+        <source>Show the address as a QR code</source>
+        <target state="translated">Afficher l'adresse en QR code</target>
+      </trans-unit>
+      <trans-unit id="7c0b84cd91aeee28baee6083c207af2e">
+        <source>Show the destination tag as a QR code</source>
+        <target state="translated">Afficher le destination tag en QR code</target>
+      </trans-unit>
+      <trans-unit id="d3d2e617335f08df83599665eef8a418">
+        <source>Close</source>
+        <target state="translated">Fermer</target>
       </trans-unit>
     </body>
   </file>

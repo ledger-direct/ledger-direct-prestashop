@@ -143,7 +143,7 @@ Modules → LedgerDirect → Configure:
 | Quote validity | How long a quoted amount stays fixed, 60–3600 seconds. |
 | Logo | What the payment page shows in its header: the shop logo, a picture from the shop's `img/` directory (a path relative to it, e.g. `brand/logo.png`), or the first letter of the shop name. |
 | Accent colour | The one colour of the payment page — buttons, countdown bar, destination tag — with white text on it, so it must be dark enough (contrast 4.5:1). Default `#1f5eff`. |
-| Xaman API key, WalletConnect project id | Public identifiers, optional. With one of them, customers on a phone get an "Open in wallet app" button. |
+| Xaman API key, WalletConnect project id | Public identifiers, optional. With the Xaman key, customers on a phone get an "Open in wallet app" button. With the WalletConnect project id, every customer paying on the XRP Ledger gets a "Pay with a wallet app (WalletConnect)" button (the wallet section is the XRP Ledger's: none on Xahau, and none once the amount has expired): it shows a code to scan with a wallet app such as Joey Wallet, and the app is told the shop's name and favicon. |
 
 Issuer addresses are shown on that screen but cannot be edited. They are fixed in the core: a wrong
 issuer would send customer funds to a dead trustline.
@@ -174,7 +174,7 @@ page, so the theme's `<head>` and stylesheets stay and its header, footer and co
 
 Behaviour and design come from [`@ledger-direct/payment-ui`](https://github.com/ledger-direct/ledger-direct-payment-ui),
 the package every LedgerDirect plugin shares: the five payment states, the countdown, polling,
-copy buttons, the QR code with address, destination tag and amount, and browser wallets over
+copy buttons, the QR code with address, destination tag and amount, the address and the tag as QR codes of their own, and browser wallets over
 XRPL Connect (Crossmark, GemWallet, MetaMask Snap, Ledger, Otsu, Xyra, and Joey through the package's own adapter; Xaman and WalletConnect
 with the identifiers above). The module has no build step: it copies the package's built files
 into `views/`.
