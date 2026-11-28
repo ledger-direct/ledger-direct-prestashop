@@ -10,3 +10,6 @@
 /Handover-*.md   export-ignore
 /CLAUDE.md export-ignore
 /.coderabbit.yaml export-ignore
+/bin              export-ignore
+/AGENTS.md        export-ignore
+/docs/adr         export-ignore
