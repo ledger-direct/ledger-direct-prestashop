@@ -91,6 +91,7 @@ knowledge_base:
   code_guidelines:
     enabled: true
     filePatterns:
+    - AGENTS.md
     - files: ledger-direct/ledger-direct-core-php:INVARIANTS.md
       applyTo: ledgerdirect.php,src/**,controllers/**,views/css/**,views/templates/**,upgrade/**,config.xml,tests/**
   learnings:

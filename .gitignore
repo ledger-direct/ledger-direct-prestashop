@@ -19,3 +19,8 @@
 # Local secrets (testnet wallet etc.) never belong in the module directory:
 # it is mounted into the web root. If one lands here anyway, keep it out of git.
 /.env
+
+# The decision register, cloned by bin/decisions, and the local snapshot that
+# bin/decisions --write can produce. The register is private: never commit either.
+/.decisions/
+/docs/adr/APPLICABLE.md
